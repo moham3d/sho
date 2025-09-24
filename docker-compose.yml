@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14
+    container_name: alshorouk-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-radiology_db}
+      POSTGRES_USER: ${POSTGRES_USER:-radiology_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database:/docker-entrypoint-initdb.d
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - alshorouk-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-radiology_user} -d ${POSTGRES_DB:-radiology_db}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # PostgREST API
+  postgrest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: alshorouk-api
+    environment:
+      PGRST_DB_URI: postgres://${POSTGRES_USER:-radiology_user}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-radiology_db}
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
+      PGRST_SERVER_PROXY_URI: "http://localhost:3000"
+      PGRST_OPENAPI_SERVER_PROXY_URI: "http://localhost:3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - alshorouk-network
+    restart: unless-stopped
+
+  # Node.js WebSocket Service
+  websocket:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.websocket
+    container_name: alshorouk-websocket
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgres://${POSTGRES_USER:-radiology_user}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-radiology_db}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this}
+      PORT: ${WEBSOCKET_PORT:-3001}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - alshorouk-network
+    restart: unless-stopped
+
+  # Frontend Development Server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: alshorouk-frontend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_WS_URL: ws://localhost:3001
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - postgrest
+      - websocket
+    networks:
+      - alshorouk-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: alshorouk-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl/certs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - postgrest
+      - websocket
+      - frontend
+    networks:
+      - alshorouk-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  alshorouk-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
