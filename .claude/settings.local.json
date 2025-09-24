@@ -29,7 +29,8 @@
       "Bash(npm run lint)",
       "Bash(npm start)",
       "Bash(react-scripts:*)",
-      "Bash(npx react-scripts:*)"
+      "Bash(npx react-scripts:*)",
+      "Bash(DISABLE_ESLINT_PLUGIN=true npx react-scripts start)"
     ],
     "deny": [],
     "ask": []
