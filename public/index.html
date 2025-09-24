@@ -1,17 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Al-Shorouk Radiology Management System - Advanced healthcare management for radiology services" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Al-Shorouk Radiology System</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
+<html lang="en" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الأشعة - الشروق</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="login-section" class="container">
+        <div class="login-card">
+            <h1>نظام إدارة الأشعة - الشروق</h1>
+            <h2>تسجيل الدخول</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">البريد الإلكتروني:</label>
+                    <input type="email" id="email" required placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة المرور:</label>
+                    <input type="password" id="password" required placeholder="كلمة المرور">
+                </div>
+                <button type="submit" class="btn btn-primary">دخول</button>
+            </form>
+            <div id="login-error" class="error-message" style="display: none;"></div>
+            <div class="login-info">
+                <h3>حسابات تجريبية:</h3>
+                <p><strong>مدير:</strong> admin@example.com / admin</p>
+                <p><strong>ممرض:</strong> nurse@example.com / nurse</p>
+                <p><strong>طبيب:</strong> doctor@example.com / doctor</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>نظام إدارة الأشعة - الشروق</h1>
+                <div class="user-info">
+                    <span id="user-name"></span>
+                    <span id="user-role" class="role-badge"></span>
+                    <button id="logout-btn" class="btn btn-secondary">خروج</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <button id="patients-btn" class="nav-btn active">المرضى</button>
+            <button id="visits-btn" class="nav-btn">الزيارات</button>
+            <button id="nurse-forms-btn" class="nav-btn" style="display: none;">تقييم الممرض</button>
+            <button id="doctor-forms-btn" class="nav-btn" style="display: none;">تقييم الطبيب</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="content" class="content">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3>
+                <button id="modal-close" class="modal-close">&times;</button>
+            </div>
+            <div id="modal-body" class="modal-body">
+                <!-- Modal content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Modal -->
+    <div id="signature-modal" class="modal" style="display: none;">
+        <div class="modal-content signature-modal-content">
+            <div class="modal-header">
+                <h3>التوقيع الرقمي</h3>
+                <button id="signature-modal-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <canvas id="signature-canvas" width="400" height="200" style="border: 1px solid #ccc;"></canvas>
+                <div class="signature-controls">
+                    <button id="clear-signature" class="btn btn-secondary">مسح</button>
+                    <button id="save-signature" class="btn btn-primary">حفظ التوقيع</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
 </html>

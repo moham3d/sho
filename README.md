@@ -1,168 +1,130 @@
 # Al-Shorouk Radiology Management System
 
-Multi-role healthcare management platform for radiology departments with comprehensive nursing assessments, doctor evaluations, and administrative oversight.
+A complete single-file web application for managing radiology patient workflows, including patient registration, nurse assessments, doctor evaluations, and digital signatures.
 
 ## Features
 
-- **Role-based Access Control**: Nurse, Doctor, and Admin roles with appropriate permissions
-- **Digital Signatures**: Canvas-based signature capture for legal compliance
-- **Bilingual Interface**: Arabic/English language support with RTL layout
-- **Real-time Monitoring**: WebSocket-based system health and error tracking
-- **Comprehensive Forms**: Nursing assessments and doctor evaluations with validation
-- **Audit Trail**: Complete audit logging for compliance requirements
+### Patient Management
+- Complete patient registration with all demographic information
+- Search and filter patients
+- Medical history tracking
+
+### Visit Management
+- Create and track patient visits
+- Assign nurses and doctors to visits
+- Status tracking (open, in-progress, signed, closed)
+
+### Nurse Assessment Forms
+Complete nursing assessment including:
+- Basic screening and vital signs
+- Psychosocial assessment
+- Nutritional evaluation
+- Functional assessment
+- Pain assessment
+- Fall risk evaluation
+- Educational needs assessment
+- Specialized assessments for elderly and disabled patients
+
+### Doctor Evaluation Forms
+Comprehensive radiology assessment including:
+- Patient information and clinical history
+- Study parameters and technical details
+- Clinical findings and interpretations
+- Radiation dose tracking (CTDIvol, DLP)
+- Digital signature capability
+
+### Authentication & Authorization
+- Role-based access control (Admin, Doctor, Nurse)
+- JWT-based authentication
+- Secure password hashing
+
+### Digital Signatures
+- Canvas-based signature capture
+- Secure signature storage
+- Audit trail with timestamps
 
 ## Technology Stack
 
-- **Frontend**: React 18+ with TypeScript, Tailwind CSS, React Router
-- **Backend**: PostgREST with PostgreSQL 14+
+- **Backend**: Express.js with SQLite database
+- **Frontend**: Vanilla HTML/CSS/JavaScript
 - **Authentication**: JWT with bcrypt password hashing
-- **Database**: PostgreSQL with Row Level Security (RLS)
-- **Containerization**: Docker Compose with Nginx
-- **Testing**: Jest, React Testing Library, PostgreSQL testing
+- **Database**: SQLite with complete schema for all form fields
+- **UI**: RTL Arabic interface with responsive design
 
-## Quick Start
+## Installation & Setup
 
-### Prerequisites
-
-- Docker and Docker Compose
-- Node.js 18+
-- Git
-
-### Setup
-
-1. **Clone and setup repository**
+1. **Install Dependencies**
    ```bash
-   git clone <repository-url>
-   cd sho
-   git checkout 001-system-requirements-user
    npm install
    ```
 
-2. **Configure environment**
+2. **Run the Application**
    ```bash
-   cp .env.example .env
-   nano .env
+   npm start
    ```
 
-3. **Start development environment**
-   ```bash
-   docker-compose up -d
-   ```
+3. **Access the Application**
+   - Open your browser and navigate to `http://localhost:3000`
+   - Default login credentials:
+     - Admin: admin@alshorouk.com / admin123
+     - Doctor: doctor@alshorouk.com / doctor123
+     - Nurse: nurse@alshorouk.com / nurse123
 
-4. **Initialize database**
-   ```bash
-   npm run db:migrate
-   ```
+## Database Schema
 
-5. **Access the application**
-   - Frontend: http://localhost:3000
-   - API: http://localhost:3000/api
-   - Default admin: admin/admin123
+The application includes a complete SQLite database with the following tables:
 
-## Development
+- `users`: User accounts with roles
+- `patients`: Complete patient demographic information
+- `visits`: Patient visit tracking
+- `nurse_forms`: Comprehensive nursing assessment data
+- `doctor_forms`: Complete radiology evaluation data
 
-### Project Structure
+All form fields from the original documentation are included without simplification.
 
-```
-sho/
-├── backend/           # Node.js backend with PostgREST
-├── frontend/          # React TypeScript application
-├── tests/             # Test suites (contracts, e2e, performance)
-├── docs/              # Documentation
-├── specs/             # Feature specifications
-└── docker-compose.yml # Container orchestration
-```
+## API Endpoints
 
-### Available Scripts
+### Authentication
+- `POST /api/auth/login` - User login
 
-- `npm run dev` - Start development environment
-- `npm test` - Run all tests
-- `npm run lint` - Run code linting
-- `npm run build` - Build for production
-- `npm start` - Start with Docker
+### Patients
+- `GET /api/patients` - List all patients
+- `POST /api/patients` - Create new patient
+- `PUT /api/patients/:id` - Update patient
+- `DELETE /api/patients/:id` - Delete patient
 
-## Testing
+### Visits
+- `GET /api/visits` - List all visits
+- `POST /api/visits` - Create new visit
 
-### Test Categories
+### Nurse Forms
+- `GET /api/nurse-forms/:visitId` - Get nurse form for visit
+- `POST /api/nurse-forms` - Create nurse form
+- `PUT /api/nurse-forms/:id` - Update nurse form
 
-1. **Contract Tests**: API endpoint validation
-2. **E2E Tests**: Complete user workflows
-3. **Performance Tests**: 20 concurrent users, 1-second response time
-4. **Security Tests**: RLS policies, JWT validation, SQL injection prevention
-
-### Running Tests
-
-```bash
-# Run specific test suites
-npm run test:contracts
-npm run test:e2e
-npm run test:performance
-npm run test:security
-
-# Run all tests
-npm test
-```
-
-## Deployment
-
-### Production Setup
-
-1. **Environment Configuration**
-   ```env
-   NODE_ENV=production
-   DATABASE_URL=postgresql://user:password@prod-db:5432/radiology_db
-   JWT_SECRET=production-super-secret-key
-   ```
-
-2. **Docker Production**
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-3. **SSL Configuration**
-   ```bash
-   sudo certbot --nginx -d api.alshorouk.com
-   ```
-
-## Documentation
-
-- [API Documentation](http://localhost:3000/api/docs)
-- [User Manual](docs/user-manual.md)
-- [Technical Guide](docs/technical-guide.md)
-- [Troubleshooting](docs/troubleshooting.md)
+### Doctor Forms
+- `GET /api/doctor-forms/:visitId` - Get doctor form for visit
+- `POST /api/doctor-forms` - Create doctor form
+- `PUT /api/doctor-forms/:id` - Update doctor form
 
 ## Security Features
 
-- **Row Level Security**: Database-level access control
-- **JWT Authentication**: Secure token-based authentication
-- **Audit Logging**: Complete audit trail for all actions
-- **Data Encryption**: Encryption at rest and in transit
-- **Input Validation**: Comprehensive input sanitization
+- Password hashing with bcrypt
+- JWT token-based authentication
+- Role-based access control
+- Input validation and sanitization
+- Secure signature storage
 
-## Performance
+## Browser Support
 
-- **20 Concurrent Users**: System designed for multi-hospital deployment
-- **1-Second Response**: Optimized database queries and caching
-- **99% Uptime**: High availability with automatic failover
-- **Database Optimization**: Smart indexing and connection pooling
+- Modern browsers with ES6+ support
+- Mobile-responsive design
+- Touch-friendly signature capture
 
-## Contributing
+## Development
 
-1. Follow the established coding standards
-2. Write tests for new features
-3. Update documentation as needed
-4. Ensure all tests pass before submitting
+The application is designed as a single-file deployment for easy setup and maintenance. All components are included in the main `app.js` file, with static frontend files served from the `public/` directory.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Support
-
-- **Technical Support**: support@alshorouk.com
-- **System Administrator**: admin@alshorouk.com
-- **Emergency Support**: +20 123 456 7890
-
----
-
-**Al-Shorouk Hospital Radiology Department** © 2025
+MIT License - see package.json for details
