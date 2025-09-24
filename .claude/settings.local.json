@@ -17,7 +17,19 @@
       "Bash(npx jest:*)",
       "Bash(DEBUG=auth:*)",
       "Bash(npm test:*)",
-      "Bash(npm run test:contracts:users:crud:*)"
+      "Bash(npm run test:contracts:users:crud:*)",
+      "Bash(npm run dev:*)",
+      "Bash(cp:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(xargs ls:*)",
+      "Bash(NODE_ENV=development POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_DB=radiology_db POSTGRES_USER=radiology_user POSTGRES_PASSWORD=secure_password_change_this_in_production JWT_SECRET=your-super-secret-jwt-key-change-this-in-production npm run dev)",
+      "Bash(npm run dev:backend:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npm run dev:frontend:*)",
+      "Bash(npm run lint)",
+      "Bash(npm start)",
+      "Bash(react-scripts:*)",
+      "Bash(npx react-scripts:*)"
     ],
     "deny": [],
     "ask": []
