@@ -49,7 +49,7 @@ Comprehensive radiology assessment including:
 - **Frontend**: Vanilla HTML/CSS/JavaScript
 - **Authentication**: JWT with bcrypt password hashing
 - **Database**: SQLite with complete schema for all form fields
-- **UI**: RTL Arabic interface with responsive design
+- **UI**: English interface with responsive design
 
 ## Installation & Setup
 
@@ -66,9 +66,9 @@ Comprehensive radiology assessment including:
 3. **Access the Application**
    - Open your browser and navigate to `http://localhost:3000`
    - Default login credentials:
-     - Admin: admin@alshorouk.com / admin123
-     - Doctor: doctor@alshorouk.com / doctor123
-     - Nurse: nurse@alshorouk.com / nurse123
+     - Admin: admin / admin
+     - Doctor: doctor / doctor
+     - Nurse: nurse / nurse
 
 ## Database Schema
 

@@ -44,14 +44,14 @@ class RadiologyApp {
     }
 
     async login() {
-        const email = document.getElementById('email').value;
+        const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
         try {
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
@@ -66,7 +66,7 @@ class RadiologyApp {
                 this.showError('login-error', data.error);
             }
         } catch (error) {
-            this.showError('login-error', 'خطأ في الاتصال');
+            this.showError('login-error', 'Login failed');
         }
     }
 
@@ -98,9 +98,9 @@ class RadiologyApp {
 
     getRoleName(role) {
         const roles = {
-            'admin': 'مدير',
-            'doctor': 'طبيب',
-            'nurse': 'ممرض'
+            'admin': 'Admin',
+            'doctor': 'Doctor',
+            'nurse': 'Nurse'
         };
         return roles[role] || role;
     }
@@ -174,11 +174,11 @@ class RadiologyApp {
         const html = `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">المرضى</h2>
-                    <button class="btn btn-primary" onclick="app.showPatientModal()">إضافة مريض جديد</button>
+                    <h2 class="card-title">Patients</h2>
+                    <button class="btn btn-primary" onclick="app.showPatientModal()">Add New Patient</button>
                 </div>
-                <div class="search-section" style="padding: 1rem; border-bottom: 1px solid #e1e8ed;">
-                    <input type="text" id="patient-search" placeholder="البحث عن مريض..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;">
+                <div class="search-section">
+                    <input type="text" id="patient-search" class="search-input" placeholder="Search patients...">
                 </div>
                 <ul class="patient-list" id="patient-list">
                     ${patients.map(patient => `
@@ -187,13 +187,13 @@ class RadiologyApp {
                                 <div>
                                     <div class="patient-name">${patient.full_name}</div>
                                     <div class="patient-details">
-                                        الرقم القومي: ${patient.national_id || 'غير محدد'} |
-                                        رقم الهاتف: ${patient.mobile || 'غير محدد'} |
-                                        العمر: ${patient.age || 'غير محدد'}
+                                        National ID: ${patient.national_id || 'Not specified'} |
+                                        Mobile: ${patient.mobile || 'Not specified'} |
+                                        Age: ${patient.age || 'Not specified'}
                                     </div>
                                 </div>
                                 <div class="actions">
-                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.createVisit(${patient.id})">إنشاء زيارة</button>
+                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.createVisit(${patient.id})">Create Visit</button>
                                 </div>
                             </div>
                         </li>
@@ -236,7 +236,7 @@ class RadiologyApp {
         const html = `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">الزيارات</h2>
+                    <h2 class="card-title">Visits</h2>
                 </div>
                 <ul class="visit-list">
                     ${visits.map(visit => `
@@ -245,19 +245,19 @@ class RadiologyApp {
                                 <div>
                                     <div class="visit-patient">${visit.patient_name}</div>
                                     <div class="visit-details">
-                                        تاريخ الزيارة: ${new Date(visit.visit_date).toLocaleDateString('ar-EG')} |
-                                        الحالة: <span class="status-badge status-${visit.status}">${this.getStatusName(visit.status)}</span>
+                                        Visit Date: ${new Date(visit.visit_date).toLocaleDateString('en-US')} |
+                                        Status: <span class="status-badge status-${visit.status}">${this.getStatusName(visit.status)}</span>
                                     </div>
                                     <div class="visit-details">
-                                        الممرض: ${visit.nurse_name || 'غير محدد'} |
-                                        الطبيب: ${visit.doctor_name || 'غير محدد'}
+                                        Nurse: ${visit.nurse_name || 'Not assigned'} |
+                                        Doctor: ${visit.doctor_name || 'Not assigned'}
                                     </div>
                                 </div>
                                 <div class="actions">
                                     ${this.user.role === 'nurse' || this.user.role === 'admin' ?
-                                        `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.showNurseForm(${visit.id})">تقييم الممرض</button>` : ''}
+                                        `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.showNurseForm(${visit.id})">Nurse Assessment</button>` : ''}
                                     ${this.user.role === 'doctor' || this.user.role === 'admin' ?
-                                        `<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); app.showDoctorForm(${visit.id})">تقييم الطبيب</button>` : ''}
+                                        `<button class="btn btn-sm btn-success" onclick="event.stopPropagation(); app.showDoctorForm(${visit.id})">Doctor Evaluation</button>` : ''}
                                 </div>
                             </div>
                         </li>
@@ -271,72 +271,72 @@ class RadiologyApp {
 
     getStatusName(status) {
         const statuses = {
-            'open': 'مفتوح',
-            'in_progress': 'قيد التنفيذ',
-            'signed': 'موقع',
-            'closed': 'مغلق'
+            'open': 'Open',
+            'in_progress': 'In Progress',
+            'signed': 'Signed',
+            'closed': 'Closed'
         };
         return statuses[status] || status;
     }
 
     showPatientModal(patientId = null) {
-        const title = patientId ? 'تعديل بيانات المريض' : 'إضافة مريض جديد';
+        const title = patientId ? 'Edit Patient' : 'Add New Patient';
         const patient = patientId ? {} : {}; // Would load patient data if editing
 
         const html = `
             <form id="patient-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>الاسم الكامل *</label>
+                        <label>Full Name *</label>
                         <input type="text" name="full_name" required>
                     </div>
                     <div class="form-group">
-                        <label>الرقم القومي</label>
+                        <label>National ID</label>
                         <input type="text" name="national_id">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>رقم الهاتف</label>
+                        <label>Mobile Phone</label>
                         <input type="tel" name="mobile">
                     </div>
                     <div class="form-group">
-                        <label>تاريخ الميلاد</label>
+                        <label>Date of Birth</label>
                         <input type="date" name="dob">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>العمر</label>
+                        <label>Age</label>
                         <input type="number" name="age">
                     </div>
                     <div class="form-group">
-                        <label>الجنس</label>
+                        <label>Gender</label>
                         <select name="gender">
-                            <option value="">اختر</option>
-                            <option value="male">ذكر</option>
-                            <option value="female">أنثى</option>
-                            <option value="other">أخرى</option>
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>رقم المريض الطبي</label>
+                        <label>Medical Number</label>
                         <input type="text" name="medical_number">
                     </div>
                     <div class="form-group">
-                        <label>التشخيص</label>
+                        <label>Diagnosis</label>
                         <input type="text" name="diagnosis">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>معلومات الاتصال الإضافية (JSON)</label>
-                    <textarea name="contact_info" placeholder='{"email": "patient@example.com", "address": "القاهرة"}'></textarea>
+                    <label>Additional Contact Info (JSON)</label>
+                    <textarea name="contact_info" placeholder='{"email": "patient@example.com", "address": "City, Country"}'></textarea>
                 </div>
                 <div class="actions" style="margin-top: 2rem;">
-                    <button type="submit" class="btn btn-primary">حفظ</button>
-                    <button type="button" class="btn btn-secondary" onclick="app.closeModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
                 </div>
             </form>
         `;
@@ -367,10 +367,10 @@ class RadiologyApp {
                 this.loadPatients();
             } else {
                 const error = await response.json();
-                alert('خطأ: ' + error.error);
+                alert('Error: ' + error.error);
             }
         } catch (error) {
-            alert('خطأ في الحفظ');
+            alert('Save failed');
         }
     }
 
@@ -382,14 +382,14 @@ class RadiologyApp {
             });
 
             if (response.ok) {
-                alert('تم إنشاء الزيارة بنجاح');
+                alert('Visit created successfully');
                 this.loadVisits();
             } else {
                 const error = await response.json();
-                alert('خطأ: ' + error.error);
+                alert('Error: ' + error.error);
             }
         } catch (error) {
-            alert('خطأ في إنشاء الزيارة');
+            alert('Failed to create visit');
         }
     }
 
@@ -415,9 +415,9 @@ class RadiologyApp {
         const html = `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">تقييم الممرض</h2>
+                    <h2 class="card-title">Nurse Assessment</h2>
                     <div class="actions">
-                        ${!formData.signed ? '<button class="btn btn-success" onclick="app.signNurseForm()">توقيع النموذج</button>' : '<span class="status-badge status-signed">موقع</span>'}
+                        ${!formData.signed ? '<button class="btn btn-success" onclick="app.signNurseForm()">Sign Form</button>' : '<span class="status-badge status-signed">Signed</span>'}
                     </div>
                 </div>
 
@@ -427,89 +427,89 @@ class RadiologyApp {
 
                     <!-- Basic Screening -->
                     <div class="form-section">
-                        <h3>التقييم الأساسي</h3>
+                        <h3>Basic Screening</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>طريقة الوصول</label>
+                                <label>Mode of Arrival</label>
                                 <select name="arrival_mode">
-                                    <option value="">اختر</option>
-                                    <option value="ambulatory">سير ذاتي</option>
-                                    <option value="stretcher">نقالة</option>
-                                    <option value="chair">كرسي متحرك</option>
-                                    <option value="other">أخرى</option>
+                                    <option value="">Select</option>
+                                    <option value="ambulatory" ${formData.arrival_mode === 'ambulatory' ? 'selected' : ''}>Ambulatory</option>
+                                    <option value="stretcher" ${formData.arrival_mode === 'stretcher' ? 'selected' : ''}>Stretcher</option>
+                                    <option value="chair" ${formData.arrival_mode === 'chair' ? 'selected' : ''}>Wheelchair</option>
+                                    <option value="other" ${formData.arrival_mode === 'other' ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>الشكوي الحالية</label>
+                                <label>Chief Complaint</label>
                                 <input type="text" name="chief_complaint" value="${formData.chief_complaint || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>وصف العمر</label>
+                                <label>Age Description</label>
                                 <input type="text" name="age_text" value="${formData.age_text || ''}">
                             </div>
                             <div class="form-group">
-                                <label>مرافق من</label>
+                                <label>Accompanied By</label>
                                 <select name="accompanied_by">
-                                    <option value="">اختر</option>
-                                    <option value="spouse">زوج/زوجة</option>
-                                    <option value="relative">قريب</option>
-                                    <option value="other">أخرى</option>
+                                    <option value="">Select</option>
+                                    <option value="spouse" ${formData.accompanied_by === 'spouse' ? 'selected' : ''}>Spouse</option>
+                                    <option value="relative" ${formData.accompanied_by === 'relative' ? 'selected' : ''}>Relative</option>
+                                    <option value="other" ${formData.accompanied_by === 'other' ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>اللغة المنطوقة</label>
+                            <label>Language Spoken</label>
                             <select name="language_spoken">
-                                <option value="">اختر</option>
-                                <option value="Arabic">عربي</option>
-                                <option value="English">إنجليزي</option>
-                                <option value="other">أخرى</option>
+                                <option value="">Select</option>
+                                <option value="Arabic" ${formData.language_spoken === 'Arabic' ? 'selected' : ''}>Arabic</option>
+                                <option value="English" ${formData.language_spoken === 'English' ? 'selected' : ''}>English</option>
+                                <option value="other" ${formData.language_spoken === 'other' ? 'selected' : ''}>Other</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Vital Signs -->
                     <div class="form-section">
-                        <h3>العلامات الحيوية</h3>
+                        <h3>Vital Signs</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>درجة الحرارة (°C)</label>
+                                <label>Temperature (°C)</label>
                                 <input type="text" name="temp" value="${formData.temp || ''}">
                             </div>
                             <div class="form-group">
-                                <label>النبض (ضربة/دقيقة)</label>
+                                <label>Pulse (bpm)</label>
                                 <input type="text" name="pulse" value="${formData.pulse || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>ضغط الدم</label>
+                                <label>Blood Pressure</label>
                                 <input type="text" name="bp" placeholder="120/80" value="${formData.bp || ''}">
                             </div>
                             <div class="form-group">
-                                <label>معدل التنفس</label>
+                                <label>Respiratory Rate</label>
                                 <input type="text" name="resp_rate" value="${formData.resp_rate || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>تشبع الأكسجين (%)</label>
+                                <label>O2 Saturation (%)</label>
                                 <input type="text" name="o2_saturation" value="${formData.o2_saturation || ''}">
                             </div>
                             <div class="form-group">
-                                <label>سكر الدم</label>
+                                <label>Blood Sugar</label>
                                 <input type="text" name="blood_sugar" value="${formData.blood_sugar || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الوزن (كجم)</label>
+                                <label>Weight (kg)</label>
                                 <input type="text" name="weight" value="${formData.weight || ''}">
                             </div>
                             <div class="form-group">
-                                <label>الطول (سم)</label>
+                                <label>Height (cm)</label>
                                 <input type="text" name="height" value="${formData.height || ''}">
                             </div>
                         </div>
@@ -517,39 +517,39 @@ class RadiologyApp {
 
                     <!-- Psychosocial Assessment -->
                     <div class="form-section">
-                        <h3>التقييم النفسي والاجتماعي</h3>
+                        <h3>Psychosocial Assessment</h3>
                         <div class="form-group">
-                            <label>التاريخ النفسي والاجتماعي</label>
+                            <label>Psychosocial History</label>
                             <textarea name="psychosocial_history">${formData.psychosocial_history || ''}</textarea>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الحالة النفسية</label>
+                                <label>Psychological State</label>
                                 <select name="psychological_problem">
-                                    <option value="">اختر</option>
-                                    <option value="anxious">قلق</option>
-                                    <option value="agitated">هيجان</option>
-                                    <option value="depressed">اكتئاب</option>
-                                    <option value="none">لا توجد مشاكل</option>
+                                    <option value="">Select</option>
+                                    <option value="anxious" ${formData.psychological_problem === 'anxious' ? 'selected' : ''}>Anxious</option>
+                                    <option value="agitated" ${formData.psychological_problem === 'agitated' ? 'selected' : ''}>Agitated</option>
+                                    <option value="depressed" ${formData.psychological_problem === 'depressed' ? 'selected' : ''}>Depressed</option>
+                                    <option value="none" ${formData.psychological_problem === 'none' ? 'selected' : ''}>No problems</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>العوائد الخاصة</label>
-                                <input type="text" name="special_habits" placeholder="التدخين، إلخ" value="${formData.special_habits || ''}">
+                                <label>Special Habits</label>
+                                <input type="text" name="special_habits" placeholder="Smoking, etc." value="${formData.special_habits || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الحساسية</label>
+                                <label>Allergies</label>
                                 <select name="allergies">
-                                    <option value="">اختر</option>
-                                    <option value="yes">نعم</option>
-                                    <option value="no">لا</option>
-                                    <option value="unknown">غير معروف</option>
+                                    <option value="">Select</option>
+                                    <option value="yes" ${formData.allergies === 'yes' ? 'selected' : ''}>Yes</option>
+                                    <option value="no" ${formData.allergies === 'no' ? 'selected' : ''}>No</option>
+                                    <option value="unknown" ${formData.allergies === 'unknown' ? 'selected' : ''}>Unknown</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>تفاصيل الحساسية</label>
+                                <label>Allergy Details</label>
                                 <input type="text" name="allergies_details" value="${formData.allergies_details || ''}">
                             </div>
                         </div>
@@ -557,173 +557,173 @@ class RadiologyApp {
 
                     <!-- Nutritional Assessment -->
                     <div class="form-section">
-                        <h3>التقييم التغذوي</h3>
+                        <h3>Nutritional Assessment</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>النظام الغذائي</label>
+                                <label>Diet Type</label>
                                 <select name="diet">
-                                    <option value="">اختر</option>
-                                    <option value="regular">عادي</option>
-                                    <option value="special">خاص</option>
+                                    <option value="">Select</option>
+                                    <option value="regular" ${formData.diet === 'regular' ? 'selected' : ''}>Regular</option>
+                                    <option value="special" ${formData.diet === 'special' ? 'selected' : ''}>Special</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>الشهية</label>
+                                <label>Appetite</label>
                                 <select name="appetite">
-                                    <option value="">اختر</option>
-                                    <option value="good">جيدة</option>
-                                    <option value="poor">ضعيفة</option>
+                                    <option value="">Select</option>
+                                    <option value="good" ${formData.appetite === 'good' ? 'selected' : ''}>Good</option>
+                                    <option value="poor" ${formData.appetite === 'poor' ? 'selected' : ''}>Poor</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="gi_problems" ${formData.gi_problems ? 'checked' : ''}>
-                                <label>مشاكل في الجهاز الهضمي</label>
+                                <label>GI Problems</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>تفاصيل مشاكل الجهاز الهضمي</label>
+                            <label>GI Problems Details</label>
                             <textarea name="gi_problems_details">${formData.gi_problems_details || ''}</textarea>
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="weight_loss" ${formData.weight_loss ? 'checked' : ''}>
-                                <label>فقدان وزن</label>
+                                <label>Weight Loss</label>
                             </div>
                             <div class="checkbox-group">
                                 <input type="checkbox" name="weight_gain" ${formData.weight_gain ? 'checked' : ''}>
-                                <label>زيادة وزن</label>
+                                <label>Weight Gain</label>
                             </div>
                             <div class="checkbox-group">
                                 <input type="checkbox" name="refer_to_nutritionist" ${formData.refer_to_nutritionist ? 'checked' : ''}>
-                                <label>إحالة لأخصائي تغذية</label>
+                                <label>Refer to Nutritionist</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Functional Assessment -->
                     <div class="form-section">
-                        <h3>التقييم الوظيفي</h3>
+                        <h3>Functional Assessment</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الاعتماد على الذات</label>
+                                <label>Self Care</label>
                                 <select name="self_care_status">
-                                    <option value="">اختر</option>
-                                    <option value="independent">مستقل</option>
-                                    <option value="needs_supervision">يحتاج مساعدة</option>
-                                    <option value="dependent">معتمد</option>
+                                    <option value="">Select</option>
+                                    <option value="independent" ${formData.self_care_status === 'independent' ? 'selected' : ''}>Independent</option>
+                                    <option value="needs_supervision" ${formData.self_care_status === 'needs_supervision' ? 'selected' : ''}>Needs Supervision</option>
+                                    <option value="dependent" ${formData.self_care_status === 'dependent' ? 'selected' : ''}>Dependent</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>الأكل</label>
+                                <label>Eating</label>
                                 <select name="feeding_status">
-                                    <option value="">اختر</option>
-                                    <option value="independent">مستقل</option>
-                                    <option value="needs_supervision">يحتاج مساعدة</option>
-                                    <option value="dependent">معتمد</option>
+                                    <option value="">Select</option>
+                                    <option value="independent" ${formData.feeding_status === 'independent' ? 'selected' : ''}>Independent</option>
+                                    <option value="needs_supervision" ${formData.feeding_status === 'needs_supervision' ? 'selected' : ''}>Needs Supervision</option>
+                                    <option value="dependent" ${formData.feeding_status === 'dependent' ? 'selected' : ''}>Dependent</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>النظافة</label>
+                                <label>Hygiene</label>
                                 <select name="hygiene_status">
-                                    <option value="">اختر</option>
-                                    <option value="independent">مستقل</option>
-                                    <option value="needs_supervision">يحتاج مساعدة</option>
-                                    <option value="dependent">معتمد</option>
+                                    <option value="">Select</option>
+                                    <option value="independent" ${formData.hygiene_status === 'independent' ? 'selected' : ''}>Independent</option>
+                                    <option value="needs_supervision" ${formData.hygiene_status === 'needs_supervision' ? 'selected' : ''}>Needs Supervision</option>
+                                    <option value="dependent" ${formData.hygiene_status === 'dependent' ? 'selected' : ''}>Dependent</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>التبول/التغوط</label>
+                                <label>Toileting</label>
                                 <select name="toileting_status">
-                                    <option value="">اختر</option>
-                                    <option value="independent">مستقل</option>
-                                    <option value="needs_supervision">يحتاج مساعدة</option>
-                                    <option value="dependent">معتمد</option>
+                                    <option value="">Select</option>
+                                    <option value="independent" ${formData.toileting_status === 'independent' ? 'selected' : ''}>Independent</option>
+                                    <option value="needs_supervision" ${formData.toileting_status === 'needs_supervision' ? 'selected' : ''}>Needs Supervision</option>
+                                    <option value="dependent" ${formData.toileting_status === 'dependent' ? 'selected' : ''}>Dependent</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الحركة</label>
+                                <label>Ambulation</label>
                                 <select name="ambulation_status">
-                                    <option value="">اختر</option>
-                                    <option value="independent">مستقل</option>
-                                    <option value="needs_supervision">يحتاج مساعدة</option>
-                                    <option value="dependent">معتمد</option>
+                                    <option value="">Select</option>
+                                    <option value="independent" ${formData.ambulation_status === 'independent' ? 'selected' : ''}>Independent</option>
+                                    <option value="needs_supervision" ${formData.ambulation_status === 'needs_supervision' ? 'selected' : ''}>Needs Supervision</option>
+                                    <option value="dependent" ${formData.ambulation_status === 'dependent' ? 'selected' : ''}>Dependent</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>استخدام المعينات</label>
+                                <label>Assistive Equipment</label>
                                 <select name="use_of_assistive_equipment">
-                                    <option value="">اختر</option>
-                                    <option value="walker">عكاز</option>
-                                    <option value="wheelchair">كرسي متحرك</option>
-                                    <option value="none">لا يوجد</option>
-                                    <option value="other">أخرى</option>
+                                    <option value="">Select</option>
+                                    <option value="walker" ${formData.use_of_assistive_equipment === 'walker' ? 'selected' : ''}>Walker</option>
+                                    <option value="wheelchair" ${formData.use_of_assistive_equipment === 'wheelchair' ? 'selected' : ''}>Wheelchair</option>
+                                    <option value="none" ${formData.use_of_assistive_equipment === 'none' ? 'selected' : ''}>None</option>
+                                    <option value="other" ${formData.use_of_assistive_equipment === 'other' ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>ملاحظات عضلية هيكلية</label>
+                            <label>Musculoskeletal Notes</label>
                             <textarea name="musculoskeletal_notes">${formData.musculoskeletal_notes || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>ألم عضلي هيكلي</label>
+                            <label>Musculoskeletal Pain</label>
                             <input type="text" name="pain_musculoskeletal" value="${formData.pain_musculoskeletal || ''}">
                         </div>
                     </div>
 
                     <!-- Pain Assessment -->
                     <div class="form-section">
-                        <h3>تقييم الألم</h3>
+                        <h3>Pain Assessment</h3>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="pain_present" ${formData.pain_present ? 'checked' : ''}>
-                                <label>يوجد ألم</label>
+                                <label>Pain Present</label>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>شدة الألم (0-10)</label>
+                                <label>Pain Intensity (0-10)</label>
                                 <input type="number" name="pain_intensity" min="0" max="10" value="${formData.pain_intensity || ''}">
                             </div>
                             <div class="form-group">
-                                <label>موقع الألم</label>
+                                <label>Pain Location</label>
                                 <input type="text" name="pain_location" value="${formData.pain_location || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>تكرار الألم</label>
+                                <label>Pain Frequency</label>
                                 <select name="pain_frequency">
-                                    <option value="">اختر</option>
-                                    <option value="constant">مستمر</option>
-                                    <option value="intermittent">متقطع</option>
-                                    <option value="occasional">أحياناً</option>
+                                    <option value="">Select</option>
+                                    <option value="constant" ${formData.pain_frequency === 'constant' ? 'selected' : ''}>Constant</option>
+                                    <option value="intermittent" ${formData.pain_frequency === 'intermittent' ? 'selected' : ''}>Intermittent</option>
+                                    <option value="occasional" ${formData.pain_frequency === 'occasional' ? 'selected' : ''}>Occasional</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>مدة الألم</label>
+                                <label>Pain Duration</label>
                                 <input type="text" name="pain_duration" value="${formData.pain_duration || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>طبيعة الألم</label>
+                                <label>Pain Character</label>
                                 <select name="pain_character">
-                                    <option value="">اختر</option>
-                                    <option value="sharp">حاد</option>
-                                    <option value="dull">ممل</option>
-                                    <option value="burning">حارق</option>
-                                    <option value="throbbing">نابض</option>
-                                    <option value="other">أخرى</option>
+                                    <option value="">Select</option>
+                                    <option value="sharp" ${formData.pain_character === 'sharp' ? 'selected' : ''}>Sharp</option>
+                                    <option value="dull" ${formData.pain_character === 'dull' ? 'selected' : ''}>Dull</option>
+                                    <option value="burning" ${formData.pain_character === 'burning' ? 'selected' : ''}>Burning</option>
+                                    <option value="throbbing" ${formData.pain_character === 'throbbing' ? 'selected' : ''}>Throbbing</option>
+                                    <option value="other" ${formData.pain_character === 'other' ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>الإجراء المتخذ</label>
+                                <label>Action Taken</label>
                                 <input type="text" name="pain_action_taken" value="${formData.pain_action_taken || ''}">
                             </div>
                         </div>
@@ -731,46 +731,46 @@ class RadiologyApp {
 
                     <!-- Fall Risk Assessment -->
                     <div class="form-section">
-                        <h3>تقييم خطر السقوط</h3>
+                        <h3>Fall Risk Assessment</h3>
                         <div class="form-group">
-                            <label>درجة خطر السقوط</label>
+                            <label>Fall Risk Score</label>
                             <input type="number" name="fall_risk_score" value="${formData.fall_risk_score || ''}">
                         </div>
                         <div class="form-group">
-                            <label>تفاصيل تقييم خطر السقوط (JSON)</label>
+                            <label>Fall Risk Details (JSON)</label>
                             <textarea name="fall_risk_details" placeholder='{"history": true, "secondary_diagnosis": false, ...}'>${formData.fall_risk_details ? JSON.stringify(formData.fall_risk_details, null, 2) : ''}</textarea>
                         </div>
                     </div>
 
                     <!-- Educational Needs -->
                     <div class="form-section">
-                        <h3>الاحتياجات التعليمية</h3>
+                        <h3>Educational Needs</h3>
                         <div class="form-group">
-                            <label>ملاحظات تعليمية</label>
+                            <label>Educational Notes</label>
                             <textarea name="education_notes">${formData.education_notes || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>الاحتياجات التعليمية (JSON)</label>
+                            <label>Educational Needs (JSON)</label>
                             <textarea name="educational_needs" placeholder='{"medication": true, "nutrition": false, ...}'>${formData.educational_needs ? JSON.stringify(formData.educational_needs, null, 2) : ''}</textarea>
                         </div>
                     </div>
 
                     <!-- Specialized Assessments -->
                     <div class="form-section">
-                        <h3>التقييمات المتخصصة</h3>
+                        <h3>Specialized Assessments</h3>
                         <div class="form-group">
-                            <label>تقييم كبار السن (JSON)</label>
+                            <label>Elderly Assessment (JSON)</label>
                             <textarea name="elderly_assessment" placeholder='{"mobility": "limited", "cognitive": "intact", ...}'>${formData.elderly_assessment ? JSON.stringify(formData.elderly_assessment, null, 2) : ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>تقييم المعاقين (JSON)</label>
+                            <label>Disabled Assessment (JSON)</label>
                             <textarea name="disabled_assessment" placeholder='{"type": "physical", "severity": "moderate", ...}'>${formData.disabled_assessment ? JSON.stringify(formData.disabled_assessment, null, 2) : ''}</textarea>
                         </div>
                     </div>
 
                     <div class="actions" style="margin-top: 2rem;">
-                        <button type="submit" class="btn btn-primary">حفظ النموذج</button>
-                        <button type="button" class="btn btn-secondary" onclick="app.showView('visits')">العودة</button>
+                        <button type="submit" class="btn btn-primary">Save Form</button>
+                        <button type="button" class="btn btn-secondary" onclick="app.showView('visits')">Back</button>
                     </div>
                 </form>
             </div>
@@ -803,14 +803,14 @@ class RadiologyApp {
             );
 
             if (response.ok) {
-                alert('تم حفظ النموذج بنجاح');
+                alert('Form saved successfully');
                 this.loadNurseForm(this.currentVisitId);
             } else {
                 const error = await response.json();
-                alert('خطأ: ' + error.error);
+                alert('Error: ' + error.error);
             }
         } catch (error) {
-            alert('خطأ في الحفظ');
+            alert('Save failed');
         }
     }
 
@@ -840,9 +840,9 @@ class RadiologyApp {
         const html = `
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">تقييم الطبيب - الأشعة</h2>
+                    <h2 class="card-title">Doctor Radiology Evaluation</h2>
                     <div class="actions">
-                        ${!formData.signed ? '<button class="btn btn-success" onclick="app.signDoctorForm()">توقيع النموذج</button>' : '<span class="status-badge status-signed">موقع</span>'}
+                        ${!formData.signed ? '<button class="btn btn-success" onclick="app.signDoctorForm()">Sign Form</button>' : '<span class="status-badge status-signed">Signed</span>'}
                     </div>
                 </div>
 
@@ -852,49 +852,49 @@ class RadiologyApp {
 
                     <!-- Patient Information -->
                     <div class="form-section">
-                        <h3>معلومات المريض</h3>
+                        <h3>Patient Information</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الاسم الكامل</label>
+                                <label>Full Name</label>
                                 <input type="text" name="patient_full_name" value="${formData.patient_full_name || ''}">
                             </div>
                             <div class="form-group">
-                                <label>تاريخ الفحص</label>
+                                <label>Exam Date</label>
                                 <input type="date" name="exam_date" value="${formData.exam_date || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>رقم الهاتف</label>
+                                <label>Mobile</label>
                                 <input type="tel" name="mobile" value="${formData.mobile || ''}">
                             </div>
                             <div class="form-group">
-                                <label>رقم المريض الطبي</label>
+                                <label>Medical Number</label>
                                 <input type="text" name="medical_number" value="${formData.medical_number || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>تاريخ الميلاد</label>
+                                <label>Date of Birth</label>
                                 <input type="date" name="dob" value="${formData.dob || ''}">
                             </div>
                             <div class="form-group">
-                                <label>العمر</label>
+                                <label>Age</label>
                                 <input type="number" name="age" value="${formData.age || ''}">
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>الجنس</label>
+                                <label>Gender</label>
                                 <select name="gender">
-                                    <option value="">اختر</option>
-                                    <option value="male" ${formData.gender === 'male' ? 'selected' : ''}>ذكر</option>
-                                    <option value="female" ${formData.gender === 'female' ? 'selected' : ''}>أنثى</option>
-                                    <option value="other" ${formData.gender === 'other' ? 'selected' : ''}>أخرى</option>
+                                    <option value="">Select</option>
+                                    <option value="male" ${formData.gender === 'male' ? 'selected' : ''}>Male</option>
+                                    <option value="female" ${formData.gender === 'female' ? 'selected' : ''}>Female</option>
+                                    <option value="other" ${formData.gender === 'other' ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>التشخيص</label>
+                                <label>Diagnosis</label>
                                 <input type="text" name="diagnosis" value="${formData.diagnosis || ''}">
                             </div>
                         </div>
@@ -902,120 +902,120 @@ class RadiologyApp {
 
                     <!-- Study Information -->
                     <div class="form-section">
-                        <h3>معلومات الدراسة</h3>
+                        <h3>Study Information</h3>
                         <div class="form-group">
-                            <label>سبب الدراسة</label>
-                            <input type="text" name="study_reason" placeholder="لماذا تتم الدراسة؟" value="${formData.study_reason || ''}">
+                            <label>Study Reason</label>
+                            <input type="text" name="study_reason" placeholder="Why is the study being done?" value="${formData.study_reason || ''}">
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="splint_present" ${formData.splint_present ? 'checked' : ''}>
-                                <label>هل يوجد جبس؟</label>
+                                <label>Is there a splint/cast?</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>ملاحظات الجبس</label>
+                            <label>Splint Notes</label>
                             <textarea name="splint_notes">${formData.splint_notes || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>الأمراض المزمنة</label>
+                            <label>Chronic Disease</label>
                             <input type="text" name="chronic_disease" value="${formData.chronic_disease || ''}">
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="pacemaker" ${formData.pacemaker ? 'checked' : ''}>
-                                <label>ناظمة قلبية</label>
+                                <label>Pacemaker</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>الزرعات</label>
-                            <input type="text" name="implants" placeholder="مسامير، صفائح، مفاصل صناعية" value="${formData.implants || ''}">
+                            <label>Implants</label>
+                            <input type="text" name="implants" placeholder="Screws, plates, artificial joints" value="${formData.implants || ''}">
                         </div>
                         <div class="form-group">
-                            <label>حالة الحمل (للنساء)</label>
+                            <label>Pregnancy Status (for women)</label>
                             <select name="pregnancy_status">
-                                <option value="">اختر</option>
-                                <option value="unknown" ${formData.pregnancy_status === 'unknown' ? 'selected' : ''}>غير معروف</option>
-                                <option value="yes" ${formData.pregnancy_status === 'yes' ? 'selected' : ''}>نعم</option>
-                                <option value="no" ${formData.pregnancy_status === 'no' ? 'selected' : ''}>لا</option>
+                                <option value="">Select</option>
+                                <option value="unknown" ${formData.pregnancy_status === 'unknown' ? 'selected' : ''}>Unknown</option>
+                                <option value="yes" ${formData.pregnancy_status === 'yes' ? 'selected' : ''}>Yes</option>
+                                <option value="no" ${formData.pregnancy_status === 'no' ? 'selected' : ''}>No</option>
                             </select>
                         </div>
                     </div>
 
                     <!-- Clinical Information -->
                     <div class="form-section">
-                        <h3>المعلومات السريرية</h3>
+                        <h3>Clinical Information</h3>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="pain_numbness" ${formData.pain_numbness ? 'checked' : ''}>
-                                <label>ألم أو خدر</label>
+                                <label>Pain or Numbness</label>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>موقع الألم</label>
+                                <label>Pain Site</label>
                                 <input type="text" name="pain_site" value="${formData.pain_site || ''}">
                             </div>
                             <div class="checkbox-group">
                                 <input type="checkbox" name="spinal_deformity" ${formData.spinal_deformity ? 'checked' : ''}>
-                                <label>تشوه فقري</label>
+                                <label>Spinal Deformity</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>تفاصيل التشوه الفقري</label>
+                            <label>Spinal Deformity Details</label>
                             <textarea name="spinal_deformity_details">${formData.spinal_deformity_details || ''}</textarea>
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="swelling" ${formData.swelling ? 'checked' : ''}>
-                                <label>تورم</label>
+                                <label>Swelling</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>موقع التورم</label>
+                            <label>Swelling Site</label>
                             <input type="text" name="swelling_site" value="${formData.swelling_site || ''}">
                         </div>
                         <div class="form-group">
-                            <label>الأعراض العصبية</label>
-                            <input type="text" name="neuro_symptoms" placeholder="صداع، بصري، سمعي، عدم توازن" value="${formData.neuro_symptoms || ''}">
+                            <label>Neurological Symptoms</label>
+                            <input type="text" name="neuro_symptoms" placeholder="Headache, visual, hearing, imbalance" value="${formData.neuro_symptoms || ''}">
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="fever" ${formData.fever ? 'checked' : ''}>
-                                <label>حمى</label>
+                                <label>Fever</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>العمليات الجراحية السابقة (+ تواريخ)</label>
+                            <label>Previous Surgeries (+ dates)</label>
                             <textarea name="surgeries">${formData.surgeries || ''}</textarea>
                         </div>
                         <div class="form-group">
-                            <label>تاريخ الورم</label>
+                            <label>Tumor History</label>
                             <input type="text" name="tumor_history" value="${formData.tumor_history || ''}">
                         </div>
                         <div class="form-group">
-                            <label>التحقيقات السابقة</label>
+                            <label>Previous Investigations</label>
                             <textarea name="previous_investigations">${formData.previous_investigations || ''}</textarea>
                         </div>
                         <div class="form-row">
                             <div class="checkbox-group">
                                 <input type="checkbox" name="previous_disc" ${formData.previous_disc ? 'checked' : ''}>
-                                <label>قرص سابق/انزلاق</label>
+                                <label>Previous Disc/Herniation</label>
                             </div>
                             <div class="checkbox-group">
                                 <input type="checkbox" name="meds_increase_fall_risk" ${formData.meds_increase_fall_risk ? 'checked' : ''}>
-                                <label>أدوية تزيد من خطر السقوط</label>
+                                <label>Medications that increase fall risk</label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>الأدوية الحالية</label>
+                            <label>Current Medication</label>
                             <textarea name="current_medication">${formData.current_medication || ''}</textarea>
                         </div>
                     </div>
 
                     <!-- Technical Parameters -->
                     <div class="form-section">
-                        <h3>المعلمات الفنية</h3>
+                        <h3>Technical Parameters</h3>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>CTDIvol (mGy)</label>
@@ -1040,16 +1040,16 @@ class RadiologyApp {
 
                     <!-- Findings -->
                     <div class="form-section">
-                        <h3>النتائج والتفسير</h3>
+                        <h3>Findings & Interpretation</h3>
                         <div class="form-group">
-                            <label>النتائج الإشعاعية</label>
-                            <textarea name="findings" rows="6" placeholder="اكتب النتائج والتفسير الإشعاعي هنا...">${formData.findings || ''}</textarea>
+                            <label>Radiological Findings</label>
+                            <textarea name="findings" rows="6" placeholder="Enter radiological findings and interpretation here...">${formData.findings || ''}</textarea>
                         </div>
                     </div>
 
                     <div class="actions" style="margin-top: 2rem;">
-                        <button type="submit" class="btn btn-primary">حفظ النموذج</button>
-                        <button type="button" class="btn btn-secondary" onclick="app.showView('visits')">العودة</button>
+                        <button type="submit" class="btn btn-primary">Save Form</button>
+                        <button type="button" class="btn btn-secondary" onclick="app.showView('visits')">Back</button>
                     </div>
                 </form>
             </div>
@@ -1082,14 +1082,14 @@ class RadiologyApp {
             );
 
             if (response.ok) {
-                alert('تم حفظ النموذج بنجاح');
+                alert('Form saved successfully');
                 this.loadDoctorForm(this.currentVisitId);
             } else {
                 const error = await response.json();
-                alert('خطأ: ' + error.error);
+                alert('Error: ' + error.error);
             }
         } catch (error) {
-            alert('خطأ في الحفظ');
+            alert('Save failed');
         }
     }
 
@@ -1171,7 +1171,7 @@ class RadiologyApp {
                 } else {
                     this.loadDoctorForm(this.currentVisitId);
                 }
-                alert('تم التوقيع بنجاح');
+                alert('Signature saved successfully');
             } else {
                 const error = await response.json();
                 alert('خطأ: ' + error.error);
@@ -1196,7 +1196,7 @@ class RadiologyApp {
     }
 
     showLoading() {
-        document.getElementById('content').innerHTML = '<div class="loading">جاري التحميل...</div>';
+        document.getElementById('content').innerHTML = '<div class="loading">Loading...</div>';
     }
 
     showError(elementId, message) {

@@ -59,8 +59,8 @@ function initializeDatabase() {
     // Users table
     `CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL CHECK (role IN ('nurse','doctor','admin')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -260,9 +260,9 @@ function initializeDatabase() {
 // Create default users for testing
 function createDefaultUsers() {
   const defaultUsers = [
-    { name: 'Admin User', email: 'admin@example.com', password: 'admin', role: 'admin' },
-    { name: 'Nurse User', email: 'nurse@example.com', password: 'nurse', role: 'nurse' },
-    { name: 'Doctor User', email: 'doctor@example.com', password: 'doctor', role: 'doctor' }
+    { name: 'Admin User', username: 'admin', password: 'admin', role: 'admin' },
+    { name: 'Nurse User', username: 'nurse', password: 'nurse', role: 'nurse' },
+    { name: 'Doctor User', username: 'doctor', password: 'doctor', role: 'doctor' }
   ];
 
   defaultUsers.forEach(user => {
@@ -270,8 +270,8 @@ function createDefaultUsers() {
       if (err) return;
 
       db.run(
-        'INSERT OR IGNORE INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-        [user.name, user.email, hash, user.role]
+        'INSERT OR IGNORE INTO users (name, username, password_hash, role) VALUES (?, ?, ?, ?)',
+        [user.name, user.username, hash, user.role]
       );
     });
   });
@@ -281,9 +281,9 @@ function createDefaultUsers() {
 
 // Authentication
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  db.get('SELECT * FROM users WHERE email = ?', [email], async (err, user) => {
+  db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
     if (err || !user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -294,7 +294,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name },
+      { id: user.id, username: user.username, role: user.role, name: user.name },
       JWT_SECRET,
       { expiresIn: '8h' }
     );
@@ -561,9 +561,9 @@ app.listen(PORT, () => {
   console.log(`Al-Shorouk Radiology Management System running on port ${PORT}`);
   console.log('Access at: http://localhost:' + PORT);
   console.log('Default users:');
-  console.log('  Admin: admin@example.com / admin');
-  console.log('  Nurse: nurse@example.com / nurse');
-  console.log('  Doctor: doctor@example.com / doctor');
+  console.log('  Admin: admin / admin');
+  console.log('  Nurse: nurse / nurse');
+  console.log('  Doctor: doctor / doctor');
 });
 
 // Graceful shutdown
