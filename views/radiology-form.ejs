@@ -21,14 +21,38 @@
                     <p class="text-muted">SH.MR.FRM.04 - Radiology Preparation & Assessment</p>
                 </div>
 
+                <!-- Patient Information -->
+                <% if (patient) { %>
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>Patient Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> <%= patient.full_name %></p>
+                                <p><strong>SSN:</strong> <%= patient.ssn %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Medical Number:</strong> <%= patient.medical_number || 'Not provided' %></p>
+                                <p><strong>Mobile:</strong> <%= patient.mobile_number || 'Not provided' %></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
                 <form id="radiologyForm" action="/submit-radiology-form" method="POST">
+                    <% if (visit) { %>
+                    <input type="hidden" name="visit_id" value="<%= visit.visit_id %>">
+                    <% } %>
                     <!-- Physician and Department Info -->
                     <div class="form-section">
                         <h4><i class="fas fa-user-md me-2"></i>Physician & Department Information</h4>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Treating Physician</label>
-                                <input type="text" class="form-control" name="treating_physician" required>
+                                <input type="text" class="form-control" name="treating_physician" value="<%= user.fullName %>" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Department</label>

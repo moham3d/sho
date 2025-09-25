@@ -264,13 +264,58 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
     });
 });
 
-app.get('/nurse-form', requireAuth, requireRole('nurse'), (req, res) => {
-    // Redirect to patient search - forms can only be accessed through patient search
-    res.redirect('/nurse/search-patient');
+app.get('/doctor', requireAuth, requireRole('physician'), (req, res) => {
+    res.render('doctor-dashboard', { user: req.session, patient: null, error: null });
+});
+
+app.post('/doctor/search-patient', requireAuth, requireRole('physician'), (req, res) => {
+    const { ssn } = req.body;
+    
+    db.get('SELECT * FROM patients WHERE ssn = ?', [ssn], (err, patient) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.render('doctor-dashboard', { user: req.session, patient: null, error: 'Database error' });
+        }
+        
+        if (!patient) {
+            return res.render('doctor-dashboard', { user: req.session, patient: null, error: 'Patient not found. Please ensure the patient is registered.' });
+        }
+        
+        // Store patient in session for radiology form access
+        req.session.selectedPatient = patient;
+        
+        // Check for current visit or create new one
+        db.get('SELECT * FROM patient_visits WHERE patient_ssn = ? ORDER BY created_at DESC LIMIT 1', [ssn], (err, visit) => {
+            if (err) {
+                console.error('Error checking visits:', err);
+                return res.render('doctor-dashboard', { user: req.session, patient: patient, error: 'Error checking patient visits' });
+            }
+            
+            if (!visit) {
+                // Create new visit
+                const visitId = 'visit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                db.run('INSERT INTO patient_visits (visit_id, patient_ssn, created_by) VALUES (?, ?, ?)',
+                    [visitId, ssn, req.session.userId], function(err) {
+                        if (err) {
+                            console.error('Error creating visit:', err);
+                            return res.render('doctor-dashboard', { user: req.session, patient: patient, error: 'Error creating visit' });
+                        }
+                        req.session.selectedVisit = { visit_id: visitId };
+                        res.render('doctor-dashboard', { user: req.session, patient: patient, error: null });
+                    });
+            } else {
+                req.session.selectedVisit = visit;
+                res.render('doctor-dashboard', { user: req.session, patient: patient, error: null });
+            }
+        });
+    });
 });
 
 app.get('/radiology-form', requireAuth, requireRole('physician'), (req, res) => {
-    res.render('radiology-form', { user: req.session });
+    if (!req.session.selectedPatient || !req.session.selectedVisit) {
+        return res.redirect('/doctor');
+    }
+    res.render('radiology-form', { user: req.session, patient: req.session.selectedPatient, visit: req.session.selectedVisit });
 });
 
 // Form submission routes
@@ -383,15 +428,19 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
     });
 });
 
-app.post('/submit-radiology-form', (req, res) => {
+app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, res) => {
     const formData = req.body;
     console.log('Radiology form submitted:', formData);
+
+    if (!req.session.selectedVisit) {
+        return res.status(400).send('No patient visit selected');
+    }
 
     // Generate UUID-like string
     const radiologyId = 'radio-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
-    // Insert into database
+    // Insert into radiology_assessments
     const sql = `
         INSERT INTO radiology_assessments (
             radiology_id, submission_id, treating_physician, department,
@@ -409,11 +458,11 @@ app.post('/submit-radiology-form', (req, res) => {
 
     const values = [
         radiologyId, submissionId, formData.treating_physician, formData.department,
-        formData.fasting_hours, formData.is_diabetic, formData.blood_sugar_level,
+        formData.fasting_hours, formData.is_diabetic === 'true' ? 1 : 0, formData.blood_sugar_level,
         formData.weight_kg, formData.height_cm, formData.dose_amount,
-        formData.ctd1vol, formData.dlp, formData.uses_contrast,
-        formData.kidney_function_value, formData.is_first_time,
-        formData.requires_report, formData.diagnosis, formData.reason_for_study,
+        formData.ctd1vol, formData.dlp, formData.uses_contrast === 'true' ? 1 : 0,
+        formData.kidney_function_value, formData.is_first_time === 'true' ? 1 : 0,
+        formData.requires_report === 'true' ? 1 : 0, formData.diagnosis, formData.reason_for_study,
         formData.findings, formData.impression, formData.recommendations,
         formData.modality, formData.body_region, formData.has_chemotherapy ? 1 : 0,
         formData.chemo_type, formData.chemo_sessions, formData.has_radiotherapy ? 1 : 0,
@@ -422,7 +471,7 @@ app.post('/submit-radiology-form', (req, res) => {
         formData.has_biopsies ? 1 : 0, formData.has_tc_mdp_bone_scan ? 1 : 0,
         formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
         formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
-        formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, 'physician-uuid'
+        formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, req.session.userId
     ];
 
     db.run(sql, values, function(err) {
@@ -430,12 +479,21 @@ app.post('/submit-radiology-form', (req, res) => {
             console.error('Error inserting radiology assessment:', err.message);
             return res.status(500).send('Error saving assessment');
         }
+
+        // Create form submission record
+        db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by, submission_status) VALUES (?, ?, ?, ?, ?)',
+            [submissionId, req.session.selectedVisit.visit_id, 'form-04-uuid', req.session.userId, 'submitted'], function(err) {
+                if (err) {
+                    console.error('Error creating form submission:', err);
+                }
+            });
+
         console.log('Radiology assessment saved with ID:', radiologyId);
         res.send(`
             <div class="alert alert-success text-center">
                 <h4><i class="fas fa-check-circle me-2"></i>Radiology Assessment Submitted Successfully!</h4>
                 <p>Assessment ID: ${radiologyId}</p>
-                <a href="/" class="btn btn-primary">Back to Home</a>
+                <a href="/doctor" class="btn btn-primary">Back to Dashboard</a>
             </div>
         `);
     });

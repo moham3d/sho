@@ -339,6 +339,13 @@ The original PostgreSQL schema has been adapted for SQLite with the following ch
 - **Draft Functionality**: Save incomplete assessments as drafts
 - **Restricted Form Access**: Direct form access without patient data is not allowed
 
+### Physician Features
+- **Physician Dashboard**: Dedicated interface for radiology physicians
+- **Radiology Assessment Forms**: SH.MR.FRM.04 - Complete imaging assessment forms
+- **Technical Parameters**: CT, MRI, X-Ray, Ultrasound with radiation dosing
+- **Clinical Reporting**: Findings, impressions, and recommendations
+- **Patient Management**: Access to patient imaging history and reports
+
 ### Database Schema Extensions
 - **users table**: Stores user accounts with roles and authentication data
 - **Session persistence**: SQLite-based session storage

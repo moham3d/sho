@@ -361,8 +361,3 @@ END;
 INSERT INTO form_definitions (form_id, form_code, form_name, form_version, form_description, form_role) VALUES
 ('form-05-uuid', 'SH.MR.FRM.05', 'Nursing Screening & Assessment', '1.0', 'Comprehensive nursing assessment and screening form', 'nurse'),
 ('form-04-uuid', 'SH.MR.FRM.04', 'Radiology Assessment', '1.0', 'Radiology preparation and assessment form', 'physician');
-
--- Insert sample users
-INSERT INTO users (user_id, username, email, full_name, role, password_hash) VALUES
-('nurse-uuid', 'nurse1', 'nurse@example.com', 'Nurse One', 'nurse', 'hashed_password'),
-('physician-uuid', 'physician1', 'physician@example.com', 'Dr. Physician', 'physician', 'hashed_password');
