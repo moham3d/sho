@@ -303,6 +303,220 @@ app.post('/api/auth/login', async (req, res) => {
   });
 });
 
+// Users CRUD (Admin only)
+app.get('/api/users', authenticate, authorize(['admin']), (req, res) => {
+  db.all('SELECT id, name, username, role, created_at FROM users ORDER BY created_at DESC', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/users', authenticate, authorize(['admin']), async (req, res) => {
+  const { name, username, password, role } = req.body;
+  
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    db.run(
+      'INSERT INTO users (name, username, password_hash, role) VALUES (?, ?, ?, ?)',
+      [name, username, hashedPassword, role],
+      function(err) {
+        if (err) {
+          if (err.message.includes('UNIQUE constraint failed')) {
+            return res.status(400).json({ error: 'Username already exists' });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: this.lastID });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: 'Error creating user' });
+  }
+});
+
+app.put('/api/users/:id', authenticate, authorize(['admin']), async (req, res) => {
+  const { name, username, role, password } = req.body;
+  
+  let sql = 'UPDATE users SET name = ?, username = ?, role = ?';
+  let params = [name, username, role];
+  
+  if (password) {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      sql += ', password_hash = ?';
+      params.push(hashedPassword);
+    } catch (error) {
+      return res.status(500).json({ error: 'Error updating password' });
+    }
+  }
+  
+  sql += ' WHERE id = ?';
+  params.push(req.params.id);
+  
+  db.run(sql, params, function(err) {
+    if (err) {
+      if (err.message.includes('UNIQUE constraint failed')) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ changes: this.changes });
+  });
+});
+
+app.delete('/api/users/:id', authenticate, authorize(['admin']), (req, res) => {
+  // Prevent admin from deleting themselves
+  if (parseInt(req.params.id) === req.user.id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+  
+  db.run('DELETE FROM users WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ changes: this.changes });
+  });
+});
+
+// Admin dashboard statistics
+app.get('/api/admin/stats', authenticate, authorize(['admin']), (req, res) => {
+  const queries = {
+    totalPatients: 'SELECT COUNT(*) as count FROM patients',
+    totalVisits: 'SELECT COUNT(*) as count FROM visits',
+    totalUsers: 'SELECT COUNT(*) as count FROM users',
+    nurseFormsCount: 'SELECT COUNT(*) as count FROM nurse_forms',
+    doctorFormsCount: 'SELECT COUNT(*) as count FROM doctor_forms',
+    visitsByStatus: 'SELECT status, COUNT(*) as count FROM visits GROUP BY status',
+    usersByRole: 'SELECT role, COUNT(*) as count FROM users GROUP BY role',
+    recentVisits: `SELECT v.id, p.full_name, v.visit_date, v.status 
+                   FROM visits v 
+                   LEFT JOIN patients p ON v.patient_id = p.id 
+                   ORDER BY v.visit_date DESC LIMIT 10`
+  };
+  
+  const stats = {};
+  let completed = 0;
+  const total = Object.keys(queries).length;
+  
+  Object.entries(queries).forEach(([key, query]) => {
+    db.all(query, (err, rows) => {
+      if (!err) {
+        stats[key] = rows;
+      }
+      completed++;
+      if (completed === total) {
+        res.json(stats);
+      }
+    });
+  });
+});
+
+// Users CRUD (Admin only)
+app.get('/api/users', authenticate, authorize(['admin']), (req, res) => {
+  db.all('SELECT id, name, username, role, created_at FROM users ORDER BY created_at DESC', (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+app.post('/api/users', authenticate, authorize(['admin']), async (req, res) => {
+  const { name, username, password, role } = req.body;
+  
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    db.run(
+      'INSERT INTO users (name, username, password_hash, role) VALUES (?, ?, ?, ?)',
+      [name, username, hashedPassword, role],
+      function(err) {
+        if (err) {
+          if (err.message.includes('UNIQUE constraint failed')) {
+            return res.status(400).json({ error: 'Username already exists' });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: this.lastID });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ error: 'Error creating user' });
+  }
+});
+
+app.put('/api/users/:id', authenticate, authorize(['admin']), async (req, res) => {
+  const { name, username, role, password } = req.body;
+  
+  let sql = 'UPDATE users SET name = ?, username = ?, role = ?';
+  let params = [name, username, role];
+  
+  if (password) {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      sql += ', password_hash = ?';
+      params.push(hashedPassword);
+    } catch (error) {
+      return res.status(500).json({ error: 'Error updating password' });
+    }
+  }
+  
+  sql += ' WHERE id = ?';
+  params.push(req.params.id);
+  
+  db.run(sql, params, function(err) {
+    if (err) {
+      if (err.message.includes('UNIQUE constraint failed')) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ changes: this.changes });
+  });
+});
+
+app.delete('/api/users/:id', authenticate, authorize(['admin']), (req, res) => {
+  // Prevent admin from deleting themselves
+  if (parseInt(req.params.id) === req.user.id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
+  }
+  
+  db.run('DELETE FROM users WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ changes: this.changes });
+  });
+});
+
+// Admin dashboard statistics
+app.get('/api/admin/stats', authenticate, authorize(['admin']), (req, res) => {
+  const queries = {
+    totalPatients: 'SELECT COUNT(*) as count FROM patients',
+    totalVisits: 'SELECT COUNT(*) as count FROM visits',
+    totalUsers: 'SELECT COUNT(*) as count FROM users',
+    nurseFormsCount: 'SELECT COUNT(*) as count FROM nurse_forms',
+    doctorFormsCount: 'SELECT COUNT(*) as count FROM doctor_forms',
+    visitsByStatus: 'SELECT status, COUNT(*) as count FROM visits GROUP BY status',
+    usersByRole: 'SELECT role, COUNT(*) as count FROM users GROUP BY role',
+    recentVisits: `SELECT v.id, p.full_name, v.visit_date, v.status 
+                   FROM visits v 
+                   LEFT JOIN patients p ON v.patient_id = p.id 
+                   ORDER BY v.visit_date DESC LIMIT 10`
+  };
+  
+  const stats = {};
+  let completed = 0;
+  const total = Object.keys(queries).length;
+  
+  Object.entries(queries).forEach(([key, query]) => {
+    db.all(query, (err, rows) => {
+      if (!err) {
+        stats[key] = rows;
+      }
+      completed++;
+      if (completed === total) {
+        res.json(stats);
+      }
+    });
+  });
+});
+
 // Patients CRUD
 app.get('/api/patients', authenticate, (req, res) => {
   const { search } = req.query;
@@ -357,6 +571,22 @@ app.put('/api/patients/:id', authenticate, authorize(['nurse', 'admin']), (req, 
       res.json({ changes: this.changes });
     }
   );
+});
+
+app.delete('/api/patients/:id', authenticate, authorize(['nurse', 'admin']), (req, res) => {
+  // Check if patient has any visits
+  db.get('SELECT COUNT(*) as visitCount FROM visits WHERE patient_id = ?', [req.params.id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    
+    if (result.visitCount > 0) {
+      return res.status(400).json({ error: 'Cannot delete patient with existing visits' });
+    }
+    
+    db.run('DELETE FROM patients WHERE id = ?', [req.params.id], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ changes: this.changes });
+    });
+  });
 });
 
 // Visits CRUD
@@ -432,7 +662,63 @@ app.put('/api/visits/:id', authenticate, (req, res) => {
   }
 });
 
+app.delete('/api/visits/:id', authenticate, authorize(['admin']), (req, res) => {
+  // Check if visit has any forms
+  db.get(
+    'SELECT COUNT(*) as formCount FROM (SELECT 1 FROM nurse_forms WHERE visit_id = ? UNION ALL SELECT 1 FROM doctor_forms WHERE visit_id = ?)',
+    [req.params.id, req.params.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      
+      if (result.formCount > 0) {
+        return res.status(400).json({ error: 'Cannot delete visit with existing forms' });
+      }
+      
+      db.run('DELETE FROM visits WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ changes: this.changes });
+      });
+    }
+  );
+});
+
+app.delete('/api/visits/:id', authenticate, authorize(['admin']), (req, res) => {
+  // Check if visit has any forms
+  db.get(
+    'SELECT COUNT(*) as formCount FROM (SELECT 1 FROM nurse_forms WHERE visit_id = ? UNION ALL SELECT 1 FROM doctor_forms WHERE visit_id = ?)',
+    [req.params.id, req.params.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      
+      if (result.formCount > 0) {
+        return res.status(400).json({ error: 'Cannot delete visit with existing forms' });
+      }
+      
+      db.run('DELETE FROM visits WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ changes: this.changes });
+      });
+    }
+  );
+});
+
 // Nurse Forms
+app.get('/api/nurse-forms', authenticate, authorize(['admin']), (req, res) => {
+  const sql = `
+    SELECT nf.*, v.visit_date, p.full_name as patient_name, u.name as nurse_name
+    FROM nurse_forms nf
+    LEFT JOIN visits v ON nf.visit_id = v.id
+    LEFT JOIN patients p ON v.patient_id = p.id
+    LEFT JOIN users u ON nf.nurse_id = u.id
+    ORDER BY nf.created_at DESC
+  `;
+  
+  db.all(sql, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 app.get('/api/nurse-forms/:visitId', authenticate, (req, res) => {
   db.get('SELECT * FROM nurse_forms WHERE visit_id = ?', [req.params.visitId], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -499,6 +785,22 @@ app.put('/api/nurse-forms/:id', authenticate, authorize(['nurse', 'admin']), (re
 });
 
 // Doctor Forms
+app.get('/api/doctor-forms', authenticate, authorize(['admin']), (req, res) => {
+  const sql = `
+    SELECT df.*, v.visit_date, p.full_name as patient_name, u.name as doctor_name
+    FROM doctor_forms df
+    LEFT JOIN visits v ON df.visit_id = v.id
+    LEFT JOIN patients p ON v.patient_id = p.id
+    LEFT JOIN users u ON df.doctor_id = u.id
+    ORDER BY df.created_at DESC
+  `;
+  
+  db.all(sql, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 app.get('/api/doctor-forms/:visitId', authenticate, (req, res) => {
   db.get('SELECT * FROM doctor_forms WHERE visit_id = ?', [req.params.visitId], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -551,15 +853,42 @@ app.put('/api/doctor-forms/:id', authenticate, authorize(['doctor', 'admin']), (
   }
 });
 
+app.delete('/api/nurse-forms/:id', authenticate, authorize(['admin']), (req, res) => {
+  db.get('SELECT signed FROM nurse_forms WHERE id = ?', [req.params.id], (err, form) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!form) return res.status(404).json({ error: 'Form not found' });
+    if (form.signed) return res.status(400).json({ error: 'Cannot delete signed form' });
+    
+    db.run('DELETE FROM nurse_forms WHERE id = ?', [req.params.id], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ changes: this.changes });
+    });
+  });
+});
+
+app.delete('/api/doctor-forms/:id', authenticate, authorize(['admin']), (req, res) => {
+  db.get('SELECT signed FROM doctor_forms WHERE id = ?', [req.params.id], (err, form) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!form) return res.status(404).json({ error: 'Form not found' });
+    if (form.signed) return res.status(400).json({ error: 'Cannot delete signed form' });
+    
+    db.run('DELETE FROM doctor_forms WHERE id = ?', [req.params.id], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ changes: this.changes });
+    });
+  });
+});
+
 // Serve the main application
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Al-Shorouk Radiology Management System running on port ${PORT}`);
   console.log('Access at: http://localhost:' + PORT);
+  console.log('Network access: http://0.0.0.0:' + PORT);
   console.log('Default users:');
   console.log('  Admin: admin / admin');
   console.log('  Nurse: nurse / nurse');

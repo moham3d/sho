@@ -23,6 +23,7 @@ class RadiologyApp {
         document.getElementById('visits-btn').addEventListener('click', () => this.showView('visits'));
         document.getElementById('nurse-forms-btn').addEventListener('click', () => this.showView('nurse-forms'));
         document.getElementById('doctor-forms-btn').addEventListener('click', () => this.showView('doctor-forms'));
+        document.getElementById('admin-btn').addEventListener('click', () => this.showView('admin'));
         document.getElementById('logout-btn').addEventListener('click', () => this.logout());
 
         // Modal
@@ -108,16 +109,20 @@ class RadiologyApp {
     updateNavigation() {
         const nurseFormsBtn = document.getElementById('nurse-forms-btn');
         const doctorFormsBtn = document.getElementById('doctor-forms-btn');
+        const adminBtn = document.getElementById('admin-btn');
 
         if (this.user.role === 'nurse') {
             nurseFormsBtn.style.display = 'inline-block';
             doctorFormsBtn.style.display = 'none';
+            adminBtn.style.display = 'none';
         } else if (this.user.role === 'doctor') {
             nurseFormsBtn.style.display = 'none';
             doctorFormsBtn.style.display = 'inline-block';
-        } else {
+            adminBtn.style.display = 'none';
+        } else if (this.user.role === 'admin') {
             nurseFormsBtn.style.display = 'inline-block';
             doctorFormsBtn.style.display = 'inline-block';
+            adminBtn.style.display = 'inline-block';
         }
     }
 
@@ -141,6 +146,9 @@ class RadiologyApp {
                 break;
             case 'doctor-forms':
                 this.loadDoctorForms();
+                break;
+            case 'admin':
+                this.loadAdminPanel();
                 break;
         }
     }
@@ -279,6 +287,123 @@ class RadiologyApp {
         return statuses[status] || status;
     }
 
+    async loadNurseForms() {
+        this.showLoading();
+
+        try {
+            // Load visits where this nurse is assigned or can be assigned
+            const response = await this.apiCall('/api/visits');
+            const visits = await response.json();
+            
+            // Filter visits that this nurse can access
+            const nurseVisits = visits.filter(visit => 
+                this.user.role === 'admin' || 
+                visit.nurse_id === this.user.id || 
+                visit.nurse_id === null
+            );
+
+            this.renderNurseForms(nurseVisits);
+        } catch (error) {
+            this.showError('content', 'Error loading nurse forms');
+        }
+    }
+
+    renderNurseForms(visits) {
+        const html = `
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Nurse Assessment Forms</h2>
+                </div>
+                <div class="forms-list">
+                    ${visits.length === 0 ? 
+                        '<div class="no-data">No visits available for nurse assessments</div>' :
+                        visits.map(visit => `
+                            <div class="form-item" onclick="app.showNurseForm(${visit.id})">
+                                <div class="form-info">
+                                    <div class="form-header">
+                                        <h4>Patient: ${visit.patient_name}</h4>
+                                        <span class="status-badge status-${visit.status}">${this.getStatusName(visit.status)}</span>
+                                    </div>
+                                    <div class="form-details">
+                                        <p><strong>Visit Date:</strong> ${new Date(visit.visit_date).toLocaleDateString()}</p>
+                                        <p><strong>Visit ID:</strong> #${visit.id}</p>
+                                        <p><strong>Assigned Nurse:</strong> ${visit.nurse_name || 'Not assigned'}</p>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.showNurseForm(${visit.id})">
+                                        ${visit.nurse_name ? 'Edit Assessment' : 'Start Assessment'}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            </div>
+        `;
+
+        document.getElementById('content').innerHTML = html;
+    }
+
+    async loadDoctorForms() {
+        this.showLoading();
+
+        try {
+            // Load visits where this doctor is assigned or can be assigned
+            const response = await this.apiCall('/api/visits');
+            const visits = await response.json();
+            
+            // Filter visits that this doctor can access
+            const doctorVisits = visits.filter(visit => 
+                this.user.role === 'admin' || 
+                visit.doctor_id === this.user.id || 
+                visit.doctor_id === null
+            );
+
+            this.renderDoctorForms(doctorVisits);
+        } catch (error) {
+            this.showError('content', 'Error loading doctor forms');
+        }
+    }
+
+    renderDoctorForms(visits) {
+        const html = `
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Doctor Radiology Evaluations</h2>
+                </div>
+                <div class="forms-list">
+                    ${visits.length === 0 ? 
+                        '<div class="no-data">No visits available for doctor evaluations</div>' :
+                        visits.map(visit => `
+                            <div class="form-item" onclick="app.showDoctorForm(${visit.id})">
+                                <div class="form-info">
+                                    <div class="form-header">
+                                        <h4>Patient: ${visit.patient_name}</h4>
+                                        <span class="status-badge status-${visit.status}">${this.getStatusName(visit.status)}</span>
+                                    </div>
+                                    <div class="form-details">
+                                        <p><strong>Visit Date:</strong> ${new Date(visit.visit_date).toLocaleDateString()}</p>
+                                        <p><strong>Visit ID:</strong> #${visit.id}</p>
+                                        <p><strong>Assigned Doctor:</strong> ${visit.doctor_name || 'Not assigned'}</p>
+                                        <p><strong>Nurse Assessment:</strong> ${visit.nurse_name ? 'Completed' : 'Pending'}</p>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); app.showDoctorForm(${visit.id})">
+                                        ${visit.doctor_name ? 'Edit Evaluation' : 'Start Evaluation'}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            </div>
+        `;
+
+        document.getElementById('content').innerHTML = html;
+    }
+
     showPatientModal(patientId = null) {
         const title = patientId ? 'Edit Patient' : 'Add New Patient';
         const patient = patientId ? {} : {}; // Would load patient data if editing
@@ -374,6 +499,365 @@ class RadiologyApp {
         }
     }
 
+    async showEnhancedPatientModal(patientId = null) {
+        const title = patientId ? 'Edit Patient' : 'Add New Patient';
+        let patient = {};
+        
+        if (patientId) {
+            try {
+                const response = await this.apiCall(`/api/patients/${patientId}`);
+                patient = await response.json();
+                
+                // Parse contact_info if it exists
+                if (patient.contact_info && typeof patient.contact_info === 'string') {
+                    try {
+                        patient.contact_info = JSON.parse(patient.contact_info);
+                    } catch (e) {
+                        patient.contact_info = {};
+                    }
+                } else if (!patient.contact_info) {
+                    patient.contact_info = {};
+                }
+            } catch (error) {
+                this.showError('content', 'Error loading patient data');
+                return;
+            }
+        } else {
+            patient.contact_info = {};
+        }
+
+        const html = `
+            <form id="enhanced-patient-form" class="multi-step-form">
+                <div class="form-steps">
+                    <div class="step-indicator">
+                        <div class="step active" data-step="1">
+                            <span class="step-number">1</span>
+                            <span class="step-title">Basic Info</span>
+                        </div>
+                        <div class="step" data-step="2">
+                            <span class="step-number">2</span>
+                            <span class="step-title">Contact</span>
+                        </div>
+                        <div class="step" data-step="3">
+                            <span class="step-number">3</span>
+                            <span class="step-title">Medical</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Basic Information -->
+                <div class="form-step active" data-step="1">
+                    <h3>Basic Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" name="full_name" value="${patient.full_name || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>National ID</label>
+                            <input type="text" name="national_id" value="${patient.national_id || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Medical Number</label>
+                            <input type="text" name="medical_number" value="${patient.medical_number || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" name="dob" value="${patient.dob || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" name="age" value="${patient.age || ''}" min="0" max="150">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select name="gender">
+                                <option value="">Select Gender</option>
+                                <option value="male" ${patient.gender === 'male' ? 'selected' : ''}>Male</option>
+                                <option value="female" ${patient.gender === 'female' ? 'selected' : ''}>Female</option>
+                                <option value="other" ${patient.gender === 'other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Contact Information -->
+                <div class="form-step" data-step="2">
+                    <h3>Contact Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mobile Phone</label>
+                            <input type="tel" name="mobile" value="${patient.mobile || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Home Phone</label>
+                            <input type="tel" name="contact_home_phone" value="${patient.contact_info?.home_phone || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" name="contact_email" value="${patient.contact_info?.email || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Emergency Contact Name</label>
+                            <input type="text" name="contact_emergency_name" value="${patient.contact_info?.emergency_contact_name || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Emergency Contact Phone</label>
+                            <input type="tel" name="contact_emergency_phone" value="${patient.contact_info?.emergency_contact_phone || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Relationship to Emergency Contact</label>
+                            <select name="contact_emergency_relationship">
+                                <option value="">Select Relationship</option>
+                                <option value="spouse" ${patient.contact_info?.emergency_relationship === 'spouse' ? 'selected' : ''}>Spouse</option>
+                                <option value="parent" ${patient.contact_info?.emergency_relationship === 'parent' ? 'selected' : ''}>Parent</option>
+                                <option value="child" ${patient.contact_info?.emergency_relationship === 'child' ? 'selected' : ''}>Child</option>
+                                <option value="sibling" ${patient.contact_info?.emergency_relationship === 'sibling' ? 'selected' : ''}>Sibling</option>
+                                <option value="friend" ${patient.contact_info?.emergency_relationship === 'friend' ? 'selected' : ''}>Friend</option>
+                                <option value="other" ${patient.contact_info?.emergency_relationship === 'other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea name="contact_address" rows="3" placeholder="Street address, city, postal code">${patient.contact_info?.address || ''}</textarea>
+                    </div>
+                </div>
+
+                <!-- Step 3: Medical Information -->
+                <div class="form-step" data-step="3">
+                    <h3>Medical Information</h3>
+                    <div class="form-group">
+                        <label>Primary Diagnosis</label>
+                        <input type="text" name="diagnosis" value="${patient.diagnosis || ''}" placeholder="Primary diagnosis or reason for visit">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Insurance Provider</label>
+                            <input type="text" name="contact_insurance_provider" value="${patient.contact_info?.insurance_provider || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Insurance Number</label>
+                            <input type="text" name="contact_insurance_number" value="${patient.contact_info?.insurance_number || ''}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Allergies</label>
+                        <textarea name="contact_allergies" rows="3" placeholder="Known allergies (medications, foods, environmental)">${patient.contact_info?.allergies || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Medications</label>
+                        <textarea name="contact_medications" rows="3" placeholder="Current medications with dosages">${patient.contact_info?.medications || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Medical Notes</label>
+                        <textarea name="contact_notes" rows="3" placeholder="Additional medical notes or comments">${patient.contact_info?.notes || ''}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn btn-secondary prev-step" disabled>Previous</button>
+                    <button type="button" class="btn btn-primary next-step">Next</button>
+                    <button type="submit" class="btn btn-success submit-form" style="display: none;">Save Patient</button>
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+                </div>
+            </form>
+        `;
+
+        this.showModal(title, html);
+        this.initializeMultiStepForm();
+        
+        // Add real-time validation to the form
+        const form = document.getElementById('enhanced-patient-form');
+        this.addFieldValidation(form);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validate form before submission
+            if (this.validateFormBeforeSubmit(e.target)) {
+                await this.saveEnhancedPatient(new FormData(e.target), patientId);
+            }
+        });
+    }
+
+    initializeMultiStepForm() {
+        const form = document.getElementById('enhanced-patient-form');
+        const steps = form.querySelectorAll('.form-step');
+        const indicators = form.querySelectorAll('.step');
+        const nextBtn = form.querySelector('.next-step');
+        const prevBtn = form.querySelector('.prev-step');
+        const submitBtn = form.querySelector('.submit-form');
+        let currentStep = 1;
+
+        function updateStep() {
+            // Hide all steps
+            steps.forEach(step => step.classList.remove('active'));
+            indicators.forEach(indicator => indicator.classList.remove('active', 'completed'));
+            
+            // Show current step
+            const activeStep = form.querySelector(`[data-step="${currentStep}"]`);
+            if (activeStep) activeStep.classList.add('active');
+            
+            // Update indicators
+            indicators.forEach((indicator, index) => {
+                if (index + 1 < currentStep) {
+                    indicator.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    indicator.classList.add('active');
+                }
+            });
+            
+            // Update buttons
+            prevBtn.disabled = currentStep === 1;
+            
+            if (currentStep === steps.length) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (validateCurrentStep()) {
+                currentStep++;
+                updateStep();
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentStep--;
+            updateStep();
+        });
+
+        function validateCurrentStep() {
+            const activeStep = form.querySelector(`[data-step="${currentStep}"].form-step`);
+            const requiredFields = activeStep.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+            let errors = [];
+            
+            requiredFields.forEach(field => {
+                const fieldName = field.name || field.id || 'Field';
+                const label = field.closest('.form-group')?.querySelector('label')?.textContent || fieldName;
+                
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    errors.push(`${label} is required`);
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                    
+                    // Additional validation based on field type
+                    if (field.type === 'email' && !this.validateEmail(field.value)) {
+                        field.classList.add('error');
+                        errors.push(`${label} must be a valid email address`);
+                        isValid = false;
+                    } else if (field.type === 'tel' && !this.validatePhone(field.value)) {
+                        field.classList.add('error');
+                        errors.push(`${label} must be a valid phone number`);
+                        isValid = false;
+                    } else if (field.type === 'number') {
+                        const min = parseInt(field.min);
+                        const max = parseInt(field.max);
+                        const value = parseInt(field.value);
+                        
+                        if (!isNaN(min) && value < min) {
+                            field.classList.add('error');
+                            errors.push(`${label} must be at least ${min}`);
+                            isValid = false;
+                        } else if (!isNaN(max) && value > max) {
+                            field.classList.add('error');
+                            errors.push(`${label} must be no more than ${max}`);
+                            isValid = false;
+                        }
+                    }
+                }
+            });
+            
+            if (!isValid) {
+                this.showValidationErrors(errors);
+            } else {
+                this.clearValidationErrors();
+            }
+            
+            return isValid;
+        }
+
+        updateStep();
+    }
+
+    async saveEnhancedPatient(formData, patientId) {
+        // Build contact_info object from form fields
+        const contactInfo = {
+            home_phone: formData.get('contact_home_phone'),
+            email: formData.get('contact_email'),
+            emergency_contact_name: formData.get('contact_emergency_name'),
+            emergency_contact_phone: formData.get('contact_emergency_phone'),
+            emergency_relationship: formData.get('contact_emergency_relationship'),
+            address: formData.get('contact_address'),
+            insurance_provider: formData.get('contact_insurance_provider'),
+            insurance_number: formData.get('contact_insurance_number'),
+            allergies: formData.get('contact_allergies'),
+            medications: formData.get('contact_medications'),
+            notes: formData.get('contact_notes')
+        };
+
+        // Remove empty fields from contact_info
+        Object.keys(contactInfo).forEach(key => {
+            if (!contactInfo[key]) {
+                delete contactInfo[key];
+            }
+        });
+
+        const patientData = {
+            full_name: formData.get('full_name'),
+            national_id: formData.get('national_id'),
+            medical_number: formData.get('medical_number'),
+            mobile: formData.get('mobile'),
+            dob: formData.get('dob'),
+            age: formData.get('age') ? parseInt(formData.get('age')) : null,
+            gender: formData.get('gender'),
+            diagnosis: formData.get('diagnosis'),
+            contact_info: contactInfo
+        };
+
+        try {
+            const method = patientId ? 'PUT' : 'POST';
+            const url = patientId ? `/api/patients/${patientId}` : '/api/patients';
+            
+            const response = await this.apiCall(url, {
+                method: method,
+                body: JSON.stringify(patientData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.closeModal();
+                // Reload the appropriate view
+                if (this.currentView === 'admin') {
+                    this.loadAdminPatients();
+                } else {
+                    this.loadPatients();
+                }
+            } else {
+                this.showError('modal-body', result.error);
+            }
+        } catch (error) {
+            this.showError('modal-body', 'Error saving patient');
+        }
+    }
+
     async createVisit(patientId) {
         try {
             const response = await this.apiCall('/api/visits', {
@@ -417,6 +901,7 @@ class RadiologyApp {
                 <div class="card-header">
                     <h2 class="card-title">Nurse Assessment</h2>
                     <div class="actions">
+                        <button class="btn btn-secondary" onclick="app.printForm('nurse')">Print Form</button>
                         ${!formData.signed ? '<button class="btn btn-success" onclick="app.signNurseForm()">Sign Form</button>' : '<span class="status-badge status-signed">Signed</span>'}
                     </div>
                 </div>
@@ -842,6 +1327,7 @@ class RadiologyApp {
                 <div class="card-header">
                     <h2 class="card-title">Doctor Radiology Evaluation</h2>
                     <div class="actions">
+                        <button class="btn btn-secondary" onclick="app.printForm('doctor')">Print Form</button>
                         ${!formData.signed ? '<button class="btn btn-success" onclick="app.signDoctorForm()">Sign Form</button>' : '<span class="status-badge status-signed">Signed</span>'}
                     </div>
                 </div>
@@ -1193,6 +1679,959 @@ class RadiologyApp {
 
     closeModal() {
         document.getElementById('modal').style.display = 'none';
+    }
+
+    // Admin Panel Functions
+    async loadAdminPanel() {
+        this.showLoading();
+        
+        try {
+            // Load dashboard statistics
+            const response = await this.apiCall('/api/admin/stats');
+            const stats = await response.json();
+            
+            this.renderAdminDashboard(stats);
+        } catch (error) {
+            this.showError('content', 'Error loading admin panel');
+        }
+    }
+
+    renderAdminDashboard(stats) {
+        const html = `
+            <div class="admin-panel">
+                <div class="admin-header">
+                    <h2>Admin Dashboard</h2>
+                </div>
+                
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="app.showAdminTab('dashboard')">Dashboard</button>
+                    <button class="admin-tab" onclick="app.showAdminTab('users')">Users</button>
+                    <button class="admin-tab" onclick="app.showAdminTab('patients')">Patients</button>
+                    <button class="admin-tab" onclick="app.showAdminTab('visits')">Visits</button>
+                    <button class="admin-tab" onclick="app.showAdminTab('forms')">Forms</button>
+                </div>
+
+                <div id="admin-content">
+                    ${this.renderDashboardStats(stats)}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('content').innerHTML = html;
+    }
+
+    renderDashboardStats(stats) {
+        return `
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Patients</h3>
+                    <div class="stat-number">${stats.totalPatients?.[0]?.count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Visits</h3>
+                    <div class="stat-number">${stats.totalVisits?.[0]?.count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="stat-number">${stats.totalUsers?.[0]?.count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Nurse Forms</h3>
+                    <div class="stat-number">${stats.nurseFormsCount?.[0]?.count || 0}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Doctor Forms</h3>
+                    <div class="stat-number">${stats.doctorFormsCount?.[0]?.count || 0}</div>
+                </div>
+            </div>
+
+            <div class="dashboard-charts">
+                <div class="chart-section">
+                    <h3>Visits by Status</h3>
+                    <div class="chart-data">
+                        ${(stats.visitsByStatus || []).map(item => 
+                            `<div class="chart-item">
+                                <span class="status-badge status-${item.status}">${this.getStatusName(item.status)}</span>
+                                <span class="chart-value">${item.count}</span>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <h3>Users by Role</h3>
+                    <div class="chart-data">
+                        ${(stats.usersByRole || []).map(item => 
+                            `<div class="chart-item">
+                                <span class="role-badge role-${item.role}">${this.getRoleName(item.role)}</span>
+                                <span class="chart-value">${item.count}</span>
+                            </div>`
+                        ).join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3>Recent Visits</h3>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Visit Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${(stats.recentVisits || []).map(visit => `
+                            <tr onclick="app.showVisitModal(${visit.id})">
+                                <td>#${visit.id}</td>
+                                <td>${visit.full_name}</td>
+                                <td>${new Date(visit.visit_date).toLocaleDateString()}</td>
+                                <td><span class="status-badge status-${visit.status}">${this.getStatusName(visit.status)}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    async showAdminTab(tab) {
+        // Update active tab
+        document.querySelectorAll('.admin-tab').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[onclick="app.showAdminTab('${tab}')"]`).classList.add('active');
+        
+        const content = document.getElementById('admin-content');
+        content.innerHTML = '<div class="loading">Loading...</div>';
+
+        switch (tab) {
+            case 'dashboard':
+                const response = await this.apiCall('/api/admin/stats');
+                const stats = await response.json();
+                content.innerHTML = this.renderDashboardStats(stats);
+                break;
+            case 'users':
+                this.loadAdminUsers();
+                break;
+            case 'patients':
+                this.loadAdminPatients();
+                break;
+            case 'visits':
+                this.loadAdminVisits();
+                break;
+            case 'forms':
+                this.loadAdminForms();
+                break;
+        }
+    }
+
+    async loadAdminUsers() {
+        try {
+            const response = await this.apiCall('/api/users');
+            const users = await response.json();
+            this.renderAdminUsers(users);
+        } catch (error) {
+            this.showError('admin-content', 'Error loading users');
+        }
+    }
+
+    renderAdminUsers(users) {
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h3>User Management</h3>
+                    <button class="btn btn-primary" onclick="app.showUserModal()">Add New User</button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr>
+                                <td>#${user.id}</td>
+                                <td>${user.name}</td>
+                                <td>${user.username}</td>
+                                <td><span class="role-badge role-${user.role}">${this.getRoleName(user.role)}</span></td>
+                                <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.showUserModal(${user.id})">Edit</button>
+                                    ${user.id !== this.user.id ? `<button class="btn btn-sm btn-danger" onclick="app.deleteUser(${user.id})">Delete</button>` : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('admin-content').innerHTML = html;
+    }
+
+    async showUserModal(userId = null) {
+        const title = userId ? 'Edit User' : 'Add New User';
+        let user = {};
+        
+        if (userId) {
+            try {
+                const response = await this.apiCall(`/api/users`);
+                const users = await response.json();
+                user = users.find(u => u.id === userId) || {};
+            } catch (error) {
+                this.showError('content', 'Error loading user data');
+                return;
+            }
+        }
+
+        const html = `
+            <form id="user-form">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" name="name" value="${user.name || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" name="username" value="${user.username || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        <option value="doctor" ${user.role === 'doctor' ? 'selected' : ''}>Doctor</option>
+                        <option value="nurse" ${user.role === 'nurse' ? 'selected' : ''}>Nurse</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Password ${userId ? '(leave empty to keep current)' : '*'}</label>
+                    <input type="password" name="password" ${userId ? '' : 'required'}>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal()">Cancel</button>
+                </div>
+            </form>
+        `;
+
+        this.showModal(title, html);
+        
+        // Add real-time validation to the form
+        const form = document.getElementById('user-form');
+        this.addFieldValidation(form);
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validate form before submission
+            if (this.validateFormBeforeSubmit(e.target)) {
+                await this.saveUser(new FormData(e.target), userId);
+            }
+        });
+    }
+
+    async saveUser(formData, userId = null) {
+        const userData = {
+            name: formData.get('name'),
+            username: formData.get('username'),
+            role: formData.get('role'),
+            password: formData.get('password')
+        };
+
+        try {
+            const method = userId ? 'PUT' : 'POST';
+            const url = userId ? `/api/users/${userId}` : '/api/users';
+            
+            const response = await this.apiCall(url, {
+                method: method,
+                body: JSON.stringify(userData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.closeModal();
+                this.loadAdminUsers(); // Reload users
+            } else {
+                this.showError('modal-body', result.error);
+            }
+        } catch (error) {
+            this.showError('modal-body', 'Error saving user');
+        }
+    }
+
+    async deleteUser(userId) {
+        if (!confirm('Are you sure you want to delete this user?')) return;
+
+        try {
+            const response = await this.apiCall(`/api/users/${userId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.loadAdminUsers(); // Reload users
+            } else {
+                const error = await response.json();
+                alert(error.error);
+            }
+        } catch (error) {
+            alert('Error deleting user');
+        }
+    }
+
+    async loadAdminPatients() {
+        try {
+            const response = await this.apiCall('/api/patients');
+            const patients = await response.json();
+            this.renderAdminPatients(patients);
+        } catch (error) {
+            this.showError('admin-content', 'Error loading patients');
+        }
+    }
+
+    renderAdminPatients(patients) {
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h3>Patient Management</h3>
+                    <button class="btn btn-primary" onclick="app.showEnhancedPatientModal()">Add New Patient</button>
+                </div>
+                <div class="search-section">
+                    <input type="text" id="admin-patient-search" class="search-input" placeholder="Search patients...">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>National ID</th>
+                            <th>Mobile</th>
+                            <th>Age/Gender</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-patients-tbody">
+                        ${patients.map(patient => `
+                            <tr>
+                                <td>#${patient.id}</td>
+                                <td>${patient.full_name}</td>
+                                <td>${patient.national_id || '-'}</td>
+                                <td>${patient.mobile || '-'}</td>
+                                <td>${patient.age || '-'} / ${patient.gender || '-'}</td>
+                                <td>${new Date(patient.created_at).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.showEnhancedPatientModal(${patient.id})">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="app.deletePatient(${patient.id})">Delete</button>
+                                    <button class="btn btn-sm btn-primary" onclick="app.createVisit(${patient.id})">New Visit</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('admin-content').innerHTML = html;
+        
+        // Add search functionality
+        document.getElementById('admin-patient-search').addEventListener('input', (e) => {
+            this.filterAdminPatients(e.target.value, patients);
+        });
+    }
+
+    filterAdminPatients(searchTerm, patients) {
+        const filtered = patients.filter(patient =>
+            patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (patient.national_id && patient.national_id.includes(searchTerm)) ||
+            (patient.mobile && patient.mobile.includes(searchTerm))
+        );
+        
+        const tbody = document.getElementById('admin-patients-tbody');
+        tbody.innerHTML = filtered.map(patient => `
+            <tr>
+                <td>#${patient.id}</td>
+                <td>${patient.full_name}</td>
+                <td>${patient.national_id || '-'}</td>
+                <td>${patient.mobile || '-'}</td>
+                <td>${patient.age || '-'} / ${patient.gender || '-'}</td>
+                <td>${new Date(patient.created_at).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="app.showEnhancedPatientModal(${patient.id})">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="app.deletePatient(${patient.id})">Delete</button>
+                    <button class="btn btn-sm btn-primary" onclick="app.createVisit(${patient.id})">New Visit</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async deletePatient(patientId) {
+        if (!confirm('Are you sure you want to delete this patient? This will also delete all associated data.')) return;
+
+        try {
+            const response = await this.apiCall(`/api/patients/${patientId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.loadAdminPatients(); // Reload patients
+            } else {
+                const error = await response.json();
+                alert(error.error);
+            }
+        } catch (error) {
+            alert('Error deleting patient');
+        }
+    }
+
+    async loadAdminVisits() {
+        try {
+            const response = await this.apiCall('/api/visits');
+            const visits = await response.json();
+            this.renderAdminVisits(visits);
+        } catch (error) {
+            this.showError('admin-content', 'Error loading visits');
+        }
+    }
+
+    renderAdminVisits(visits) {
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h3>Visit Management</h3>
+                    <button class="btn btn-primary" onclick="app.showVisitModal()">Create New Visit</button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Patient</th>
+                            <th>Visit Date</th>
+                            <th>Nurse</th>
+                            <th>Doctor</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${visits.map(visit => `
+                            <tr>
+                                <td>#${visit.id}</td>
+                                <td>${visit.patient_name}</td>
+                                <td>${new Date(visit.visit_date).toLocaleDateString()}</td>
+                                <td>${visit.nurse_name || '<em>Not assigned</em>'}</td>
+                                <td>${visit.doctor_name || '<em>Not assigned</em>'}</td>
+                                <td><span class="status-badge status-${visit.status}">${this.getStatusName(visit.status)}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.showVisitModal(${visit.id})">Edit</button>
+                                    <button class="btn btn-sm btn-primary" onclick="app.showNurseForm(${visit.id})">Nurse Form</button>
+                                    <button class="btn btn-sm btn-success" onclick="app.showDoctorForm(${visit.id})">Doctor Form</button>
+                                    <button class="btn btn-sm btn-danger" onclick="app.deleteVisit(${visit.id})">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('admin-content').innerHTML = html;
+    }
+
+    async deleteVisit(visitId) {
+        if (!confirm('Are you sure you want to delete this visit? This will also delete all associated forms.')) return;
+
+        try {
+            const response = await this.apiCall(`/api/visits/${visitId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.loadAdminVisits(); // Reload visits
+            } else {
+                const error = await response.json();
+                alert(error.error);
+            }
+        } catch (error) {
+            alert('Error deleting visit');
+        }
+    }
+
+    async loadAdminForms() {
+        try {
+            const [nurseResponse, doctorResponse] = await Promise.all([
+                this.apiCall('/api/nurse-forms'),
+                this.apiCall('/api/doctor-forms')
+            ]);
+            
+            const nurseForms = await nurseResponse.json();
+            const doctorForms = await doctorResponse.json();
+            
+            this.renderAdminForms(nurseForms, doctorForms);
+        } catch (error) {
+            this.showError('admin-content', 'Error loading forms');
+        }
+    }
+
+    renderAdminForms(nurseForms, doctorForms) {
+        this.currentNurseForms = nurseForms;
+        this.currentDoctorForms = doctorForms;
+        
+        const html = `
+            <div class="admin-section">
+                <div class="section-header">
+                    <h3>Forms Management</h3>
+                    <div class="forms-stats">
+                        <span class="stat-item">Nurse Forms: ${nurseForms.length}</span>
+                        <span class="stat-item">Doctor Forms: ${doctorForms.length}</span>
+                    </div>
+                </div>
+                
+                <div class="forms-tabs">
+                    <button class="form-tab active" onclick="app.showFormsTab('nurse')">
+                        Nurse Forms (${nurseForms.length})
+                    </button>
+                    <button class="form-tab" onclick="app.showFormsTab('doctor')">
+                        Doctor Forms (${doctorForms.length})
+                    </button>
+                </div>
+
+                <div id="forms-content">
+                    ${this.renderNurseFormsTable(nurseForms)}
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('admin-content').innerHTML = html;
+    }
+
+    renderNurseFormsTable(forms) {
+        if (forms.length === 0) {
+            return `
+                <div class="no-data">
+                    <p>No nurse assessment forms found</p>
+                    <small>Forms will appear here once nurses complete patient assessments</small>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="forms-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Form ID</th>
+                            <th>Patient</th>
+                            <th>Nurse</th>
+                            <th>Visit Date</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${forms.map(form => `
+                            <tr>
+                                <td>#${form.id}</td>
+                                <td>${form.patient_name || 'Unknown'}</td>
+                                <td>${form.nurse_name || 'Unknown'}</td>
+                                <td>${form.visit_date ? new Date(form.visit_date).toLocaleDateString() : 'N/A'}</td>
+                                <td>
+                                    <span class="status-badge ${form.signed ? 'status-signed' : 'status-open'}">
+                                        ${form.signed ? 'Signed' : 'Draft'}
+                                    </span>
+                                </td>
+                                <td>${new Date(form.created_at).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.viewForm('nurse', ${form.visit_id})">View</button>
+                                    <button class="btn btn-sm btn-primary" onclick="app.printForm('nurse')">Print</button>
+                                    ${!form.signed ? `<button class="btn btn-sm btn-danger" onclick="app.deleteForm('nurse', ${form.id})">Delete</button>` : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    renderDoctorFormsTable(forms) {
+        if (forms.length === 0) {
+            return `
+                <div class="no-data">
+                    <p>No doctor evaluation forms found</p>
+                    <small>Forms will appear here once doctors complete patient evaluations</small>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="forms-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Form ID</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Visit Date</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${forms.map(form => `
+                            <tr>
+                                <td>#${form.id}</td>
+                                <td>${form.patient_name || 'Unknown'}</td>
+                                <td>${form.doctor_name || 'Unknown'}</td>
+                                <td>${form.visit_date ? new Date(form.visit_date).toLocaleDateString() : 'N/A'}</td>
+                                <td>
+                                    <span class="status-badge ${form.signed ? 'status-signed' : 'status-open'}">
+                                        ${form.signed ? 'Signed' : 'Draft'}
+                                    </span>
+                                </td>
+                                <td>${new Date(form.created_at).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.viewForm('doctor', ${form.visit_id})">View</button>
+                                    <button class="btn btn-sm btn-primary" onclick="app.printForm('doctor')">Print</button>
+                                    ${!form.signed ? `<button class="btn btn-sm btn-danger" onclick="app.deleteForm('doctor', ${form.id})">Delete</button>` : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    showFormsTab(type) {
+        // Update active tab
+        document.querySelectorAll('.form-tab').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[onclick="app.showFormsTab('${type}')"]`).classList.add('active');
+        
+        // Display the appropriate forms table
+        const content = document.getElementById('forms-content');
+        
+        if (type === 'nurse') {
+            content.innerHTML = this.renderNurseFormsTable(this.currentNurseForms || []);
+        } else if (type === 'doctor') {
+            content.innerHTML = this.renderDoctorFormsTable(this.currentDoctorForms || []);
+        }
+    }
+
+    viewForm(formType, visitId) {
+        if (formType === 'nurse') {
+            this.showNurseForm(visitId);
+        } else if (formType === 'doctor') {
+            this.showDoctorForm(visitId);
+        }
+    }
+
+    async deleteForm(formType, formId) {
+        if (!confirm(`Are you sure you want to delete this ${formType} form? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const endpoint = formType === 'nurse' ? `/api/nurse-forms/${formId}` : `/api/doctor-forms/${formId}`;
+            const response = await this.apiCall(endpoint, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                // Reload the forms data
+                this.loadAdminForms();
+            } else {
+                const error = await response.json();
+                alert(`Error deleting form: ${error.error}`);
+            }
+        } catch (error) {
+            alert('Error deleting form');
+        }
+    }
+
+    printForm(formType) {
+        // Add print class to body to activate print styles
+        document.body.classList.add('printing');
+        
+        // Hide navigation and other non-printable elements
+        const elementsToHide = ['.header', '.nav', '.actions', '.btn', '.signature-controls'];
+        elementsToHide.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.display = 'none';
+            });
+        });
+        
+        // Add print header with logo and facility information
+        const content = document.getElementById('content');
+        const originalContent = content.innerHTML;
+        
+        const printHeader = `
+            <div class="print-header">
+                <div class="facility-info">
+                    <h1>Al-Shorouk Radiology Center</h1>
+                    <p>Comprehensive Radiology Services</p>
+                    <p>Phone: +123-456-7890 | Email: info@alshorouk-radiology.com</p>
+                </div>
+                <div class="form-info">
+                    <h2>${formType === 'nurse' ? 'Nursing Assessment Form' : 'Radiology Evaluation Form'}</h2>
+                    <p>Date: ${new Date().toLocaleDateString()}</p>
+                    <p>Time: ${new Date().toLocaleTimeString()}</p>
+                </div>
+            </div>
+        `;
+        
+        content.innerHTML = printHeader + originalContent;
+        
+        // Trigger print
+        setTimeout(() => {
+            window.print();
+            
+            // Restore original state after print dialog
+            setTimeout(() => {
+                content.innerHTML = originalContent;
+                elementsToHide.forEach(selector => {
+                    document.querySelectorAll(selector).forEach(el => {
+                        el.style.display = '';
+                    });
+                });
+                document.body.classList.remove('printing');
+            }, 1000);
+        }, 100);
+    }
+
+    // Validation Helper Methods
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    validatePhone(phone) {
+        // Remove spaces, dashes, and parentheses
+        const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+        // Check if it's a valid phone number (basic check)
+        return /^[\+]?[\d]{7,15}$/.test(cleanPhone);
+    }
+
+    validateNationalId(nationalId) {
+        // Basic validation - adjust based on your country's format
+        return /^\d{10,14}$/.test(nationalId);
+    }
+
+    validateAge(age) {
+        const numAge = parseInt(age);
+        return numAge >= 0 && numAge <= 150;
+    }
+
+    validateVitalSigns(vitals) {
+        const errors = [];
+        
+        // Temperature validation (normal range: 36-40°C)
+        if (vitals.temp && (vitals.temp < 30 || vitals.temp > 45)) {
+            errors.push('Temperature seems unusual (normal range: 36-40°C)');
+        }
+        
+        // Blood pressure validation
+        if (vitals.bp) {
+            const bpMatch = vitals.bp.match(/(\d+)\/(\d+)/);
+            if (bpMatch) {
+                const systolic = parseInt(bpMatch[1]);
+                const diastolic = parseInt(bpMatch[2]);
+                if (systolic < 50 || systolic > 250 || diastolic < 30 || diastolic > 150) {
+                    errors.push('Blood pressure values seem unusual');
+                }
+            }
+        }
+        
+        // Heart rate validation (normal range: 40-200 bpm)
+        if (vitals.pulse && (vitals.pulse < 30 || vitals.pulse > 220)) {
+            errors.push('Heart rate seems unusual (normal range: 60-100 bpm)');
+        }
+        
+        // O2 Saturation validation (normal range: 95-100%)
+        if (vitals.o2_saturation && (vitals.o2_saturation < 70 || vitals.o2_saturation > 100)) {
+            errors.push('Oxygen saturation seems unusual (normal range: 95-100%)');
+        }
+        
+        return errors;
+    }
+
+    showValidationErrors(errors) {
+        // Remove existing error display
+        this.clearValidationErrors();
+        
+        // Create error display
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-errors';
+        errorDiv.innerHTML = `
+            <div class="error-header">
+                <i class="error-icon">⚠</i>
+                <span>Please correct the following errors:</span>
+            </div>
+            <ul class="error-list">
+                ${errors.map(error => `<li>${error}</li>`).join('')}
+            </ul>
+        `;
+        
+        // Insert at the top of the active form step
+        const activeStep = document.querySelector('.form-step.active');
+        if (activeStep) {
+            activeStep.insertBefore(errorDiv, activeStep.firstChild);
+        }
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            this.clearValidationErrors();
+        }, 5000);
+    }
+
+    clearValidationErrors() {
+        const existingErrors = document.querySelectorAll('.validation-errors');
+        existingErrors.forEach(error => error.remove());
+    }
+
+    // Real-time validation for form fields
+    addFieldValidation(form) {
+        const fields = form.querySelectorAll('input, select, textarea');
+        
+        fields.forEach(field => {
+            field.addEventListener('blur', () => {
+                this.validateField(field);
+            });
+            
+            field.addEventListener('input', () => {
+                // Clear error styling on input
+                field.classList.remove('error');
+                this.clearFieldError(field);
+            });
+        });
+    }
+
+    validateField(field) {
+        const fieldName = field.name || field.id || 'Field';
+        const label = field.closest('.form-group')?.querySelector('label')?.textContent || fieldName;
+        let isValid = true;
+        let errorMessage = '';
+
+        // Required field validation
+        if (field.hasAttribute('required') && !field.value.trim()) {
+            isValid = false;
+            errorMessage = `${label} is required`;
+        } else if (field.value.trim()) {
+            // Type-specific validation
+            switch (field.type) {
+                case 'email':
+                    if (!this.validateEmail(field.value)) {
+                        isValid = false;
+                        errorMessage = `${label} must be a valid email address`;
+                    }
+                    break;
+                case 'tel':
+                    if (!this.validatePhone(field.value)) {
+                        isValid = false;
+                        errorMessage = `${label} must be a valid phone number`;
+                    }
+                    break;
+                case 'number':
+                    const min = parseInt(field.min);
+                    const max = parseInt(field.max);
+                    const value = parseInt(field.value);
+                    
+                    if (!isNaN(min) && value < min) {
+                        isValid = false;
+                        errorMessage = `${label} must be at least ${min}`;
+                    } else if (!isNaN(max) && value > max) {
+                        isValid = false;
+                        errorMessage = `${label} must be no more than ${max}`;
+                    }
+                    break;
+            }
+
+            // Field-specific validation
+            if (field.name === 'national_id' && field.value && !this.validateNationalId(field.value)) {
+                isValid = false;
+                errorMessage = 'National ID must be 10-14 digits';
+            } else if (field.name === 'age' && field.value && !this.validateAge(field.value)) {
+                isValid = false;
+                errorMessage = 'Age must be between 0 and 150';
+            }
+        }
+
+        if (!isValid) {
+            field.classList.add('error');
+            this.showFieldError(field, errorMessage);
+        } else {
+            field.classList.remove('error');
+            this.clearFieldError(field);
+        }
+
+        return isValid;
+    }
+
+    showFieldError(field, message) {
+        this.clearFieldError(field);
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error';
+        errorDiv.textContent = message;
+        
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+            formGroup.appendChild(errorDiv);
+        }
+    }
+
+    clearFieldError(field) {
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+            const existingError = formGroup.querySelector('.field-error');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+    }
+
+    // Form submission validation
+    validateFormBeforeSubmit(form) {
+        const fields = form.querySelectorAll('input, select, textarea');
+        let isValid = true;
+        const errors = [];
+
+        fields.forEach(field => {
+            if (!this.validateField(field)) {
+                isValid = false;
+            }
+        });
+
+        // Additional form-level validation
+        if (form.id === 'nurse-form') {
+            const vitals = {
+                temp: form.querySelector('[name="temp"]')?.value,
+                bp: form.querySelector('[name="bp"]')?.value,
+                pulse: form.querySelector('[name="pulse"]')?.value,
+                o2_saturation: form.querySelector('[name="o2_saturation"]')?.value
+            };
+            
+            const vitalErrors = this.validateVitalSigns(vitals);
+            if (vitalErrors.length > 0) {
+                errors.push(...vitalErrors);
+            }
+        }
+
+        if (errors.length > 0) {
+            this.showValidationErrors(errors);
+            isValid = false;
+        }
+
+        return isValid;
     }
 
     showLoading() {
