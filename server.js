@@ -190,9 +190,218 @@ app.post('/admin/users/:id/delete', requireAuth, requireRole('admin'), (req, res
     });
 });
 
+// Admin visit management routes
+app.get('/admin/visits', requireAuth, requireRole('admin'), (req, res) => {
+    const { search, status, department, date_from, date_to } = req.query;
+    
+    let sql = `
+        SELECT 
+            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status, 
+            pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
+            pv.visit_type, pv.department, pv.created_at, pv.completed_at,
+            p.full_name as patient_name, p.medical_number,
+            u.full_name as created_by_name,
+            (SELECT COUNT(*) FROM form_submissions fs WHERE fs.visit_id = pv.visit_id) as assessment_count
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN users u ON pv.created_by = u.user_id
+        WHERE 1=1
+    `;
+    
+    const params = [];
+    
+    if (search) {
+        sql += ` AND (p.full_name LIKE ? OR p.medical_number LIKE ? OR pv.patient_ssn LIKE ?)`;
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    
+    if (status && status !== 'all') {
+        sql += ` AND pv.visit_status = ?`;
+        params.push(status);
+    }
+    
+    if (department && department !== 'all') {
+        sql += ` AND pv.department = ?`;
+        params.push(department);
+    }
+    
+    if (date_from) {
+        sql += ` AND DATE(pv.visit_date) >= ?`;
+        params.push(date_from);
+    }
+    
+    if (date_to) {
+        sql += ` AND DATE(pv.visit_date) <= ?`;
+        params.push(date_to);
+    }
+    
+    sql += ` ORDER BY pv.visit_date DESC, pv.created_at DESC`;
+    
+    db.all(sql, params, (err, visits) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).send('Database error');
+        }
+        
+        // Get unique departments for filter dropdown
+        db.all('SELECT DISTINCT department FROM patient_visits WHERE department IS NOT NULL ORDER BY department', [], (err, departments) => {
+            res.render('admin-visits', { 
+                user: req.session, 
+                visits: visits || [],
+                departments: departments || [],
+                filters: { search, status, department, date_from, date_to }
+            });
+        });
+    });
+});
+
+app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) => {
+    const visitId = req.params.visitId;
+    
+    // Get visit details with patient info
+    db.get(`
+        SELECT 
+            pv.*, p.full_name, p.medical_number, p.mobile_number, p.phone_number,
+            p.date_of_birth, p.gender, p.address, p.emergency_contact_name,
+            p.emergency_contact_phone, p.emergency_contact_relation,
+            u.full_name as created_by_name
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN users u ON pv.created_by = u.user_id
+        WHERE pv.visit_id = ?
+    `, [visitId], (err, visit) => {
+        if (err || !visit) {
+            return res.status(404).send('Visit not found');
+        }
+        
+        // Get nursing assessment
+        db.get(`
+            SELECT na.*, u.full_name as assessed_by_name
+            FROM nursing_assessments na
+            JOIN form_submissions fs ON na.submission_id = fs.submission_id
+            LEFT JOIN users u ON na.assessed_by = u.user_id
+            WHERE fs.visit_id = ?
+        `, [visitId], (err, nursingAssessment) => {
+            
+            // Get radiology assessment
+            db.get(`
+                SELECT ra.*, u.full_name as assessed_by_name
+                FROM radiology_assessments ra
+                JOIN form_submissions fs ON ra.submission_id = fs.submission_id
+                LEFT JOIN users u ON ra.assessed_by = u.user_id
+                WHERE fs.visit_id = ?
+            `, [visitId], (err, radiologyAssessment) => {
+                
+                res.render('admin-visit-detail', { 
+                    user: req.session, 
+                    visit: visit,
+                    nursingAssessment: nursingAssessment || null,
+                    radiologyAssessment: radiologyAssessment || null
+                });
+            });
+        });
+    });
+});
+
+app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req, res) => {
+    const visitId = req.params.visitId;
+    
+    // Get visit details with patient info
+    db.get(`
+        SELECT 
+            pv.*, p.full_name, p.medical_number, p.mobile_number, p.phone_number,
+            p.date_of_birth, p.gender, p.address, p.emergency_contact_name,
+            p.emergency_contact_phone, p.emergency_contact_relation,
+            u.full_name as created_by_name
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN users u ON pv.created_by = u.user_id
+        WHERE pv.visit_id = ?
+    `, [visitId], (err, visit) => {
+        if (err || !visit) {
+            return res.status(404).send('Visit not found');
+        }
+        
+        // Get nursing assessment
+        db.get(`
+            SELECT na.*, u.full_name as assessed_by_name
+            FROM nursing_assessments na
+            JOIN form_submissions fs ON na.submission_id = fs.submission_id
+            LEFT JOIN users u ON na.assessed_by = u.user_id
+            WHERE fs.visit_id = ?
+        `, [visitId], (err, nursingAssessment) => {
+            
+            // Get radiology assessment
+            db.get(`
+                SELECT ra.*, u.full_name as assessed_by_name
+                FROM radiology_assessments ra
+                JOIN form_submissions fs ON ra.submission_id = fs.submission_id
+                LEFT JOIN users u ON ra.assessed_by = u.user_id
+                WHERE fs.visit_id = ?
+            `, [visitId], (err, radiologyAssessment) => {
+                
+                res.render('visit-print', { 
+                    visit: visit,
+                    nursingAssessment: nursingAssessment || null,
+                    radiologyAssessment: radiologyAssessment || null
+                });
+            });
+        });
+    });
+});
+
 // Nurse routes
 app.get('/nurse', requireAuth, requireRole('nurse'), (req, res) => {
-    res.render('nurse-dashboard', { user: req.session });
+    // Get nurse's statistics
+    db.get(`
+        SELECT 
+            COUNT(CASE WHEN DATE(assessed_at) = DATE('now') THEN 1 END) as today_assessments,
+            COUNT(CASE WHEN DATE(assessed_at) >= DATE('now', '-7 days') THEN 1 END) as week_assessments,
+            COUNT(CASE WHEN fs.submission_status = 'draft' THEN 1 END) as draft_assessments,
+            COUNT(CASE WHEN DATE(assessed_at) >= DATE('now', 'start of month') THEN 1 END) as month_assessments
+        FROM nursing_assessments na
+        LEFT JOIN form_submissions fs ON na.submission_id = fs.submission_id
+        WHERE na.assessed_by = ?
+    `, [req.session.userId], (err, stats) => {
+        if (err) {
+            console.error('Error getting nurse stats:', err);
+            stats = { today_assessments: 0, week_assessments: 0, draft_assessments: 0, month_assessments: 0 };
+        }
+        
+        res.render('nurse-dashboard', { 
+            user: req.session,
+            stats: stats || { today_assessments: 0, week_assessments: 0, draft_assessments: 0, month_assessments: 0 }
+        });
+    });
+});
+
+app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) => {
+    // Get visits assigned to this nurse that are in progress
+    db.all(`
+        SELECT 
+            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status, 
+            pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
+            pv.visit_type, pv.department, pv.created_at,
+            p.full_name as patient_name, p.medical_number, p.date_of_birth, p.gender,
+            na.assessment_id, fs.submission_status = 'draft' as is_draft,
+            (SELECT COUNT(*) FROM form_submissions fs2 WHERE fs2.visit_id = pv.visit_id) as total_assessments
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN form_submissions fs ON fs.visit_id = pv.visit_id AND fs.form_id = 'form-05-uuid'
+        LEFT JOIN nursing_assessments na ON na.submission_id = fs.submission_id
+        WHERE pv.created_by = ? AND pv.visit_status = 'in_progress'
+        ORDER BY pv.visit_date DESC, pv.created_at DESC
+    `, [req.session.userId], (err, visits) => {
+        if (err) {
+            console.error('Error getting nurse assessments:', err);
+            return res.status(500).send('Database error');
+        }
+        
+        res.render('nurse-assessments', { 
+            user: req.session, 
+            visits: visits || []
+        });
+    });
 });
 
 app.get('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
@@ -252,13 +461,21 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
             return res.status(404).send('Visit not found');
         }
         
-        // Check if assessment exists
-        db.get('SELECT * FROM nursing_assessments WHERE submission_id IN (SELECT submission_id FROM form_submissions WHERE visit_id = ?)', [visitId], (err, assessment) => {
+        // Check if assessment exists and get submission status
+        db.get(`
+            SELECT na.*, fs.submission_status
+            FROM nursing_assessments na
+            JOIN form_submissions fs ON na.submission_id = fs.submission_id
+            WHERE fs.visit_id = ?
+        `, [visitId], (err, result) => {
+            const assessment = result ? result : null;
+            const isDraft = result ? result.submission_status === 'draft' : false;
+            
             res.render('nurse-form', { 
                 user: req.session, 
                 visit: visit, 
-                assessment: assessment || null,
-                isDraft: !assessment || assessment.temporary === 1
+                assessment: assessment,
+                isDraft: isDraft
             });
         });
     });
@@ -349,7 +566,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 pain_intensity = ?, pain_location = ?, pain_frequency = ?, pain_character = ?,
                 needs_medication_education = ?, needs_diet_nutrition_education = ?, needs_medical_equipment_education = ?,
                 needs_rehabilitation_education = ?, needs_drug_interaction_education = ?, needs_pain_symptom_education = ?,
-                needs_fall_prevention_education = ?, other_needs = ?, temporary = ?
+                needs_fall_prevention_education = ?, other_needs = ?
              WHERE assessment_id = ?` :
             `INSERT INTO nursing_assessments (
                 assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
@@ -361,8 +578,8 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 uses_transfer_device, uses_other_equipment, pain_intensity, pain_location, pain_frequency,
                 pain_character, needs_medication_education, needs_diet_nutrition_education,
                 needs_medical_equipment_education, needs_rehabilitation_education, needs_drug_interaction_education,
-                needs_pain_symptom_education, needs_fall_prevention_education, other_needs, temporary, assessed_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                needs_pain_symptom_education, needs_fall_prevention_education, other_needs, assessed_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         
         const values = existingAssessment ? [
             formData.mode_of_arrival, formData.age, formData.chief_complaint, formData.accompanied_by, formData.language_spoken,
@@ -378,7 +595,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.needs_diet_nutrition_education ? 1 : 0, formData.needs_medical_equipment_education ? 1 : 0,
             formData.needs_rehabilitation_education ? 1 : 0, formData.needs_drug_interaction_education ? 1 : 0,
             formData.needs_pain_symptom_education ? 1 : 0, formData.needs_fall_prevention_education ? 1 : 0,
-            formData.other_needs ? 1 : 0, isDraft ? 1 : 0, assessmentId
+            formData.other_needs ? 1 : 0, assessmentId
         ] : [
             assessmentId, submissionId, formData.mode_of_arrival, formData.age, formData.chief_complaint,
             formData.accompanied_by, formData.language_spoken, formData.temperature_celsius, formData.pulse_bpm,
@@ -394,7 +611,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.needs_diet_nutrition_education ? 1 : 0, formData.needs_medical_equipment_education ? 1 : 0,
             formData.needs_rehabilitation_education ? 1 : 0, formData.needs_drug_interaction_education ? 1 : 0,
             formData.needs_pain_symptom_education ? 1 : 0, formData.needs_fall_prevention_education ? 1 : 0,
-            formData.other_needs ? 1 : 0, isDraft ? 1 : 0, req.session.userId
+            formData.other_needs ? 1 : 0, req.session.userId
         ];
         
         db.run(sql, values, function(err) {
