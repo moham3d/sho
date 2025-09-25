@@ -51,7 +51,7 @@ Thumbs.db
 
 # Database
 *.sqlite
-
+*.db
 
 # Backups
 backup-*.sql
