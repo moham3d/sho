@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-const db = new sqlite3.Database('./radiology.db', (err) => {
+const db = new sqlite3.Database('./test.db', (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
         return;
@@ -11,7 +11,6 @@ const db = new sqlite3.Database('./radiology.db', (err) => {
     console.log('Connected to SQLite database.');
 });
 
-// Read and execute schema
 const schemaPath = path.join(__dirname, 'docs', 'schema.sql');
 const schema = fs.readFileSync(schemaPath, 'utf8');
 
@@ -20,14 +19,13 @@ db.exec(schema, (err) => {
         console.error('Error executing schema:', err.message);
     } else {
         console.log('Database schema created successfully.');
-        
-        // Insert sample users with hashed passwords
+
         const users = [
             { id: 'admin-uuid', username: 'admin', email: 'admin@example.com', fullName: 'Administrator', role: 'admin', password: 'admin' },
             { id: 'nurse-uuid', username: 'nurse', email: 'nurse@example.com', fullName: 'Nurse One', role: 'nurse', password: 'nurse' },
             { id: 'physician-uuid', username: 'doctor', email: 'doctor@example.com', fullName: 'Dr. Physician', role: 'physician', password: 'doctor' }
         ];
-        
+
         users.forEach(user => {
             const hash = bcrypt.hashSync(user.password, 10);
             db.run('INSERT INTO users (user_id, username, email, full_name, role, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
@@ -40,11 +38,5 @@ db.exec(schema, (err) => {
                 });
         });
     }
-    db.close((err) => {
-        if (err) {
-            console.error('Error closing database:', err.message);
-        } else {
-            console.log('Database connection closed.');
-        }
-    });
+    setTimeout(() => db.close(), 2000);
 });

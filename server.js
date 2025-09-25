@@ -405,7 +405,29 @@ app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) =
 });
 
 app.get('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
-    res.render('patient-search', { user: req.session, patient: null, error: null });
+    res.render('patient-search', { user: req.session, patient: null, error: null, visitId: null });
+});
+
+// API endpoint for patient autocomplete search
+app.get('/api/patients/search', requireAuth, (req, res) => {
+    const { q } = req.query;
+    if (!q || q.length < 2) {
+        return res.json([]);
+    }
+
+    db.all(`
+        SELECT full_name, ssn, medical_number, mobile_number, date_of_birth, gender
+        FROM patients
+        WHERE ssn LIKE ?
+        ORDER BY ssn
+        LIMIT 3
+    `, [`%${q}%`], (err, patients) => {
+        if (err) {
+            console.error('Patient search error:', err);
+            return res.status(500).json({ error: 'Search failed' });
+        }
+        res.json(patients || []);
+    });
 });
 
 app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
@@ -429,7 +451,7 @@ app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) 
             [visitId, ssn, req.session.userId], function(err) {
                 if (err) {
                     console.error('Error creating visit:', err);
-                    return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating visit' });
+                    return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating visit', visitId: null });
                 }
 
                 // Create form submission
@@ -437,7 +459,7 @@ app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) 
                     [submissionId, visitId, 'form-05-uuid', req.session.userId], function(err) {
                         if (err) {
                             console.error('Error creating form submission:', err);
-                            return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating assessment' });
+                            return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating assessment', visitId: null });
                         }
 
                         // Redirect to nurse form with visit context
@@ -452,7 +474,8 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
 
     // Get visit and patient info
     db.get(`
-        SELECT pv.*, p.full_name, p.mobile_number, p.medical_number, p.date_of_birth, p.gender
+        SELECT pv.*, p.full_name, p.mobile_number, p.medical_number, p.date_of_birth, p.gender,
+               p.phone_number, p.address, p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relation
         FROM patient_visits pv
         JOIN patients p ON pv.patient_ssn = p.ssn
         WHERE pv.visit_id = ? AND pv.created_by = ?
