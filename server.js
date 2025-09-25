@@ -20,7 +20,7 @@ app.use(session({
     secret: 'al-shorouk-radiology-secret-key-2025',
     resave: false,
     saveUninitialized: false,
-    cookie: { 
+    cookie: {
         secure: false, // Set to true in production with HTTPS
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
@@ -48,7 +48,7 @@ function requireRole(role) {
 }
 
 // Database setup
-const db = new sqlite3.Database('./radiology.db', (err) => {
+const db = new sqlite3.Database('c:\\Users\\Mohamed\\Desktop\\sho\\test.db', (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
@@ -67,28 +67,28 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    
+
     db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
         if (err) {
             console.error('Database error:', err);
             return res.render('login', { error: 'Database error' });
         }
-        
+
         if (!user) {
             return res.render('login', { error: 'Invalid username or password' });
         }
-        
+
         const isValidPassword = await bcrypt.compare(password, user.password_hash);
         if (!isValidPassword) {
             return res.render('login', { error: 'Invalid username or password' });
         }
-        
+
         // Set session
         req.session.userId = user.user_id;
         req.session.username = user.username;
         req.session.role = user.role;
         req.session.fullName = user.full_name;
-        
+
         // Redirect based on role
         if (user.role === 'admin') {
             res.redirect('/admin');
@@ -128,11 +128,11 @@ app.get('/admin/users/new', requireAuth, requireRole('admin'), (req, res) => {
 
 app.post('/admin/users', requireAuth, requireRole('admin'), async (req, res) => {
     const { username, email, full_name, role, password } = req.body;
-    
+
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const userId = 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        
+
         db.run('INSERT INTO users (user_id, username, email, full_name, role, password_hash) VALUES (?, ?, ?, ?, ?, ?)',
             [userId, username, email, full_name, role, hashedPassword], function(err) {
                 if (err) {
@@ -160,16 +160,16 @@ app.get('/admin/users/:id/edit', requireAuth, requireRole('admin'), (req, res) =
 app.post('/admin/users/:id', requireAuth, requireRole('admin'), async (req, res) => {
     const userId = req.params.id;
     const { username, email, full_name, role, password, is_active } = req.body;
-    
+
     let updateQuery = 'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, is_active = ? WHERE user_id = ?';
     let params = [username, email, full_name, role, is_active ? 1 : 0, userId];
-    
+
     if (password) {
         const hashedPassword = await bcrypt.hash(password, 10);
         updateQuery = 'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, password_hash = ?, is_active = ? WHERE user_id = ?';
         params = [username, email, full_name, role, hashedPassword, is_active ? 1 : 0, userId];
     }
-    
+
     db.run(updateQuery, params, function(err) {
         if (err) {
             console.error('Database error:', err);
@@ -193,10 +193,10 @@ app.post('/admin/users/:id/delete', requireAuth, requireRole('admin'), (req, res
 // Admin visit management routes
 app.get('/admin/visits', requireAuth, requireRole('admin'), (req, res) => {
     const { search, status, department, date_from, date_to } = req.query;
-    
+
     let sql = `
-        SELECT 
-            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status, 
+        SELECT
+            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status,
             pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
             pv.visit_type, pv.department, pv.created_at, pv.completed_at,
             p.full_name as patient_name, p.medical_number,
@@ -207,46 +207,46 @@ app.get('/admin/visits', requireAuth, requireRole('admin'), (req, res) => {
         LEFT JOIN users u ON pv.created_by = u.user_id
         WHERE 1=1
     `;
-    
+
     const params = [];
-    
+
     if (search) {
         sql += ` AND (p.full_name LIKE ? OR p.medical_number LIKE ? OR pv.patient_ssn LIKE ?)`;
         params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-    
+
     if (status && status !== 'all') {
         sql += ` AND pv.visit_status = ?`;
         params.push(status);
     }
-    
+
     if (department && department !== 'all') {
         sql += ` AND pv.department = ?`;
         params.push(department);
     }
-    
+
     if (date_from) {
         sql += ` AND DATE(pv.visit_date) >= ?`;
         params.push(date_from);
     }
-    
+
     if (date_to) {
         sql += ` AND DATE(pv.visit_date) <= ?`;
         params.push(date_to);
     }
-    
+
     sql += ` ORDER BY pv.visit_date DESC, pv.created_at DESC`;
-    
+
     db.all(sql, params, (err, visits) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).send('Database error');
         }
-        
+
         // Get unique departments for filter dropdown
         db.all('SELECT DISTINCT department FROM patient_visits WHERE department IS NOT NULL ORDER BY department', [], (err, departments) => {
-            res.render('admin-visits', { 
-                user: req.session, 
+            res.render('admin-visits', {
+                user: req.session,
                 visits: visits || [],
                 departments: departments || [],
                 filters: { search, status, department, date_from, date_to }
@@ -257,10 +257,10 @@ app.get('/admin/visits', requireAuth, requireRole('admin'), (req, res) => {
 
 app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) => {
     const visitId = req.params.visitId;
-    
+
     // Get visit details with patient info
     db.get(`
-        SELECT 
+        SELECT
             pv.*, p.full_name, p.medical_number, p.mobile_number, p.phone_number,
             p.date_of_birth, p.gender, p.address, p.emergency_contact_name,
             p.emergency_contact_phone, p.emergency_contact_relation,
@@ -273,7 +273,7 @@ app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) 
         if (err || !visit) {
             return res.status(404).send('Visit not found');
         }
-        
+
         // Get nursing assessment
         db.get(`
             SELECT na.*, u.full_name as assessed_by_name
@@ -282,7 +282,7 @@ app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) 
             LEFT JOIN users u ON na.assessed_by = u.user_id
             WHERE fs.visit_id = ?
         `, [visitId], (err, nursingAssessment) => {
-            
+
             // Get radiology assessment
             db.get(`
                 SELECT ra.*, u.full_name as assessed_by_name
@@ -291,9 +291,9 @@ app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) 
                 LEFT JOIN users u ON ra.assessed_by = u.user_id
                 WHERE fs.visit_id = ?
             `, [visitId], (err, radiologyAssessment) => {
-                
-                res.render('admin-visit-detail', { 
-                    user: req.session, 
+
+                res.render('admin-visit-detail', {
+                    user: req.session,
                     visit: visit,
                     nursingAssessment: nursingAssessment || null,
                     radiologyAssessment: radiologyAssessment || null
@@ -305,10 +305,10 @@ app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) 
 
 app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req, res) => {
     const visitId = req.params.visitId;
-    
+
     // Get visit details with patient info
     db.get(`
-        SELECT 
+        SELECT
             pv.*, p.full_name, p.medical_number, p.mobile_number, p.phone_number,
             p.date_of_birth, p.gender, p.address, p.emergency_contact_name,
             p.emergency_contact_phone, p.emergency_contact_relation,
@@ -321,7 +321,7 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
         if (err || !visit) {
             return res.status(404).send('Visit not found');
         }
-        
+
         // Get nursing assessment
         db.get(`
             SELECT na.*, u.full_name as assessed_by_name
@@ -330,7 +330,7 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
             LEFT JOIN users u ON na.assessed_by = u.user_id
             WHERE fs.visit_id = ?
         `, [visitId], (err, nursingAssessment) => {
-            
+
             // Get radiology assessment
             db.get(`
                 SELECT ra.*, u.full_name as assessed_by_name
@@ -339,8 +339,8 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
                 LEFT JOIN users u ON ra.assessed_by = u.user_id
                 WHERE fs.visit_id = ?
             `, [visitId], (err, radiologyAssessment) => {
-                
-                res.render('visit-print', { 
+
+                res.render('visit-print', {
                     visit: visit,
                     nursingAssessment: nursingAssessment || null,
                     radiologyAssessment: radiologyAssessment || null
@@ -354,7 +354,7 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
 app.get('/nurse', requireAuth, requireRole('nurse'), (req, res) => {
     // Get nurse's statistics
     db.get(`
-        SELECT 
+        SELECT
             COUNT(CASE WHEN DATE(assessed_at) = DATE('now') THEN 1 END) as today_assessments,
             COUNT(CASE WHEN DATE(assessed_at) >= DATE('now', '-7 days') THEN 1 END) as week_assessments,
             COUNT(CASE WHEN fs.submission_status = 'draft' THEN 1 END) as draft_assessments,
@@ -367,8 +367,8 @@ app.get('/nurse', requireAuth, requireRole('nurse'), (req, res) => {
             console.error('Error getting nurse stats:', err);
             stats = { today_assessments: 0, week_assessments: 0, draft_assessments: 0, month_assessments: 0 };
         }
-        
-        res.render('nurse-dashboard', { 
+
+        res.render('nurse-dashboard', {
             user: req.session,
             stats: stats || { today_assessments: 0, week_assessments: 0, draft_assessments: 0, month_assessments: 0 }
         });
@@ -378,8 +378,8 @@ app.get('/nurse', requireAuth, requireRole('nurse'), (req, res) => {
 app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) => {
     // Get visits assigned to this nurse that are in progress
     db.all(`
-        SELECT 
-            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status, 
+        SELECT
+            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status,
             pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
             pv.visit_type, pv.department, pv.created_at,
             p.full_name as patient_name, p.medical_number, p.date_of_birth, p.gender,
@@ -396,9 +396,9 @@ app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) =
             console.error('Error getting nurse assessments:', err);
             return res.status(500).send('Database error');
         }
-        
-        res.render('nurse-assessments', { 
-            user: req.session, 
+
+        res.render('nurse-assessments', {
+            user: req.session,
             visits: visits || []
         });
     });
@@ -410,28 +410,28 @@ app.get('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) =
 
 app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
     const { ssn } = req.body;
-    
+
     db.get('SELECT * FROM patients WHERE ssn = ?', [ssn], (err, patient) => {
         if (err) {
             console.error('Database error:', err);
             return res.render('patient-search', { user: req.session, patient: null, error: 'Database error' });
         }
-        
+
         if (!patient) {
             return res.render('patient-search', { user: req.session, patient: null, error: 'Patient not found. Please register the patient first.' });
         }
-        
+
         // Create new visit immediately
         const visitId = 'visit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        
+
         db.run('INSERT INTO patient_visits (visit_id, patient_ssn, created_by) VALUES (?, ?, ?)',
             [visitId, ssn, req.session.userId], function(err) {
                 if (err) {
                     console.error('Error creating visit:', err);
                     return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating visit' });
                 }
-                
+
                 // Create form submission
                 db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by) VALUES (?, ?, ?, ?)',
                     [submissionId, visitId, 'form-05-uuid', req.session.userId], function(err) {
@@ -439,7 +439,7 @@ app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) 
                             console.error('Error creating form submission:', err);
                             return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating assessment' });
                         }
-                        
+
                         // Redirect to nurse form with visit context
                         res.redirect(`/nurse/assessment/${visitId}`);
                     });
@@ -449,7 +449,7 @@ app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) 
 
 app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, res) => {
     const visitId = req.params.visitId;
-    
+
     // Get visit and patient info
     db.get(`
         SELECT pv.*, p.full_name, p.mobile_number, p.medical_number, p.date_of_birth, p.gender
@@ -460,7 +460,7 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
         if (err || !visit) {
             return res.status(404).send('Visit not found');
         }
-        
+
         // Check if assessment exists and get submission status
         db.get(`
             SELECT na.*, fs.submission_status
@@ -470,10 +470,10 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
         `, [visitId], (err, result) => {
             const assessment = result ? result : null;
             const isDraft = result ? result.submission_status === 'draft' : false;
-            
-            res.render('nurse-form', { 
-                user: req.session, 
-                visit: visit, 
+
+            res.render('nurse-form', {
+                user: req.session,
+                visit: visit,
                 assessment: assessment,
                 isDraft: isDraft
             });
@@ -487,27 +487,27 @@ app.get('/doctor', requireAuth, requireRole('physician'), (req, res) => {
 
 app.post('/doctor/search-patient', requireAuth, requireRole('physician'), (req, res) => {
     const { ssn } = req.body;
-    
+
     db.get('SELECT * FROM patients WHERE ssn = ?', [ssn], (err, patient) => {
         if (err) {
             console.error('Database error:', err);
             return res.render('doctor-dashboard', { user: req.session, patient: null, error: 'Database error' });
         }
-        
+
         if (!patient) {
             return res.render('doctor-dashboard', { user: req.session, patient: null, error: 'Patient not found. Please ensure the patient is registered.' });
         }
-        
+
         // Store patient in session for radiology form access
         req.session.selectedPatient = patient;
-        
+
         // Check for current visit or create new one
         db.get('SELECT * FROM patient_visits WHERE patient_ssn = ? ORDER BY created_at DESC LIMIT 1', [ssn], (err, visit) => {
             if (err) {
                 console.error('Error checking visits:', err);
                 return res.render('doctor-dashboard', { user: req.session, patient: patient, error: 'Error checking patient visits' });
             }
-            
+
             if (!visit) {
                 // Create new visit
                 const visitId = 'visit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
@@ -540,86 +540,90 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
     const formData = req.body;
     const visitId = formData.visit_id;
     const isDraft = formData.action === 'draft';
-    
+
     console.log('Nurse form submitted:', formData);
-    
+
     // Check if assessment already exists
     db.get('SELECT na.*, fs.submission_id FROM nursing_assessments na JOIN form_submissions fs ON na.submission_id = fs.submission_id WHERE fs.visit_id = ?', [visitId], (err, existingAssessment) => {
         if (err) {
             console.error('Error checking existing assessment:', err);
             return res.status(500).send('Database error');
         }
-        
+
         const submissionId = existingAssessment ? existingAssessment.submission_id : 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         const assessmentId = existingAssessment ? existingAssessment.assessment_id : 'nurse-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        
-        const sql = existingAssessment ? 
-            `UPDATE nursing_assessments SET 
+
+        const sql = existingAssessment ?
+            `UPDATE nursing_assessments SET
                 mode_of_arrival = ?, age = ?, chief_complaint = ?, accompanied_by = ?, language_spoken = ?,
                 temperature_celsius = ?, pulse_bpm = ?, blood_pressure_systolic = ?, blood_pressure_diastolic = ?,
                 respiratory_rate_per_min = ?, oxygen_saturation_percent = ?, blood_sugar_mg_dl = ?,
                 weight_kg = ?, height_cm = ?, psychological_problem = ?, is_smoker = ?, has_allergies = ?,
-                medication_allergies = ?, food_allergies = ?, other_allergies = ?, diet_type = ?,
-                appetite = ?, has_git_problems = ?, has_weight_loss = ?, has_weight_gain = ?,
-                feeding_status = ?, hygiene_status = ?, toileting_status = ?, ambulation_status = ?,
-                uses_walker = ?, uses_wheelchair = ?, uses_transfer_device = ?, uses_other_equipment = ?,
-                pain_intensity = ?, pain_location = ?, pain_frequency = ?, pain_character = ?,
-                needs_medication_education = ?, needs_diet_nutrition_education = ?, needs_medical_equipment_education = ?,
-                needs_rehabilitation_education = ?, needs_drug_interaction_education = ?, needs_pain_symptom_education = ?,
-                needs_fall_prevention_education = ?, other_needs = ?
+                medication_allergies = ?, food_allergies = ?, other_allergies = ?, diet_type = ?, appetite = ?,
+                has_gi_problems = ?, has_weight_loss = ?, has_weight_gain = ?, feeding_status = ?, hygiene_status = ?,
+                toileting_status = ?, ambulation_status = ?, uses_walker = ?, uses_wheelchair = ?, uses_transfer_device = ?,
+                uses_other_equipment = ?, pain_intensity = ?, pain_location = ?, pain_frequency = ?,
+                pain_character = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
+                needs_medical_equipment_education = ?, needs_rehabilitation_education = ?, needs_drug_interaction_education = ?,
+                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?
              WHERE assessment_id = ?` :
             `INSERT INTO nursing_assessments (
                 assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
                 temperature_celsius, pulse_bpm, blood_pressure_systolic, blood_pressure_diastolic,
                 respiratory_rate_per_min, oxygen_saturation_percent, blood_sugar_mg_dl, weight_kg, height_cm,
-                psychological_problem, is_smoker, has_allergies, medication_allergies, food_allergies, other_allergies,
-                diet_type, appetite, has_git_problems, has_weight_loss, has_weight_gain, feeding_status,
-                hygiene_status, toileting_status, ambulation_status, uses_walker, uses_wheelchair,
-                uses_transfer_device, uses_other_equipment, pain_intensity, pain_location, pain_frequency,
-                pain_character, needs_medication_education, needs_diet_nutrition_education,
-                needs_medical_equipment_education, needs_rehabilitation_education, needs_drug_interaction_education,
-                needs_pain_symptom_education, needs_fall_prevention_education, other_needs, assessed_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        
+                psychological_problem, medication_allergies, food_allergies, other_allergies, diet_type, appetite,
+                feeding_status, ambulation_status, pain_intensity, pain_location, pain_frequency, pain_character,
+                needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
+                needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
+                needs_fall_prevention_education, other_needs, assessed_by, assessed_at, is_smoker, has_allergies,
+                has_gi_problems, has_weight_loss, has_weight_gain, hygiene_status, toileting_status, walker,
+                wheelchair, transfer_device, other_equipment, uses_walker, uses_wheelchair, uses_transfer_device,
+                uses_other_equipment
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
         const values = existingAssessment ? [
             formData.mode_of_arrival, formData.age, formData.chief_complaint, formData.accompanied_by, formData.language_spoken,
             formData.temperature_celsius, formData.pulse_bpm, formData.blood_pressure_systolic, formData.blood_pressure_diastolic,
             formData.respiratory_rate_per_min, formData.oxygen_saturation_percent, formData.blood_sugar_mg_dl,
             formData.weight_kg, formData.height_cm, formData.psychological_problem, formData.is_smoker ? 1 : 0,
             formData.has_allergies ? 1 : 0, formData.medication_allergies, formData.food_allergies, formData.other_allergies,
-            formData.diet_type, formData.appetite, formData.has_git_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
+            formData.diet_type, formData.appetite, formData.has_gi_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
             formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
-            formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0,
-            formData.uses_transfer_device ? 1 : 0, formData.uses_other_equipment ? 1 : 0, formData.pain_intensity,
-            formData.pain_location, formData.pain_frequency, formData.pain_character, formData.needs_medication_education ? 1 : 0,
-            formData.needs_diet_nutrition_education ? 1 : 0, formData.needs_medical_equipment_education ? 1 : 0,
-            formData.needs_rehabilitation_education ? 1 : 0, formData.needs_drug_interaction_education ? 1 : 0,
-            formData.needs_pain_symptom_education ? 1 : 0, formData.needs_fall_prevention_education ? 1 : 0,
-            formData.other_needs ? 1 : 0, assessmentId
+            formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0,
+            formData.uses_other_equipment ? 1 : 0, formData.pain_intensity, formData.pain_location, formData.pain_frequency,
+            formData.pain_character, formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
+            formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
+            formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, assessmentId
         ] : [
             assessmentId, submissionId, formData.mode_of_arrival, formData.age, formData.chief_complaint,
             formData.accompanied_by, formData.language_spoken, formData.temperature_celsius, formData.pulse_bpm,
             formData.blood_pressure_systolic, formData.blood_pressure_diastolic, formData.respiratory_rate_per_min,
             formData.oxygen_saturation_percent, formData.blood_sugar_mg_dl, formData.weight_kg, formData.height_cm,
-            formData.psychological_problem, formData.is_smoker ? 1 : 0, formData.has_allergies ? 1 : 0,
-            formData.medication_allergies, formData.food_allergies, formData.other_allergies, formData.diet_type,
-            formData.appetite, formData.has_git_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
-            formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
-            formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0,
-            formData.uses_transfer_device ? 1 : 0, formData.uses_other_equipment ? 1 : 0, formData.pain_intensity,
-            formData.pain_location, formData.pain_frequency, formData.pain_character, formData.needs_medication_education ? 1 : 0,
-            formData.needs_diet_nutrition_education ? 1 : 0, formData.needs_medical_equipment_education ? 1 : 0,
-            formData.needs_rehabilitation_education ? 1 : 0, formData.needs_drug_interaction_education ? 1 : 0,
-            formData.needs_pain_symptom_education ? 1 : 0, formData.needs_fall_prevention_education ? 1 : 0,
-            formData.other_needs ? 1 : 0, req.session.userId
+            formData.psychological_problem, formData.medication_allergies, formData.food_allergies, formData.other_allergies,
+            formData.diet_type, formData.appetite, formData.feeding_status, formData.ambulation_status,
+            formData.pain_intensity, formData.pain_location, formData.pain_frequency, formData.pain_character,
+            formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
+            formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
+            formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, req.session.userId,
+            new Date().toISOString(), formData.is_smoker ? 1 : 0, formData.has_allergies ? 1 : 0,
+            formData.has_gi_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0, formData.has_weight_gain ? 1 : 0,
+            formData.hygiene_status, formData.toileting_status, formData.walker ? 1 : 0, formData.wheelchair ? 1 : 0,
+            formData.transfer_device ? 1 : 0, formData.other_equipment ? 1 : 0, formData.uses_walker ? 1 : 0,
+            formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0, formData.uses_other_equipment ? 1 : 0
         ];
-        
+
         db.run(sql, values, function(err) {
             if (err) {
                 console.error('Error saving nurse assessment:', err.message);
-                return res.status(500).send('Error saving assessment');
+                console.error('SQL:', sql);
+                console.error('Number of columns in SQL:', sql.match(/\?/g).length);
+                console.error('Number of values provided:', values.length);
+                console.error('Values:', values);
+                return res.status(500).send('Error saving assessment: ' + err.message);
             }
-            
+
             if (!existingAssessment) {
                 // Create form submission record if new
                 db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by, submission_status) VALUES (?, ?, ?, ?, ?)',
@@ -629,7 +633,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                         }
                     });
             }
-            
+
             if (isDraft) {
                 res.redirect(`/nurse/assessment/${visitId}?saved=draft`);
             } else {
