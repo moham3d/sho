@@ -278,11 +278,72 @@ app.get('/admin/visits', requireAuth, requireRole('admin'), (req, res) => {
 
         // Get unique departments for filter dropdown
         db.all('SELECT DISTINCT department FROM patient_visits WHERE department IS NOT NULL ORDER BY department', [], (err, departments) => {
+            // Get notification from session and clear it
+            const notification = req.session.notification;
+            if (req.session.notification) {
+                delete req.session.notification;
+            }
+
             res.render('admin-visits', {
                 user: req.session,
                 visits: visits || [],
                 departments: departments || [],
-                filters: { search, status, department, date_from, date_to }
+                filters: { search, status, department, date_from, date_to },
+                notification: notification
+            });
+        });
+    });
+});
+
+// Delete visit route - must come before the :visitId routes
+app.post('/admin/visits/:visitId/delete', requireAuth, requireRole('admin'), (req, res) => {
+    console.log('Delete visit route hit for visitId:', req.params.visitId);
+    console.log('User session:', req.session.userId, req.session.role);
+
+    const visitId = req.params.visitId;
+
+    // First, delete related assessments and form submissions
+    db.run('DELETE FROM nursing_assessments WHERE submission_id IN (SELECT submission_id FROM form_submissions WHERE visit_id = ?)', [visitId], function(err) {
+        if (err) {
+            console.error('Error deleting nursing assessments:', err);
+            return res.status(500).send('Error deleting visit');
+        }
+
+        db.run('DELETE FROM radiology_assessments WHERE submission_id IN (SELECT submission_id FROM form_submissions WHERE visit_id = ?)', [visitId], function(err) {
+            if (err) {
+                console.error('Error deleting radiology assessments:', err);
+                return res.status(500).send('Error deleting visit');
+            }
+
+            db.run('DELETE FROM form_submissions WHERE visit_id = ?', [visitId], function(err) {
+                if (err) {
+                    console.error('Error deleting form submissions:', err);
+                    return res.status(500).send('Error deleting visit');
+                }
+
+                // Finally, delete the visit itself
+                db.run('DELETE FROM patient_visits WHERE visit_id = ?', [visitId], function(err) {
+                    if (err) {
+                        console.error('Error deleting visit:', err);
+                        return res.status(500).send('Error deleting visit');
+                    }
+
+                    if (this.changes === 0) {
+                        return res.status(404).send('Visit not found');
+                    }
+
+                    console.log(`Visit ${visitId} and all related data deleted successfully`);
+
+                    // Store success message in session
+                    req.session.notification = {
+                        type: 'success',
+                        message: 'Visit and all associated assessments have been deleted successfully.'
+                    };
+
+                    // Redirect back to the previous page or admin visits
+                    const referrer = req.get('Referer') || '/admin/visits';
+                    res.redirect(referrer);
+                });
             });
         });
     });
@@ -325,11 +386,18 @@ app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) 
                 WHERE fs.visit_id = ?
             `, [visitId], (err, radiologyAssessment) => {
 
+                // Get notification from session and clear it
+                const notification = req.session.notification;
+                if (req.session.notification) {
+                    delete req.session.notification;
+                }
+
                 res.render('admin-visit-detail', {
                     user: req.session,
                     visit: visit,
                     nursingAssessment: nursingAssessment || null,
-                    radiologyAssessment: radiologyAssessment || null
+                    radiologyAssessment: radiologyAssessment || null,
+                    notification: notification
                 });
             });
         });
@@ -558,6 +626,90 @@ app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) 
     });
 });
 
+// Add patient routes
+app.get('/nurse/add-patient', requireAuth, requireRole('nurse'), (req, res) => {
+    res.render('add-patient', { user: req.session, error: null });
+});
+
+app.post('/nurse/add-patient', requireAuth, requireRole('nurse'), (req, res) => {
+    const { ssn, full_name, mobile_number, phone_number, medical_number, date_of_birth, gender, address, emergency_contact_name, emergency_contact_phone, emergency_contact_relation } = req.body;
+
+    // Validate required fields
+    if (!ssn || !full_name || !mobile_number || !date_of_birth || !gender) {
+        return res.render('add-patient', {
+            user: req.session,
+            error: 'Please fill in all required fields (SSN, Full Name, Mobile Number, Date of Birth, Gender)'
+        });
+    }
+
+    // Check if patient already exists
+    db.get('SELECT ssn FROM patients WHERE ssn = ?', [ssn], (err, existingPatient) => {
+        if (err) {
+            console.error('Error checking patient existence:', err);
+            return res.render('add-patient', {
+                user: req.session,
+                error: 'Database error occurred'
+            });
+        }
+
+        if (existingPatient) {
+            return res.render('add-patient', {
+                user: req.session,
+                error: 'A patient with this SSN already exists'
+            });
+        }
+
+        // Insert new patient
+        db.run(`INSERT INTO patients (
+            ssn, full_name, mobile_number, phone_number, medical_number,
+            date_of_birth, gender, address, emergency_contact_name,
+            emergency_contact_phone, emergency_contact_relation, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [ssn, full_name, mobile_number, phone_number || null, medical_number || null,
+         date_of_birth, gender, address || null, emergency_contact_name || null,
+         emergency_contact_phone || null, emergency_contact_relation || null, req.session.userId],
+        function(err) {
+            if (err) {
+                console.error('Error creating patient:', err);
+                return res.render('add-patient', {
+                    user: req.session,
+                    error: 'Error creating patient record'
+                });
+            }
+
+            // Patient created successfully, now create a new visit and redirect to assessment
+            const visitId = 'visit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            db.run('INSERT INTO patient_visits (visit_id, patient_ssn, created_by) VALUES (?, ?, ?)',
+                [visitId, ssn, req.session.userId], function(err) {
+                    if (err) {
+                        console.error('Error creating visit:', err);
+                        return res.render('add-patient', {
+                            user: req.session,
+                            error: 'Patient created but error creating visit. Please try searching for the patient.'
+                        });
+                    }
+
+                    // Create form submission
+                    db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by) VALUES (?, ?, ?, ?)',
+                        [submissionId, visitId, 'form-05-uuid', req.session.userId], function(err) {
+                            if (err) {
+                                console.error('Error creating form submission:', err);
+                                return res.render('add-patient', {
+                                    user: req.session,
+                                    error: 'Patient and visit created but error creating assessment. Please try searching for the patient.'
+                                });
+                            }
+
+                            // Redirect to nurse form with visit context
+                            res.redirect(`/nurse/assessment/${visitId}`);
+                        });
+                });
+        });
+    });
+});
+
 app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, res) => {
     const visitId = req.params.visitId;
 
@@ -677,7 +829,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 uses_other_equipment = ?, pain_intensity = ?, pain_location = ?, pain_frequency = ?,
                 pain_character = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
                 needs_medical_equipment_education = ?, needs_rehabilitation_education = ?, needs_drug_interaction_education = ?,
-                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?
+                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature = ?
              WHERE assessment_id = ?` :
             `INSERT INTO nursing_assessments (
                 assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
@@ -689,7 +841,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 pain_intensity, pain_location, pain_frequency, pain_character,
                 needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
                 needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
-                needs_fall_prevention_education, other_needs, assessed_by, assessed_at
+                needs_fall_prevention_education, other_needs, nurse_signature, assessed_by, assessed_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const values = existingAssessment ? [
@@ -705,7 +857,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.pain_character, formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
-            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, assessmentId
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, formData.nurse_signature, assessmentId
         ] : [
             assessmentId, submissionId, formData.mode_of_arrival, formData.age, formData.chief_complaint,
             formData.accompanied_by, formData.language_spoken, formData.temperature_celsius, formData.pulse_bpm,
@@ -721,7 +873,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
-            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, req.session.userId,
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, formData.nurse_signature, req.session.userId,
             new Date().toISOString()
         ];
 

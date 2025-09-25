@@ -33,7 +33,7 @@
 
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
-            <div class="col-12 col-md-10 col-lg-8">
+            <div class="col-12 col-md-10 col-lg-8 col-xl-10">
                 <div class="text-center my-5">
                     <h1 class="display-4 text-dark mb-4">
                         <i class="fas fa-hospital-alt me-3"></i>
@@ -47,7 +47,7 @@
                 <div class="row g-4">
                     <% if (user.role === 'admin') { %>
                         <!-- Admin Options -->
-                        <div class="col-12 col-md-6 col-lg-4">
+                        <div class="col-12 col-md-6 col-lg-4 col-xl-6">
                             <div class="card h-100 shadow-sm hover-card">
                                 <div class="card-body text-center p-4">
                                     <div class="icon-wrapper mb-3">
@@ -68,7 +68,7 @@
 
                     <% if (user.role === 'nurse') { %>
                         <!-- Nurse Options -->
-                        <div class="col-12 col-lg-3">
+                        <div class="col-12 col-lg-3 col-xl-4">
                             <div class="card h-100 shadow-sm hover-card">
                                 <div class="card-body text-center p-4">
                                     <div class="icon-wrapper mb-3">
@@ -88,7 +88,7 @@
 
                         <!-- Current Visits Status for Nurses -->
                         <% if (currentVisits && currentVisits.length > 0) { %>
-                            <div class="col-12 col-lg-9">
+                            <div class="col-12 col-lg-9 col-xl-8">
                                 <div class="card h-100">
                                     <div class="card-header bg-primary text-white">
                                         <h5 class="card-title mb-0">
@@ -191,7 +191,7 @@
 
                     <% if (user.role === 'physician') { %>
                         <!-- Doctor Options -->
-                        <div class="col-12 col-md-6 col-lg-4">
+                        <div class="col-12 col-md-6 col-lg-4 col-xl-5">
                             <div class="card h-100 shadow-sm hover-card">
                                 <div class="card-body text-center p-4">
                                     <div class="icon-wrapper mb-3">
@@ -209,7 +209,7 @@
                             </div>
                         </div>
 
-                        <div class="col-12 col-md-6 col-lg-4">
+                        <div class="col-12 col-md-6 col-lg-4 col-xl-5">
                             <div class="card h-100 shadow-sm hover-card">
                                 <div class="card-body text-center p-4">
                                     <div class="icon-wrapper mb-3">
@@ -230,7 +230,7 @@
                 </div>
 
                 <div class="text-center mt-5">
-                    <div class="alert alert-light border">
+                    <div class="alert alert-light border mx-auto" style="max-width: 800px;">
                         <h5 class="alert-heading">
                             <i class="fas fa-tablet-alt me-2"></i>
                             Tablet Compatible
