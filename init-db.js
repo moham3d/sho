@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-const db = new sqlite3.Database('./test.db', (err) => {
+const db = new sqlite3.Database('./database.db', (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
         return;

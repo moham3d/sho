@@ -7,7 +7,7 @@ const PORT = 3000;
 console.log('Starting minimal server...');
 
 // Database setup
-const db = new sqlite3.Database('c:\\Users\\Mohamed\\Desktop\\sho\\test.db', (err) => {
+const db = new sqlite3.Database('c:\\Users\\Mohamed\\Desktop\\sho\\database.db', (err) => {
     if (err) {
         console.error('Error opening database:', err);
         process.exit(1);
