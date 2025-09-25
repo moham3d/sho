@@ -58,7 +58,40 @@ const db = new sqlite3.Database('c:\\Users\\Mohamed\\Desktop\\sho\\database.db',
 
 // Routes
 app.get('/', requireAuth, (req, res) => {
-    res.render('index', { user: req.session });
+    // If nurse, get current visits data
+    if (req.session.role === 'nurse') {
+        db.all(`
+            SELECT
+                pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status,
+                pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
+                pv.visit_type, pv.department, pv.created_at,
+                p.full_name as patient_name, p.medical_number, p.date_of_birth, p.gender,
+                na.assessment_id, fs.submission_status = 'draft' as is_draft,
+                (SELECT COUNT(*) FROM form_submissions fs2 WHERE fs2.visit_id = pv.visit_id) as total_assessments
+            FROM patient_visits pv
+            JOIN patients p ON pv.patient_ssn = p.ssn
+            LEFT JOIN form_submissions fs ON fs.visit_id = pv.visit_id AND fs.form_id = 'form-05-uuid'
+            LEFT JOIN nursing_assessments na ON na.submission_id = fs.submission_id
+            WHERE pv.created_by = ? AND pv.visit_status IN ('open', 'in_progress')
+            ORDER BY pv.visit_date DESC, pv.created_at DESC
+            LIMIT 5
+        `, [req.session.userId], (err, currentVisits) => {
+            if (err) {
+                console.error('Error getting nurse visits for home page:', err);
+                currentVisits = [];
+            }
+
+            res.render('index', { 
+                user: req.session,
+                currentVisits: currentVisits || []
+            });
+        });
+    } else {
+        res.render('index', { 
+            user: req.session,
+            currentVisits: []
+        });
+    }
 });
 
 app.get('/login', (req, res) => {
@@ -93,7 +126,7 @@ app.post('/login', async (req, res) => {
         if (user.role === 'admin') {
             res.redirect('/admin');
         } else if (user.role === 'nurse') {
-            res.redirect('/nurse/search-patient');
+            res.redirect('/');
         } else if (user.role === 'physician') {
             res.redirect('/doctor');
         } else {
@@ -385,7 +418,36 @@ app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) =
 });
 
 app.get('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
-    res.render('patient-search', { user: req.session, patient: null, error: null, visitId: null });
+    // Get nurse's current visits with assessment status
+    db.all(`
+        SELECT
+            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status,
+            pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
+            pv.visit_type, pv.department, pv.created_at,
+            p.full_name as patient_name, p.medical_number, p.date_of_birth, p.gender,
+            na.assessment_id, fs.submission_status = 'draft' as is_draft,
+            (SELECT COUNT(*) FROM form_submissions fs2 WHERE fs2.visit_id = pv.visit_id) as total_assessments
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN form_submissions fs ON fs.visit_id = pv.visit_id AND fs.form_id = 'form-05-uuid'
+        LEFT JOIN nursing_assessments na ON na.submission_id = fs.submission_id
+        WHERE pv.created_by = ? AND pv.visit_status IN ('open', 'in_progress')
+        ORDER BY pv.visit_date DESC, pv.created_at DESC
+        LIMIT 10
+    `, [req.session.userId], (err, visits) => {
+        if (err) {
+            console.error('Error getting nurse visits:', err);
+            visits = [];
+        }
+
+        res.render('patient-search', {
+            user: req.session,
+            patient: null,
+            error: null,
+            visitId: null,
+            currentVisits: visits || []
+        });
+    });
 });
 
 // API endpoint for patient autocomplete search
@@ -413,39 +475,86 @@ app.get('/api/patients/search', requireAuth, (req, res) => {
 app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
     const { ssn } = req.body;
 
-    db.get('SELECT * FROM patients WHERE ssn = ?', [ssn], (err, patient) => {
+    // Get current visits for the template
+    db.all(`
+        SELECT
+            pv.visit_id, pv.patient_ssn, pv.visit_date, pv.visit_status,
+            pv.primary_diagnosis, pv.secondary_diagnosis, pv.diagnosis_code,
+            pv.visit_type, pv.department, pv.created_at,
+            p.full_name as patient_name, p.medical_number, p.date_of_birth, p.gender,
+            na.assessment_id, fs.submission_status = 'draft' as is_draft,
+            (SELECT COUNT(*) FROM form_submissions fs2 WHERE fs2.visit_id = pv.visit_id) as total_assessments
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN form_submissions fs ON fs.visit_id = pv.visit_id AND fs.form_id = 'form-05-uuid'
+        LEFT JOIN nursing_assessments na ON na.submission_id = fs.submission_id
+        WHERE pv.created_by = ? AND pv.visit_status IN ('open', 'in_progress')
+        ORDER BY pv.visit_date DESC, pv.created_at DESC
+        LIMIT 10
+    `, [req.session.userId], (err, currentVisits) => {
         if (err) {
-            console.error('Database error:', err);
-            return res.render('patient-search', { user: req.session, patient: null, error: 'Database error' });
+            console.error('Error getting nurse visits:', err);
+            currentVisits = [];
         }
 
-        if (!patient) {
-            return res.render('patient-search', { user: req.session, patient: null, error: 'Patient not found. Please register the patient first.' });
-        }
+        db.get('SELECT * FROM patients WHERE ssn = ?', [ssn], (err, patient) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.render('patient-search', {
+                    user: req.session,
+                    patient: null,
+                    error: 'Database error',
+                    visitId: null,
+                    currentVisits: currentVisits || []
+                });
+            }
 
-        // Create new visit immediately
-        const visitId = 'visit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            if (!patient) {
+                return res.render('patient-search', {
+                    user: req.session,
+                    patient: null,
+                    error: 'Patient not found. Please register the patient first.',
+                    visitId: null,
+                    currentVisits: currentVisits || []
+                });
+            }
 
-        db.run('INSERT INTO patient_visits (visit_id, patient_ssn, created_by) VALUES (?, ?, ?)',
-            [visitId, ssn, req.session.userId], function(err) {
-                if (err) {
-                    console.error('Error creating visit:', err);
-                    return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating visit', visitId: null });
-                }
+            // Create new visit immediately
+            const visitId = 'visit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
-                // Create form submission
-                db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by) VALUES (?, ?, ?, ?)',
-                    [submissionId, visitId, 'form-05-uuid', req.session.userId], function(err) {
-                        if (err) {
-                            console.error('Error creating form submission:', err);
-                            return res.render('patient-search', { user: req.session, patient: patient, error: 'Error creating assessment', visitId: null });
-                        }
+            db.run('INSERT INTO patient_visits (visit_id, patient_ssn, created_by) VALUES (?, ?, ?)',
+                [visitId, ssn, req.session.userId], function(err) {
+                    if (err) {
+                        console.error('Error creating visit:', err);
+                        return res.render('patient-search', {
+                            user: req.session,
+                            patient: patient,
+                            error: 'Error creating visit',
+                            visitId: null,
+                            currentVisits: currentVisits || []
+                        });
+                    }
 
-                        // Redirect to nurse form with visit context
-                        res.redirect(`/nurse/assessment/${visitId}`);
-                    });
-            });
+                    // Create form submission
+                    db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by) VALUES (?, ?, ?, ?)',
+                        [submissionId, visitId, 'form-05-uuid', req.session.userId], function(err) {
+                            if (err) {
+                                console.error('Error creating form submission:', err);
+                                return res.render('patient-search', {
+                                    user: req.session,
+                                    patient: patient,
+                                    error: 'Error creating assessment',
+                                    visitId: null,
+                                    currentVisits: currentVisits || []
+                                });
+                            }
+
+                            // Redirect to nurse form with visit context
+                            res.redirect(`/nurse/assessment/${visitId}`);
+                        });
+                });
+        });
     });
 });
 
