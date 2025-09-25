@@ -583,7 +583,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 respiratory_rate_per_min = ?, oxygen_saturation_percent = ?, blood_sugar_mg_dl = ?,
                 weight_kg = ?, height_cm = ?, psychological_problem = ?, is_smoker = ?, has_allergies = ?,
                 medication_allergies = ?, food_allergies = ?, other_allergies = ?, diet_type = ?, appetite = ?,
-                has_gi_problems = ?, has_weight_loss = ?, has_weight_gain = ?, feeding_status = ?, hygiene_status = ?,
+                has_git_problems = ?, has_weight_loss = ?, has_weight_gain = ?, feeding_status = ?, hygiene_status = ?,
                 toileting_status = ?, ambulation_status = ?, uses_walker = ?, uses_wheelchair = ?, uses_transfer_device = ?,
                 uses_other_equipment = ?, pain_intensity = ?, pain_location = ?, pain_frequency = ?,
                 pain_character = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
@@ -594,15 +594,14 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
                 temperature_celsius, pulse_bpm, blood_pressure_systolic, blood_pressure_diastolic,
                 respiratory_rate_per_min, oxygen_saturation_percent, blood_sugar_mg_dl, weight_kg, height_cm,
-                psychological_problem, medication_allergies, food_allergies, other_allergies, diet_type, appetite,
-                feeding_status, ambulation_status, pain_intensity, pain_location, pain_frequency, pain_character,
+                psychological_problem, is_smoker, has_allergies, medication_allergies, food_allergies, other_allergies,
+                diet_type, appetite, has_git_problems, has_weight_loss, has_weight_gain, feeding_status, hygiene_status,
+                toileting_status, ambulation_status, uses_walker, uses_wheelchair, uses_transfer_device, uses_other_equipment,
+                pain_intensity, pain_location, pain_frequency, pain_character,
                 needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
                 needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
-                needs_fall_prevention_education, other_needs, assessed_by, assessed_at, is_smoker, has_allergies,
-                has_gi_problems, has_weight_loss, has_weight_gain, hygiene_status, toileting_status, walker,
-                wheelchair, transfer_device, other_equipment, uses_walker, uses_wheelchair, uses_transfer_device,
-                uses_other_equipment
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                needs_fall_prevention_education, other_needs, assessed_by, assessed_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const values = existingAssessment ? [
             formData.mode_of_arrival, formData.age, formData.chief_complaint, formData.accompanied_by, formData.language_spoken,
@@ -610,7 +609,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.respiratory_rate_per_min, formData.oxygen_saturation_percent, formData.blood_sugar_mg_dl,
             formData.weight_kg, formData.height_cm, formData.psychological_problem, formData.is_smoker ? 1 : 0,
             formData.has_allergies ? 1 : 0, formData.medication_allergies, formData.food_allergies, formData.other_allergies,
-            formData.diet_type, formData.appetite, formData.has_gi_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
+            formData.diet_type, formData.appetite, formData.has_git_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
             formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
             formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0,
             formData.uses_other_equipment ? 1 : 0, formData.pain_intensity, formData.pain_location, formData.pain_frequency,
@@ -623,18 +622,18 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.accompanied_by, formData.language_spoken, formData.temperature_celsius, formData.pulse_bpm,
             formData.blood_pressure_systolic, formData.blood_pressure_diastolic, formData.respiratory_rate_per_min,
             formData.oxygen_saturation_percent, formData.blood_sugar_mg_dl, formData.weight_kg, formData.height_cm,
-            formData.psychological_problem, formData.medication_allergies, formData.food_allergies, formData.other_allergies,
-            formData.diet_type, formData.appetite, formData.feeding_status, formData.ambulation_status,
+            formData.psychological_problem, formData.is_smoker ? 1 : 0, formData.has_allergies ? 1 : 0,
+            formData.medication_allergies, formData.food_allergies, formData.other_allergies,
+            formData.diet_type, formData.appetite, formData.has_git_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
+            formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
+            formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0,
+            formData.uses_transfer_device ? 1 : 0, formData.uses_other_equipment ? 1 : 0,
             formData.pain_intensity, formData.pain_location, formData.pain_frequency, formData.pain_character,
             formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
             formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, req.session.userId,
-            new Date().toISOString(), formData.is_smoker ? 1 : 0, formData.has_allergies ? 1 : 0,
-            formData.has_gi_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0, formData.has_weight_gain ? 1 : 0,
-            formData.hygiene_status, formData.toileting_status, formData.walker ? 1 : 0, formData.wheelchair ? 1 : 0,
-            formData.transfer_device ? 1 : 0, formData.other_equipment ? 1 : 0, formData.uses_walker ? 1 : 0,
-            formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0, formData.uses_other_equipment ? 1 : 0
+            new Date().toISOString()
         ];
 
         db.run(sql, values, function(err) {
