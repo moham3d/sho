@@ -265,7 +265,8 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
 });
 
 app.get('/nurse-form', requireAuth, requireRole('nurse'), (req, res) => {
-    res.render('nurse-form', { user: req.session, visit: null, assessment: null, isDraft: true });
+    // Redirect to patient search - forms can only be accessed through patient search
+    res.redirect('/nurse/search-patient');
 });
 
 app.get('/radiology-form', requireAuth, requireRole('physician'), (req, res) => {

@@ -46,7 +46,7 @@ The original PostgreSQL schema has been adapted for SQLite with the following ch
 - Added SQLite-compatible triggers for automatic timestamps
 
 ### Core Tables Created
-1. **patients** - Patient demographics and contact information
+1. **patients** - Patient demographics and contact information (SSN: 14-digit format)
 2. **users** - System users (nurses, physicians, admins)
 3. **patient_visits** - Patient visit tracking
 4. **form_definitions** - Form metadata (SH.MR.FRM.05, SH.MR.FRM.04)
@@ -317,8 +317,9 @@ The original PostgreSQL schema has been adapted for SQLite with the following ch
 ## Authentication & User Management System
 
 ### Authentication Features
+- **Username-Based Login**: Users login with username instead of email address
 - **User Roles**: Admin, Nurse, Physician with role-based access control
-- **Secure Login**: Email/password authentication with bcrypt hashing
+- **Secure Login**: Username/password authentication with bcrypt hashing
 - **Session Management**: Express-session with SQLite store for persistent sessions
 - **Role-Based Redirects**: Automatic redirection based on user role after login
 - **Logout Functionality**: Secure session destruction
@@ -331,11 +332,12 @@ The original PostgreSQL schema has been adapted for SQLite with the following ch
 - **User Statistics**: Dashboard showing user counts by role
 
 ### Nurse Workflow Features
-- **Patient Search**: SSN-based patient lookup for assessments
+- **Patient Search**: SSN-based patient lookup for assessments (14-digit format)
+- **Mandatory Patient Data**: Assessment forms can only be accessed through patient search
 - **Automatic Visit Creation**: New visits created when patient is found
 - **Assessment Linking**: Assessments linked to specific visits and nurses
 - **Draft Functionality**: Save incomplete assessments as drafts
-- **Nurse Dashboard**: Dedicated interface for nursing operations
+- **Restricted Form Access**: Direct form access without patient data is not allowed
 
 ### Database Schema Extensions
 - **users table**: Stores user accounts with roles and authentication data
@@ -347,6 +349,7 @@ The original PostgreSQL schema has been adapted for SQLite with the following ch
 - **Session Security**: HttpOnly, secure cookies in production
 - **Role Middleware**: Route protection based on user roles
 - **Input Validation**: Server-side validation for all user inputs
+- **Username Authentication**: Login uses username field instead of email for simplicity
 
 ### UI/UX Enhancements
 - **Role-Based Navigation**: Different dashboards for each user role

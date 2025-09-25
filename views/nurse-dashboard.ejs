@@ -93,17 +93,11 @@
                         <h3 class="card-title mb-4">
                             <i class="fas fa-bolt me-2"></i>Quick Actions
                         </h3>
-                        <div class="row g-3">
+                        <div class="row justify-content-center">
                             <div class="col-md-6">
                                 <a href="/nurse/search-patient" class="btn btn-light btn-custom w-100">
                                     <i class="fas fa-search me-2"></i>Start New Assessment
                                     <br><small>Search patient by SSN</small>
-                                </a>
-                            </div>
-                            <div class="col-md-6">
-                                <a href="/nurse-form" class="btn btn-light btn-custom w-100">
-                                    <i class="fas fa-plus-circle me-2"></i>Quick Assessment
-                                    <br><small>Assessment without patient search</small>
                                 </a>
                             </div>
                         </div>
@@ -115,7 +109,7 @@
         <!-- Main Features -->
         <div class="row g-4">
             <!-- Patient Search & Assessment -->
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="card h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-search-plus icon-large text-primary"></i>
@@ -131,25 +125,8 @@
                 </div>
             </div>
 
-            <!-- Assessment Forms -->
-            <div class="col-lg-6">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-clipboard-list icon-large text-success"></i>
-                        <h4 class="card-title">Assessment Forms</h4>
-                        <p class="card-text text-muted">
-                            Access comprehensive nursing assessment forms with vital signs,
-                            patient history, allergies, and care planning. Forms can be saved as drafts.
-                        </p>
-                        <a href="/nurse-form" class="btn btn-success btn-custom">
-                            <i class="fas fa-clipboard-check me-2"></i>Open Form
-                        </a>
-                    </div>
-                </div>
-            </div>
-
             <!-- Recent Activity -->
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="card h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-history icon-large text-warning"></i>
@@ -166,7 +143,7 @@
             </div>
 
             <!-- Reports & Analytics -->
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="card h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-chart-bar icon-large text-info"></i>
@@ -226,8 +203,8 @@
                             <div class="col-md-6">
                                 <h6><i class="fas fa-search text-primary me-2"></i>Starting a New Assessment</h6>
                                 <ol class="text-muted">
-                                    <li>Click "Start New Assessment" or "Search Patient"</li>
-                                    <li>Enter the patient's SSN</li>
+                                    <li>Click "Start New Assessment" to search for a patient</li>
+                                    <li>Enter the patient's 14-digit SSN</li>
                                     <li>If patient exists, a new visit is created automatically</li>
                                     <li>Fill out the assessment form</li>
                                     <li>Save as draft or submit when complete</li>
