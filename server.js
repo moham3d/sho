@@ -453,7 +453,16 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
 
 // Nurse routes
 app.get('/nurse', requireAuth, requireRole('nurse'), (req, res) => {
-    res.redirect('/nurse/search-patient');
+    // Handle notification from query parameters
+    const notification = req.query.notification ? {
+        type: req.query.notification,
+        message: req.query.message ? decodeURIComponent(req.query.message) : ''
+    } : null;
+
+    res.render('nurse-dashboard', {
+        user: req.session,
+        notification: notification
+    });
 });
 
 app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) => {
@@ -542,6 +551,17 @@ app.get('/api/patients/search', requireAuth, (req, res) => {
 
 app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) => {
     const { ssn } = req.body;
+
+    // Validate SSN format
+    if (!ssn || !/^\d{14}$/.test(ssn)) {
+        return res.render('patient-search', {
+            user: req.session,
+            patient: null,
+            error: 'Please enter a valid 14-digit SSN',
+            visitId: null,
+            currentVisits: []
+        });
+    }
 
     // Get current visits for the template
     db.all(`
@@ -639,6 +659,14 @@ app.post('/nurse/add-patient', requireAuth, requireRole('nurse'), (req, res) => 
         return res.render('add-patient', {
             user: req.session,
             error: 'Please fill in all required fields (SSN, Full Name, Mobile Number, Date of Birth, Gender)'
+        });
+    }
+
+    // Validate SSN format (14-digit Egyptian SSN)
+    if (!/^\d{14}$/.test(ssn)) {
+        return res.render('add-patient', {
+            user: req.session,
+            error: 'SSN must be exactly 14 digits and contain only numbers'
         });
     }
 
@@ -751,6 +779,11 @@ app.get('/doctor', requireAuth, requireRole('physician'), (req, res) => {
 
 app.post('/doctor/search-patient', requireAuth, requireRole('physician'), (req, res) => {
     const { ssn } = req.body;
+
+    // Validate SSN format
+    if (!ssn || !/^\d{14}$/.test(ssn)) {
+        return res.render('doctor-dashboard', { user: req.session, patient: null, error: 'Please enter a valid 14-digit SSN' });
+    }
 
     db.get('SELECT * FROM patients WHERE ssn = ?', [ssn], (err, patient) => {
         if (err) {
@@ -900,13 +933,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             if (isDraft) {
                 res.redirect(`/nurse/assessment/${visitId}?saved=draft`);
             } else {
-                res.send(`
-                    <div class="alert alert-success text-center">
-                        <h4><i class="fas fa-check-circle me-2"></i>Nurse Assessment ${existingAssessment ? 'Updated' : 'Submitted'} Successfully!</h4>
-                        <p>Assessment ID: ${assessmentId}</p>
-                        <a href="/nurse/search-patient" class="btn btn-primary">Start New Assessment</a>
-                    </div>
-                `);
+                res.redirect('/nurse?notification=success&message=Nursing+assessment+submitted+successfully');
             }
         });
     });
@@ -936,8 +963,8 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
             radiotherapy_site, radiotherapy_sessions, has_operations, has_endoscopy,
             has_biopsies, has_tc_mdp_bone_scan, has_tc_dtpa_kidney_scan,
             has_mri, has_mammography, has_ct, has_xray, has_ultrasound,
-            assessed_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            physician_signature, assessed_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -955,7 +982,7 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
         formData.has_biopsies ? 1 : 0, formData.has_tc_mdp_bone_scan ? 1 : 0,
         formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
         formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
-        formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, req.session.userId
+        formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, formData.physician_signature, req.session.userId
     ];
 
     db.run(sql, values, function(err) {

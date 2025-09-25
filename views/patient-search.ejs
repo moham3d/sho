@@ -148,7 +148,7 @@
                             <div class="mb-4" style="position: relative;">
                                 <label for="patientSearch" class="form-label fs-5">Search by Patient SSN</label>
                                 <input type="text" class="form-control form-control-lg" id="patientSearch"
-                                       placeholder="Type patient SSN..."
+                                       placeholder="Type patient SSN (14 digits)..."
                                        autocomplete="off">
                                 <div class="form-text text-center">
                                     <small>Type at least 2 digits to search</small>
@@ -171,10 +171,10 @@
                                     <div class="col-md-6 mb-3">
                                         <label for="ssn" class="form-label">Patient SSN</label>
                                         <input type="text" class="form-control form-control-lg ssn-input text-center"
-                                               id="ssn" name="ssn" placeholder="XXX-XX-XXXX"
-                                               pattern="\d{3}-\d{2}-\d{4}" maxlength="11" required>
+                                               id="ssn" name="ssn" placeholder="14-digit SSN"
+                                               pattern="\d{14}" maxlength="14" required>
                                         <div class="form-text text-center">
-                                            <small>Format: XXX-XX-XXXX (e.g., 123-45-6789)</small>
+                                            <small>14-digit Egyptian SSN</small>
                                         </div>
                                     </div>
                                 </div>
@@ -354,7 +354,7 @@
                             <div class="col-md-6">
                                 <h6><i class="fas fa-search text-primary me-2"></i>Search Process</h6>
                                 <ol class="text-muted">
-                                    <li>Enter the patient's SSN in XXX-XX-XXXX format</li>
+                                    <li>Enter the patient's 14-digit SSN</li>
                                     <li>Type at least 2 digits to see matching results</li>
                                     <li>Select the patient from the dropdown</li>
                                     <li>Verify both patient name and SSN in the confirmation section</li>
@@ -503,39 +503,23 @@
             document.getElementById('searchBtn').disabled = false;
         }
 
-        // Auto-format SSN search input with XXX-XX-XXXX format
+        // Auto-format SSN search input (allow only digits, limit to 14)
         document.getElementById('patientSearch').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, ''); // Remove any non-digit characters
-            // Limit to 9 digits
-            if (value.length > 9) {
-                value = value.slice(0, 9);
+            // Limit to 14 digits
+            if (value.length > 14) {
+                value = value.slice(0, 14);
             }
-
-            // Format as XXX-XX-XXXX
-            if (value.length >= 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5);
-            } else if (value.length >= 3) {
-                value = value.slice(0, 3) + '-' + value.slice(3);
-            }
-
             e.target.value = value;
         });
 
-        // Auto-format SSN input with XXX-XX-XXXX format
+        // Auto-format SSN input (allow only digits, limit to 14)
         document.getElementById('ssn').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, ''); // Remove any non-digit characters
-            // Limit to 9 digits
-            if (value.length > 9) {
-                value = value.slice(0, 9);
+            // Limit to 14 digits
+            if (value.length > 14) {
+                value = value.slice(0, 14);
             }
-
-            // Format as XXX-XX-XXXX
-            if (value.length >= 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5);
-            } else if (value.length >= 3) {
-                value = value.slice(0, 3) + '-' + value.slice(3);
-            }
-
             e.target.value = value;
         });
 

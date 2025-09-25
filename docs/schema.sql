@@ -205,6 +205,7 @@ CREATE TABLE nursing_assessments (
     reporting_date DATETIME,
 
     -- Audit fields
+    nurse_signature TEXT,
     assessed_by TEXT NOT NULL REFERENCES users(user_id),
     assessed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -285,6 +286,7 @@ CREATE TABLE radiology_assessments (
     other_imaging_desc TEXT,
 
     -- Audit fields
+    physician_signature TEXT,
     assessed_by TEXT NOT NULL REFERENCES users(user_id),
     assessed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -117,7 +117,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Age</label>
-                                <input type="number" class="form-control" name="age" min="0" max="150" required value="<%= assessment ? assessment.age : '' %>">
+                                <input type="number" class="form-control" name="age" id="ageField" min="0" max="150" required value="<%= assessment ? assessment.age : '' %>">
+                                <small class="text-muted">Auto-calculated from patient's date of birth</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Chief Complaint (الشكوي الحالية)</label>
@@ -451,6 +452,23 @@
     <!-- Signature Pad Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto-populate age from patient's date of birth
+            const patientDOB = '<%= visit.date_of_birth %>';
+            const ageField = document.getElementById('ageField');
+
+            if (patientDOB && patientDOB !== 'null' && !ageField.value) {
+                const birthDate = new Date(patientDOB);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                ageField.value = age;
+            }
+
             const canvas = document.getElementById('signatureCanvas');
             const signatureInput = document.getElementById('nurseSignatureInput');
             const clearButton = document.getElementById('clearSignature');

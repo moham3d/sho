@@ -134,13 +134,13 @@
                                     <div class="col-md-6 mb-3">
                                         <label for="ssn" class="form-label required-field">Social Security Number (SSN)</label>
                                         <input type="text" class="form-control form-control-lg ssn-input text-center"
-                                               id="ssn" name="ssn" placeholder="XXX-XX-XXXX"
-                                               pattern="\d{3}-\d{2}-\d{4}" maxlength="11" required>
+                                               id="ssn" name="ssn" placeholder="14-digit SSN"
+                                               pattern="\d{14}" maxlength="14" required>
                                         <div class="form-text text-center">
-                                            <small>Format: XXX-XX-XXXX (e.g., 123-45-6789)</small>
+                                            <small>14-digit Egyptian SSN (e.g., 28308191300293)</small>
                                         </div>
                                         <div class="invalid-feedback">
-                                            Please enter a valid SSN in the format XXX-XX-XXXX
+                                            Please enter a valid 14-digit SSN
                                         </div>
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -154,15 +154,23 @@
                                 </div>
 
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
                                         <label for="date_of_birth" class="form-label required-field">Date of Birth</label>
                                         <input type="date" class="form-control form-control-lg" id="date_of_birth"
-                                               name="date_of_birth" required>
+                                               name="date_of_birth" readonly>
                                         <div class="form-text">
-                                            <small>Patient's date of birth</small>
+                                            <small>Auto-calculated from SSN</small>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="age" class="form-label">Age</label>
+                                        <input type="number" class="form-control form-control-lg" id="age"
+                                               name="age" readonly>
+                                        <div class="form-text">
+                                            <small>Auto-calculated from SSN</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
                                         <label for="gender" class="form-label required-field">Gender</label>
                                         <select class="form-select form-select-lg" id="gender" name="gender" required>
                                             <option value="">Select Gender</option>
@@ -281,21 +289,24 @@
                         </h5>
                         <div class="row">
                             <div class="col-md-6">
-                                <h6><i class="fas fa-user-plus text-success me-2"></i>Patient Registration</h6>
+                                <h6><i class="fas fa-id-card text-primary me-2"></i>Egyptian SSN Format</h6>
                                 <ul class="text-muted">
-                                    <li>Patient information is securely stored in the database</li>
-                                    <li>SSN is used as the unique identifier</li>
-                                    <li>All contact and medical information is recorded</li>
-                                    <li>Emergency contact details are saved for quick access</li>
+                                    <li>14-digit number (no hyphens or spaces)</li>
+                                    <li>First digit: Governorate code</li>
+                                    <li>Next 2 digits: Year of birth</li>
+                                    <li>Next 2 digits: Month of birth</li>
+                                    <li>Next 2 digits: Day of birth</li>
+                                    <li>Last 7 digits: Unique ID number</li>
+                                    <li><strong>Example:</strong> 28308191300293</li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
-                                <h6><i class="fas fa-clipboard-list text-primary me-2"></i>Assessment Creation</h6>
+                                <h6><i class="fas fa-calculator text-success me-2"></i>Auto-Calculated Fields</h6>
                                 <ul class="text-muted">
-                                    <li>A new patient visit is automatically created</li>
-                                    <li>You will be redirected to the nursing assessment form</li>
-                                    <li>The form will be pre-filled with patient information</li>
-                                    <li>You can begin the assessment immediately</li>
+                                    <li>Date of birth automatically calculated from SSN</li>
+                                    <li>Age automatically calculated and updated</li>
+                                    <li>Invalid SSN dates will show validation errors</li>
+                                    <li>All fields are validated before submission</li>
                                 </ul>
                             </div>
                         </div>
@@ -307,31 +318,106 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Auto-format SSN input with XXX-XX-XXXX format
+        // Egyptian SSN parsing functions
+        function parseEgyptianSSN(ssn) {
+            if (!ssn || ssn.length !== 14 || !/^\d{14}$/.test(ssn)) {
+                return null;
+            }
+
+            const governorateCode = ssn.substring(0, 1);
+            const year = parseInt(ssn.substring(1, 3));
+            const month = parseInt(ssn.substring(3, 5));
+            const day = parseInt(ssn.substring(5, 7));
+
+            // Determine century - Egyptian SSNs use 1900s for years 00-99, but we need to handle current century properly
+            const currentYear = new Date().getFullYear();
+            const currentCentury = Math.floor(currentYear / 100) * 100;
+            const previousCentury = currentCentury - 100;
+
+            let fullYear;
+            if (year > (currentYear - 2000)) {
+                fullYear = previousCentury + year;
+            } else {
+                fullYear = currentCentury + year;
+            }
+
+            // Validate date components
+            if (month < 1 || month > 12 || day < 1 || day > 31) {
+                return null;
+            }
+
+            // Check for valid date (accounting for different month lengths)
+            const daysInMonth = new Date(fullYear, month, 0).getDate();
+            if (day > daysInMonth) {
+                return null;
+            }
+
+            // Create date object for age calculation
+            const birthDate = new Date(fullYear, month - 1, day);
+
+            return {
+                governorateCode: governorateCode,
+                birthDate: birthDate,
+                age: calculateAge(birthDate)
+            };
+        }
+
+        function calculateAge(birthDate) {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            return age;
+        }
+
+        // SSN input handler
         document.getElementById('ssn').addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, ''); // Remove any non-digit characters
-            // Limit to 9 digits
-            if (value.length > 9) {
-                value = value.slice(0, 9);
+            // Limit to 14 digits
+            if (value.length > 14) {
+                value = value.slice(0, 14);
             }
-
-            // Format as XXX-XX-XXXX
-            if (value.length >= 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3, 5) + '-' + value.slice(5);
-            } else if (value.length >= 3) {
-                value = value.slice(0, 3) + '-' + value.slice(3);
-            }
-
             e.target.value = value;
+
+            // Auto-populate DOB and age if SSN is valid
+            if (value.length === 14) {
+                const parsed = parseEgyptianSSN(value);
+                if (parsed) {
+                    // Format date as YYYY-MM-DD
+                    const year = parsed.birthDate.getFullYear();
+                    const month = (parsed.birthDate.getMonth() + 1).toString().padStart(2, '0');
+                    const day = parsed.birthDate.getDate().toString().padStart(2, '0');
+                    const dateString = `${year}-${month}-${day}`;
+                    
+                    document.getElementById('date_of_birth').value = dateString;
+                    document.getElementById('age').value = parsed.age;
+                    e.target.classList.remove('is-invalid');
+                } else {
+                    document.getElementById('date_of_birth').value = '';
+                    document.getElementById('age').value = '';
+                    e.target.classList.add('is-invalid');
+                }
+            } else {
+                document.getElementById('date_of_birth').value = '';
+                document.getElementById('age').value = '';
+                e.target.classList.remove('is-invalid');
+            }
         });
 
         // Validate SSN format on blur
         document.getElementById('ssn').addEventListener('blur', function(e) {
-            const ssnPattern = /^\d{3}-\d{2}-\d{4}$/;
+            const ssnPattern = /^\d{14}$/;
             if (e.target.value && !ssnPattern.test(e.target.value)) {
                 e.target.classList.add('is-invalid');
-            } else {
-                e.target.classList.remove('is-invalid');
+            } else if (e.target.value.length === 14) {
+                const parsed = parseEgyptianSSN(e.target.value);
+                if (!parsed) {
+                    e.target.classList.add('is-invalid');
+                }
             }
         });
 
@@ -342,12 +428,6 @@
                 let value = e.target.value.replace(/\D/g, '');
                 e.target.value = value;
             });
-        });
-
-        // Set max date for date of birth (no future dates)
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date_of_birth').setAttribute('max', today);
         });
     </script>
 </body>
