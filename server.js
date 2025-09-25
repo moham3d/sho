@@ -93,7 +93,7 @@ app.post('/login', async (req, res) => {
         if (user.role === 'admin') {
             res.redirect('/admin');
         } else if (user.role === 'nurse') {
-            res.redirect('/nurse');
+            res.redirect('/nurse/search-patient');
         } else if (user.role === 'physician') {
             res.redirect('/doctor');
         } else {
@@ -352,27 +352,7 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
 
 // Nurse routes
 app.get('/nurse', requireAuth, requireRole('nurse'), (req, res) => {
-    // Get nurse's statistics
-    db.get(`
-        SELECT
-            COUNT(CASE WHEN DATE(assessed_at) = DATE('now') THEN 1 END) as today_assessments,
-            COUNT(CASE WHEN DATE(assessed_at) >= DATE('now', '-7 days') THEN 1 END) as week_assessments,
-            COUNT(CASE WHEN fs.submission_status = 'draft' THEN 1 END) as draft_assessments,
-            COUNT(CASE WHEN DATE(assessed_at) >= DATE('now', 'start of month') THEN 1 END) as month_assessments
-        FROM nursing_assessments na
-        LEFT JOIN form_submissions fs ON na.submission_id = fs.submission_id
-        WHERE na.assessed_by = ?
-    `, [req.session.userId], (err, stats) => {
-        if (err) {
-            console.error('Error getting nurse stats:', err);
-            stats = { today_assessments: 0, week_assessments: 0, draft_assessments: 0, month_assessments: 0 };
-        }
-
-        res.render('nurse-dashboard', {
-            user: req.session,
-            stats: stats || { today_assessments: 0, week_assessments: 0, draft_assessments: 0, month_assessments: 0 }
-        });
-    });
+    res.redirect('/nurse/search-patient');
 });
 
 app.get('/nurse/my-assessments', requireAuth, requireRole('nurse'), (req, res) => {
@@ -663,7 +643,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                     <div class="alert alert-success text-center">
                         <h4><i class="fas fa-check-circle me-2"></i>Nurse Assessment ${existingAssessment ? 'Updated' : 'Submitted'} Successfully!</h4>
                         <p>Assessment ID: ${assessmentId}</p>
-                        <a href="/nurse" class="btn btn-primary">Back to Dashboard</a>
+                        <a href="/nurse/search-patient" class="btn btn-primary">Start New Assessment</a>
                     </div>
                 `);
             }
