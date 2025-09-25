@@ -1,27 +1,49 @@
 /* =========================================================
-   Global Theme Variables
+   Bootstrap Integration & Custom Enhancements
    ========================================================= */
+
+/* Medical Theme Color Overrides */
 :root {
-    --color-primary: #3498db;
-    --color-primary-dark: #2980b9;
-    --color-secondary: #95a5a6;
-    --color-secondary-dark: #7f8c8d;
-    --color-success: #27ae60;
-    --color-success-dark: #229954;
-    --color-danger: #e74c3c;
-    --color-danger-dark: #c0392b;
-    --color-text: #243447;
-    --color-text-muted: #657786;
-    --color-border: #e1e8ed;
-    --color-surface: #ffffff;
-    --color-surface-muted: #f8f9fb;
-    --color-background: #f3f5f9;
-    --shadow-card: 0 12px 24px rgba(15, 23, 42, 0.06);
-    --shadow-hover: 0 16px 32px rgba(15, 23, 42, 0.12);
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
+    --bs-primary: #0066cc;
+    --bs-primary-rgb: 0, 102, 204;
+    --bs-secondary: #6c757d;
+    --bs-success: #198754;
+    --bs-info: #0dcaf0;
+    --bs-warning: #ffc107;
+    --bs-danger: #dc3545;
+    --bs-light: #f8f9fa;
+    --bs-dark: #212529;
+    
+    /* Medical-specific colors */
+    --medical-blue: #0066cc;
+    --medical-green: #28a745;
+    --medical-red: #dc3545;
+    --medical-orange: #fd7e14;
+    --medical-gray: #6c757d;
+    
+    /* Custom variables for compatibility */
+    --color-primary: var(--bs-primary);
+    --color-success: var(--bs-success);
+    --color-danger: var(--bs-danger);
     --transition: 0.25s ease;
+}
+
+/* Enhanced Navigation */
+.navbar-nav .nav-link.btn {
+    border: none !important;
+    border-radius: 0.375rem;
+    margin: 0 0.25rem;
+    transition: all var(--transition);
+}
+
+.navbar-nav .nav-link.btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transform: translateY(-1px);
+}
+
+.navbar-nav .nav-link.btn.active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    font-weight: 600;
 }
 
 /* =========================================================
@@ -600,9 +622,9 @@ main.content {
 }
 
 /* =========================================================
-   Modal & Overlay Styling
+   Modal & Overlay Styling (Custom modals only, not Bootstrap)
    ========================================================= */
-.modal {
+.modal.custom-modal {
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.55);
@@ -613,7 +635,7 @@ main.content {
     z-index: 1000;
 }
 
-.modal-content {
+.modal.custom-modal .modal-content {
     width: 100%;
     max-width: 880px;
     max-height: 90vh;
@@ -629,7 +651,7 @@ main.content {
     max-width: 540px;
 }
 
-.modal-header {
+.modal.custom-modal .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -642,7 +664,7 @@ main.content {
     font-size: 1.25rem;
 }
 
-.modal-close {
+.modal.custom-modal .modal-close {
     border: none;
     background: none;
     font-size: 1.5rem;
@@ -651,12 +673,12 @@ main.content {
     transition: color var(--transition), transform var(--transition);
 }
 
-.modal-close:hover {
+.modal.custom-modal .modal-close:hover {
     color: var(--color-danger);
     transform: scale(1.15);
 }
 
-.modal-body {
+.modal.custom-modal .modal-body {
     padding: 1.75rem;
     overflow-y: auto;
 }
@@ -1670,6 +1692,228 @@ body.printing .print-header {
     
     .form-navigation .btn {
         width: 100%;
+    }
+}
+
+/* =========================================================
+   Medical UI Enhancements with Bootstrap
+   ========================================================= */
+
+/* Enhanced Cards for Medical Data */
+.medical-card {
+    border: none;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075);
+    transition: all var(--transition);
+}
+
+.medical-card:hover {
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.medical-card .card-header {
+    background: linear-gradient(135deg, var(--bs-primary), #0056b3);
+    border: none;
+    color: white;
+}
+
+/* Patient Cards */
+.patient-card {
+    border-left: 4px solid var(--bs-primary);
+    transition: all var(--transition);
+}
+
+.patient-card:hover {
+    border-left-color: var(--bs-success);
+    box-shadow: 0 0.25rem 1rem rgba(0, 102, 204, 0.15);
+}
+
+/* Form Enhancements */
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--bs-gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-label i {
+    color: var(--bs-primary);
+}
+
+/* Status Badges Enhancement */
+.badge {
+    font-size: 0.75em;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.status-open {
+    background-color: var(--bs-info) !important;
+    color: white;
+}
+
+.status-in_progress, .status-in-progress {
+    background-color: var(--bs-warning) !important;
+    color: var(--bs-dark);
+}
+
+.status-signed {
+    background-color: var(--bs-success) !important;
+    color: white;
+}
+
+.status-closed {
+    background-color: var(--bs-secondary) !important;
+    color: white;
+}
+
+/* Role Badges */
+.role-admin {
+    background-color: var(--bs-danger) !important;
+    color: white;
+}
+
+.role-doctor {
+    background-color: var(--bs-primary) !important;
+    color: white;
+}
+
+.role-nurse {
+    background-color: var(--bs-success) !important;
+    color: white;
+}
+
+/* Button Enhancements */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all var(--transition);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+}
+
+.btn i {
+    font-size: 0.9em;
+}
+
+/* Table Enhancements */
+.table {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--bs-primary), #0056b3);
+    color: white;
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+    transition: all var(--transition);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 102, 204, 0.05);
+    transform: scale(1.001);
+}
+
+/* Loading Spinner Enhancement */
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--bs-primary);
+}
+
+.loading::before {
+    content: '';
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--bs-light);
+    border-top-color: var(--bs-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+}
+
+/* Alert Enhancements */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: var(--bs-danger);
+    border-left: 4px solid var(--bs-danger);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: var(--bs-success);
+    border-left: 4px solid var(--bs-success);
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.modal-header {
+    border-radius: 1rem 1rem 0 0;
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 1rem 1rem;
+    padding: 1.5rem;
+}
+
+/* Signature Canvas Enhancement */
+.signature-canvas-container {
+    background: repeating-linear-gradient(
+        transparent,
+        transparent 24px,
+        rgba(0, 0, 0, 0.1) 25px
+    );
+}
+
+/* Print Media Queries for Bootstrap */
+@media print {
+    .navbar, .modal, .btn, .alert {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+    }
+    
+    .table {
+        box-shadow: none !important;
     }
 }
 

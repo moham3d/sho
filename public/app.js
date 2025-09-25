@@ -2,21 +2,45 @@
 
 class RadiologyApp {
     constructor() {
+        console.log('RadiologyApp constructor called');
         this.token = localStorage.getItem('token');
-        this.user = null;
+        this.user = JSON.parse(localStorage.getItem('user') || 'null');
         this.currentView = 'patients';
         this.currentVisitId = null;
+        
+        console.log('Token from localStorage:', this.token);
+        console.log('User from localStorage:', this.user);
 
+        console.log('Initializing event listeners');
         this.initializeEventListeners();
+        console.log('Checking authentication');
         this.checkAuth();
     }
 
     initializeEventListeners() {
         // Login form
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.login();
-        });
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            console.log('Login form found, adding event listener');
+            loginForm.addEventListener('submit', (e) => {
+                console.log('Login form submitted');
+                e.preventDefault();
+                this.login();
+            });
+        } else {
+            console.error('Login form not found!');
+        }
+
+        // Also add click handler for login button
+        const loginBtn = loginForm ? loginForm.querySelector('button[type="submit"]') : null;
+        if (loginBtn) {
+            console.log('Login button found, adding click handler');
+            loginBtn.addEventListener('click', (e) => {
+                console.log('Login button clicked');
+                e.preventDefault();
+                this.login();
+            });
+        }
 
         // Navigation
         document.getElementById('patients-btn').addEventListener('click', () => this.showView('patients'));
@@ -26,48 +50,72 @@ class RadiologyApp {
         document.getElementById('admin-btn').addEventListener('click', () => this.showView('admin'));
         document.getElementById('logout-btn').addEventListener('click', () => this.logout());
 
-        // Modal
-        document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
-
-        // Signature modal
-        document.getElementById('signature-modal-close').addEventListener('click', () => this.closeSignatureModal());
+        // Bootstrap modals will be handled by Bootstrap's JavaScript
+        // No need for manual close handlers
         document.getElementById('clear-signature').addEventListener('click', () => this.clearSignature());
         document.getElementById('save-signature').addEventListener('click', () => this.saveSignature());
     }
 
     checkAuth() {
+        console.log('checkAuth() called, token:', this.token, 'user:', this.user);
         if (this.token) {
-            this.user = JSON.parse(localStorage.getItem('user'));
+            if (!this.user) {
+                this.user = JSON.parse(localStorage.getItem('user') || 'null');
+                console.log('Loaded user from localStorage:', this.user);
+            }
+            console.log('Token exists, calling showApp()');
             this.showApp();
         } else {
+            console.log('No token, calling showLogin()');
             this.showLogin();
         }
     }
 
     async login() {
+        console.log('Login function called');
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
+        
+        console.log('Username:', username, 'Password length:', password.length);
+
+        if (!username || !password) {
+            this.showError('login-error', 'Please enter both username and password');
+            return;
+        }
 
         try {
+            console.log('Attempting login API call');
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
 
+            console.log('Response status:', response.status);
             const data = await response.json();
+            console.log('Response data:', data);
 
             if (response.ok) {
                 this.token = data.token;
                 this.user = data.user;
                 localStorage.setItem('token', this.token);
                 localStorage.setItem('user', JSON.stringify(this.user));
+                
+                // Hide login error if it was shown
+                const errorElement = document.getElementById('login-error');
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+                
+                console.log('Login successful, showing app');
                 this.showApp();
             } else {
-                this.showError('login-error', data.error);
+                console.log('Login failed with error:', data.error);
+                this.showError('login-error', data.error || 'Invalid credentials');
             }
         } catch (error) {
-            this.showError('login-error', 'Login failed');
+            console.error('Login error:', error);
+            this.showError('login-error', 'Login failed. Please check your connection.');
         }
     }
 
@@ -80,17 +128,66 @@ class RadiologyApp {
     }
 
     showLogin() {
-        document.getElementById('login-section').style.display = 'flex';
-        document.getElementById('app').style.display = 'none';
+        console.log('showLogin() called');
+        const loginSection = document.getElementById('login-section');
+        const appSection = document.getElementById('app');
+        
+        if (loginSection) {
+            loginSection.style.setProperty('display', 'flex', 'important');
+            console.log('Login section shown with !important');
+        }
+        
+        if (appSection) {
+            appSection.style.setProperty('display', 'none', 'important');
+            console.log('App section hidden with !important');
+        }
     }
 
     showApp() {
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
+        console.log('showApp() called');
+        console.log('Current user:', this.user);
+        
+        const loginSection = document.getElementById('login-section');
+        const appSection = document.getElementById('app');
+        
+        console.log('Login section element:', loginSection);
+        console.log('App section element:', appSection);
+        
+        if (loginSection) {
+            loginSection.style.setProperty('display', 'none', 'important');
+            console.log('Login section hidden with !important');
+        } else {
+            console.error('Login section not found');
+        }
+        
+        if (appSection) {
+            appSection.style.setProperty('display', 'block', 'important');
+            console.log('App section shown with !important');
+        } else {
+            console.error('App section not found');
+        }
 
         // Update user info
-        document.getElementById('user-name').textContent = this.user.name;
-        document.getElementById('user-role').textContent = this.getRoleName(this.user.role);
+        if (this.user && this.user.name) {
+            const userName = document.getElementById('user-name');
+            const userRole = document.getElementById('user-role');
+            
+            if (userName) {
+                userName.textContent = this.user.name;
+                console.log('User name set to:', this.user.name);
+            } else {
+                console.error('user-name element not found');
+            }
+            
+            if (userRole) {
+                userRole.textContent = this.getRoleName(this.user.role);
+                console.log('User role set to:', this.getRoleName(this.user.role));
+            } else {
+                console.error('user-role element not found');
+            }
+        } else {
+            console.error('User data is missing:', this.user);
+        }
 
         // Show/hide navigation based on role
         this.updateNavigation();
@@ -129,9 +226,16 @@ class RadiologyApp {
     showView(view) {
         this.currentView = view;
 
-        // Update active navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`${view}-btn`).classList.add('active');
+        // Update active navigation for Bootstrap navbar
+        document.querySelectorAll('.navbar-nav .nav-link').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.backgroundColor = '';
+        });
+        const activeBtn = document.getElementById(`${view}-btn`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+        }
 
         // Load view content
         switch (view) {
@@ -180,33 +284,80 @@ class RadiologyApp {
 
     renderPatients(patients) {
         const html = `
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Patients</h2>
-                    <button class="btn btn-primary" onclick="app.showPatientModal()">Add New Patient</button>
+            <div class="card medical-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-people-fill me-2"></i>Patient Management
+                    </h5>
+                    <button class="btn btn-light btn-sm" onclick="app.showEnhancedPatientModal()">
+                        <i class="bi bi-person-plus me-2"></i>Add New Patient
+                    </button>
                 </div>
-                <div class="search-section">
-                    <input type="text" id="patient-search" class="search-input" placeholder="Search patients...">
-                </div>
-                <ul class="patient-list" id="patient-list">
-                    ${patients.map(patient => `
-                        <li class="patient-item" onclick="app.showPatientModal(${patient.id})">
-                            <div class="patient-info">
-                                <div>
-                                    <div class="patient-name">${patient.full_name}</div>
-                                    <div class="patient-details">
-                                        National ID: ${patient.national_id || 'Not specified'} |
-                                        Mobile: ${patient.mobile || 'Not specified'} |
-                                        Age: ${patient.age || 'Not specified'}
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" id="patient-search" class="form-control" placeholder="Search patients by name, ID, or mobile...">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                ${patients.length} patient${patients.length !== 1 ? 's' : ''} found
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="patient-list">
+                        ${patients.map(patient => `
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card patient-card h-100" onclick="app.showEnhancedPatientModal(${patient.id})" style="cursor: pointer;">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-primary">
+                                            <i class="bi bi-person me-2"></i>${patient.full_name}
+                                        </h6>
+                                        <div class="card-text">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-card-text me-1"></i>
+                                                ID: ${patient.national_id || 'Not specified'}
+                                            </small>
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-telephone me-1"></i>
+                                                ${patient.mobile || 'No phone'}
+                                            </small>
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar me-1"></i>
+                                                Age: ${patient.age || 'Not specified'} • ${patient.gender || 'Not specified'}
+                                            </small>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-primary btn-sm me-2" onclick="event.stopPropagation(); app.createVisit(${patient.id})">
+                                                <i class="bi bi-plus-circle me-1"></i>New Visit
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation(); app.showEnhancedPatientModal(${patient.id})">
+                                                <i class="bi bi-pencil me-1"></i>Edit
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="actions">
-                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.createVisit(${patient.id})">Create Visit</button>
-                                </div>
                             </div>
-                        </li>
-                    `).join('')}
-                </ul>
+                        `).join('')}
+                    </div>
+                    
+                    ${patients.length === 0 ? `
+                        <div class="text-center py-5">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">No Patients Found</h5>
+                            <p class="text-muted">Start by adding your first patient to the system.</p>
+                            <button class="btn btn-primary" onclick="app.showEnhancedPatientModal()">
+                                <i class="bi bi-person-plus me-2"></i>Add First Patient
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
 
@@ -222,9 +373,56 @@ class RadiologyApp {
         const filtered = patients.filter(patient =>
             patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (patient.national_id && patient.national_id.includes(searchTerm)) ||
-            (patient.medical_number && patient.medical_number.includes(searchTerm))
+            (patient.medical_number && patient.medical_number.includes(searchTerm)) ||
+            (patient.mobile && patient.mobile.includes(searchTerm))
         );
-        this.renderPatients(filtered);
+        
+        // Update the patient list container only
+        const patientListContainer = document.getElementById('patient-list');
+        if (patientListContainer) {
+            patientListContainer.innerHTML = filtered.map(patient => `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card patient-card h-100" onclick="app.showEnhancedPatientModal(${patient.id})" style="cursor: pointer;">
+                        <div class="card-body">
+                            <h6 class="card-title text-primary">
+                                <i class="bi bi-person me-2"></i>${patient.full_name}
+                            </h6>
+                            <div class="card-text">
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-card-text me-1"></i>
+                                    ID: ${patient.national_id || 'Not specified'}
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-telephone me-1"></i>
+                                    ${patient.mobile || 'No phone'}
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    Age: ${patient.age || 'Not specified'} • ${patient.gender || 'Not specified'}
+                                </small>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary btn-sm me-2" onclick="event.stopPropagation(); app.createVisit(${patient.id})">
+                                    <i class="bi bi-plus-circle me-1"></i>New Visit
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="event.stopPropagation(); app.showEnhancedPatientModal(${patient.id})">
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update the counter
+            const counterElement = document.querySelector('.text-muted small');
+            if (counterElement) {
+                counterElement.innerHTML = `
+                    <i class="bi bi-info-circle me-1"></i>
+                    ${filtered.length} patient${filtered.length !== 1 ? 's' : ''} found
+                `;
+            }
+        }
     }
 
     async loadVisits() {
@@ -528,36 +726,52 @@ class RadiologyApp {
 
         const html = `
             <form id="enhanced-patient-form" class="multi-step-form">
-                <div class="form-steps">
-                    <div class="step-indicator">
-                        <div class="step active" data-step="1">
-                            <span class="step-number">1</span>
-                            <span class="step-title">Basic Info</span>
-                        </div>
-                        <div class="step" data-step="2">
-                            <span class="step-number">2</span>
-                            <span class="step-title">Contact</span>
-                        </div>
-                        <div class="step" data-step="3">
-                            <span class="step-number">3</span>
-                            <span class="step-title">Medical</span>
-                        </div>
+                <!-- Progress Indicator -->
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-primary progress-fill" style="width: 33.33%;"></div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <nav aria-label="Form steps">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item active" data-step="1">
+                                    <i class="bi bi-1-circle-fill me-1"></i>Basic Info
+                                </li>
+                                <li class="breadcrumb-item" data-step="2">
+                                    <i class="bi bi-2-circle me-1"></i>Contact
+                                </li>
+                                <li class="breadcrumb-item" data-step="3">
+                                    <i class="bi bi-3-circle me-1"></i>Medical
+                                </li>
+                            </ol>
+                        </nav>
                     </div>
                 </div>
 
                 <!-- Step 1: Basic Information -->
                 <div class="form-step active" data-step="1">
-                    <h3>Basic Information</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Full Name *</label>
-                            <input type="text" name="full_name" value="${patient.full_name || ''}" required>
+                    <div class="card border-0 bg-light">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-fill me-2"></i>Basic Information
+                            </h5>
                         </div>
-                        <div class="form-group">
-                            <label>National ID</label>
-                            <input type="text" name="national_id" value="${patient.national_id || ''}">
-                        </div>
-                    </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required">
+                                        <i class="bi bi-person me-2"></i>Full Name
+                                    </label>
+                                    <input type="text" class="form-control" name="full_name" value="${patient.full_name || ''}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-card-text me-2"></i>National ID
+                                    </label>
+                                    <input type="text" class="form-control" name="national_id" value="${patient.national_id || ''}">
+                                </div>
+                            </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Medical Number</label>
@@ -844,6 +1058,7 @@ class RadiologyApp {
 
             if (response.ok) {
                 this.closeModal();
+                this.showNotification(`Patient ${patientData.full_name} ${patientId ? 'updated' : 'created'} successfully!`, 'success');
                 // Reload the appropriate view
                 if (this.currentView === 'admin') {
                     this.loadAdminPatients();
@@ -888,6 +1103,9 @@ class RadiologyApp {
         try {
             const response = await this.apiCall(`/api/nurse-forms/${visitId}`);
             const formData = await response.json();
+            
+            // Store the form ID for signature
+            this.currentNurseFormId = formData.id;
 
             this.renderNurseForm(formData, visitId);
         } catch (error) {
@@ -1314,6 +1532,9 @@ class RadiologyApp {
         try {
             const response = await this.apiCall(`/api/doctor-forms/${visitId}`);
             const formData = await response.json();
+            
+            // Store the form ID for signature
+            this.currentDoctorFormId = formData.id;
 
             this.renderDoctorForm(formData, visitId);
         } catch (error) {
@@ -1584,8 +1805,18 @@ class RadiologyApp {
     }
 
     showSignatureModal(type) {
-        document.getElementById('signature-modal').style.display = 'flex';
         this.signatureType = type;
+        
+        // Set currentFormId based on type
+        if (type === 'nurse') {
+            this.currentFormId = this.currentNurseFormId;
+        } else {
+            this.currentFormId = this.currentDoctorFormId;
+        }
+        
+        // Use Bootstrap modal API
+        const modal = new bootstrap.Modal(document.getElementById('signature-modal'));
+        modal.show();
 
         // Initialize canvas
         const canvas = document.getElementById('signature-canvas');
@@ -1636,6 +1867,17 @@ class RadiologyApp {
     }
 
     async saveSignature() {
+        if (!this.currentFormId) {
+            this.showNotification('Error: No form selected', 'error');
+            return;
+        }
+
+        if (!this.token) {
+            this.showNotification('Please login again', 'error');
+            this.logout();
+            return;
+        }
+
         const canvas = document.getElementById('signature-canvas');
         const signatureData = canvas.toDataURL('image/png');
 
@@ -1652,33 +1894,47 @@ class RadiologyApp {
 
             if (response.ok) {
                 this.closeSignatureModal();
+                this.showNotification('Signature saved successfully', 'success');
                 if (this.signatureType === 'nurse') {
                     this.loadNurseForm(this.currentVisitId);
                 } else {
                     this.loadDoctorForm(this.currentVisitId);
                 }
-                alert('Signature saved successfully');
+            } else if (response.status === 401) {
+                this.showNotification('Session expired. Please login again', 'error');
+                this.logout();
             } else {
                 const error = await response.json();
-                alert('خطأ: ' + error.error);
+                this.showNotification(`Error: ${error.error || 'Unknown error'}`, 'error');
             }
         } catch (error) {
-            alert('خطأ في حفظ التوقيع');
+            console.error('Network error:', error);
+            this.showNotification('Network error. Please check your connection.', 'error');
         }
     }
 
     closeSignatureModal() {
-        document.getElementById('signature-modal').style.display = 'none';
+        const modal = bootstrap.Modal.getInstance(document.getElementById('signature-modal'));
+        if (modal) {
+            modal.hide();
+        }
     }
 
     showModal(title, content) {
-        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-title').innerHTML = `<i class="bi bi-plus-circle me-2"></i>${title}`;
         document.getElementById('modal-body').innerHTML = content;
-        document.getElementById('modal').style.display = 'flex';
+        
+        // Use Bootstrap's modal API
+        const modal = new bootstrap.Modal(document.getElementById('modal'));
+        modal.show();
     }
 
     closeModal() {
-        document.getElementById('modal').style.display = 'none';
+        // Use Bootstrap's modal API
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modal'));
+        if (modal) {
+            modal.hide();
+        }
     }
 
     // Admin Panel Functions
@@ -1722,26 +1978,80 @@ class RadiologyApp {
 
     renderDashboardStats(stats) {
         return `
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <h3>Total Patients</h3>
-                    <div class="stat-number">${stats.totalPatients?.[0]?.count || 0}</div>
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 col-lg-2 mb-3">
+                    <div class="card bg-primary text-white h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people-fill" style="font-size: 2rem;"></i>
+                            <h3 class="mt-2 mb-1">${stats.totalPatients?.[0]?.count || 0}</h3>
+                            <small>Total Patients</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Visits</h3>
-                    <div class="stat-number">${stats.totalVisits?.[0]?.count || 0}</div>
+                <div class="col-md-4 col-lg-2 mb-3">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-calendar-check-fill" style="font-size: 2rem;"></i>
+                            <h3 class="mt-2 mb-1">${stats.totalVisits?.[0]?.count || 0}</h3>
+                            <small>Total Visits</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Users</h3>
-                    <div class="stat-number">${stats.totalUsers?.[0]?.count || 0}</div>
+                <div class="col-md-4 col-lg-2 mb-3">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-person-badge-fill" style="font-size: 2rem;"></i>
+                            <h3 class="mt-2 mb-1">${stats.totalUsers?.[0]?.count || 0}</h3>
+                            <small>System Users</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <h3>Nurse Forms</h3>
-                    <div class="stat-number">${stats.nurseFormsCount?.[0]?.count || 0}</div>
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card bg-warning text-dark h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-clipboard-pulse" style="font-size: 2rem;"></i>
+                            <h3 class="mt-2 mb-1">${stats.nurseFormsCount?.[0]?.count || 0}</h3>
+                            <small>Nurse Assessments</small>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <h3>Doctor Forms</h3>
-                    <div class="stat-number">${stats.doctorFormsCount?.[0]?.count || 0}</div>
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card bg-danger text-white h-100">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-medical-fill" style="font-size: 2rem;"></i>
+                            <h3 class="mt-2 mb-1">${stats.doctorFormsCount?.[0]?.count || 0}</h3>
+                            <small>Doctor Evaluations</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-pie-chart me-2"></i>Visits by Status
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="visitStatusChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">
+                                <i class="bi bi-bar-chart me-2"></i>Users by Role
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="userRoleChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1874,6 +2184,105 @@ class RadiologyApp {
         `;
         
         document.getElementById('admin-content').innerHTML = html;
+        
+        // Initialize charts after DOM is updated
+        setTimeout(() => {
+            this.initializeCharts(stats);
+        }, 100);
+    }
+
+    initializeCharts(stats) {
+        // Configure Toastr
+        if (typeof toastr !== 'undefined') {
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "3000"
+            };
+        }
+
+        // Visits by Status Pie Chart
+        const visitStatusCtx = document.getElementById('visitStatusChart');
+        if (visitStatusCtx && typeof Chart !== 'undefined') {
+            const visitStatusData = stats.visitsByStatus || [];
+            new Chart(visitStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: visitStatusData.map(item => this.getStatusName(item.status)),
+                    datasets: [{
+                        data: visitStatusData.map(item => item.count),
+                        backgroundColor: [
+                            '#0dcaf0', // info - open
+                            '#ffc107', // warning - in_progress  
+                            '#198754', // success - signed
+                            '#6c757d'  // secondary - closed
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Users by Role Bar Chart  
+        const userRoleCtx = document.getElementById('userRoleChart');
+        if (userRoleCtx && typeof Chart !== 'undefined') {
+            const userRoleData = stats.usersByRole || [];
+            new Chart(userRoleCtx, {
+                type: 'bar',
+                data: {
+                    labels: userRoleData.map(item => this.getRoleName(item.role)),
+                    datasets: [{
+                        label: 'Number of Users',
+                        data: userRoleData.map(item => item.count),
+                        backgroundColor: [
+                            '#dc3545', // danger - admin
+                            '#0d6efd', // primary - doctor  
+                            '#198754'  // success - nurse
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    // Notification system
+    showNotification(message, type = 'success') {
+        if (typeof toastr !== 'undefined') {
+            toastr[type](message);
+        } else {
+            // Fallback for browsers without toastr
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
     }
 
     async showUserModal(userId = null) {
@@ -1976,10 +2385,11 @@ class RadiologyApp {
             });
 
             if (response.ok) {
+                this.showNotification('User deleted successfully!', 'success');
                 this.loadAdminUsers(); // Reload users
             } else {
                 const error = await response.json();
-                alert(error.error);
+                this.showNotification(error.error, 'error');
             }
         } catch (error) {
             alert('Error deleting user');
@@ -2635,14 +3045,30 @@ class RadiologyApp {
     }
 
     showLoading() {
-        document.getElementById('content').innerHTML = '<div class="loading">Loading...</div>';
+        document.getElementById('content').innerHTML = `
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+                    <div class="text-muted">Loading...</div>
+                </div>
+            </div>
+        `;
     }
 
     showError(elementId, message) {
         const element = document.getElementById(elementId);
-        element.innerHTML = `<div class="error-message">${message}</div>`;
+        if (element) {
+            element.innerHTML = `<div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>${message}
+            </div>`;
+            element.style.display = 'block';
+        }
     }
 }
 
-// Initialize the application
-const app = new RadiologyApp();
+// Initialize the application when DOM is ready
+let app;
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app');
+    app = new RadiologyApp();
+});
