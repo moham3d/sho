@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nursing Assessment Form - Al-Shorouk Radiology</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="text-primary mb-2">
+                        <i class="fas fa-user-nurse me-2"></i>
+                        Nursing Assessment Form
+                    </h2>
+                    <p class="text-muted">SH.MR.FRM.05 - Comprehensive Patient Screening</p>
+                </div>
+
+                <form id="nurseForm" action="/submit-nurse-form" method="POST">
+                    <!-- Basic Assessment Info -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-info-circle me-2"></i>Basic Assessment Information</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Mode of Arrival</label>
+                                <select class="form-select" name="mode_of_arrival" required>
+                                    <option value="">Select mode...</option>
+                                    <option value="ambulatory">Ambulatory</option>
+                                    <option value="wheelchair">Wheelchair</option>
+                                    <option value="stretcher">Stretcher</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Age</label>
+                                <input type="number" class="form-control" name="age" min="0" max="150" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Chief Complaint (الشكوي الحالية)</label>
+                                <textarea class="form-control" name="chief_complaint" rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Accompanied By</label>
+                                <select class="form-select" name="accompanied_by">
+                                    <option value="">Select...</option>
+                                    <option value="spouse">Spouse</option>
+                                    <option value="relative">Relative</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Language Spoken</label>
+                                <select class="form-select" name="language_spoken">
+                                    <option value="arabic">Arabic</option>
+                                    <option value="english">English</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vital Signs -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-heartbeat me-2"></i>Vital Signs</h4>
+                        <div class="vital-signs-grid">
+                            <div>
+                                <label class="form-label">Temperature (°C)</label>
+                                <input type="number" class="form-control" name="temperature_celsius" step="0.1" min="30" max="45">
+                            </div>
+                            <div>
+                                <label class="form-label">Pulse (BPM)</label>
+                                <input type="number" class="form-control" name="pulse_bpm" min="30" max="200">
+                            </div>
+                            <div>
+                                <label class="form-label">Blood Pressure (Systolic)</label>
+                                <input type="number" class="form-control" name="blood_pressure_systolic" min="70" max="250">
+                            </div>
+                            <div>
+                                <label class="form-label">Blood Pressure (Diastolic)</label>
+                                <input type="number" class="form-control" name="blood_pressure_diastolic" min="40" max="150">
+                            </div>
+                            <div>
+                                <label class="form-label">Respiratory Rate</label>
+                                <input type="number" class="form-control" name="respiratory_rate_per_min" min="8" max="60">
+                            </div>
+                            <div>
+                                <label class="form-label">Oxygen Saturation (%)</label>
+                                <input type="number" class="form-control" name="oxygen_saturation_percent" step="0.1" min="70" max="100">
+                            </div>
+                            <div>
+                                <label class="form-label">Blood Sugar (mg/dL)</label>
+                                <input type="number" class="form-control" name="blood_sugar_mg_dl" min="0">
+                            </div>
+                            <div>
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" name="weight_kg" step="0.1" min="0" max="500">
+                            </div>
+                            <div>
+                                <label class="form-label">Height (cm)</label>
+                                <input type="number" class="form-control" name="height_cm" step="0.1" min="0" max="300">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Psychosocial Assessment -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-brain me-2"></i>Psychosocial Assessment</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Psychological Problem</label>
+                                <select class="form-select" name="psychological_problem">
+                                    <option value="none">None</option>
+                                    <option value="depressed">Depressed</option>
+                                    <option value="agitated">Agitated</option>
+                                    <option value="anxious">Anxious</option>
+                                    <option value="isolated">Isolated</option>
+                                    <option value="confused">Confused</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Smoker</label>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_smoker">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Allergies</label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="has_allergies" id="has_allergies">
+                                            <label class="form-check-label" for="has_allergies">Has Allergies</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="text" class="form-control" name="medication_allergies" placeholder="Medication allergies">
+                                    <input type="text" class="form-control mt-2" name="food_allergies" placeholder="Food allergies">
+                                    <input type="text" class="form-control mt-2" name="other_allergies" placeholder="Other allergies">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nutritional Screening -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-utensils me-2"></i>Nutritional Screening</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Diet Type</label>
+                                <select class="form-select" name="diet_type">
+                                    <option value="regular">Regular</option>
+                                    <option value="special">Special</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Appetite</label>
+                                <select class="form-select" name="appetite">
+                                    <option value="good">Good</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="has_git_problems">
+                                            <label class="form-check-label">GI Problems</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="has_weight_loss">
+                                            <label class="form-check-label">Weight Loss</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="has_weight_gain">
+                                            <label class="form-check-label">Weight Gain</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Functional Assessment -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-wheelchair me-2"></i>Functional Assessment</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Feeding Status</label>
+                                <select class="form-select" name="feeding_status">
+                                    <option value="independent">Independent</option>
+                                    <option value="needs_supervision">Needs Supervision</option>
+                                    <option value="totally_dependent">Totally Dependent</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ambulation Status</label>
+                                <select class="form-select" name="ambulation_status">
+                                    <option value="independent">Independent</option>
+                                    <option value="needs_supervision">Needs Supervision</option>
+                                    <option value="totally_dependent">Totally Dependent</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Assistive Equipment</label>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="uses_walker">
+                                            <label class="form-check-label">Walker</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="uses_wheelchair">
+                                            <label class="form-check-label">Wheelchair</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="uses_transfer_device">
+                                            <label class="form-check-label">Transfer Device</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="uses_other_equipment">
+                                            <label class="form-check-label">Other</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pain Assessment -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-exclamation-triangle me-2"></i>Pain Assessment</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Pain Intensity (0-10)</label>
+                                <input type="range" class="form-range" name="pain_intensity" min="0" max="10" value="0" oninput="this.nextElementSibling.value = this.value">
+                                <output>0</output>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pain Location</label>
+                                <input type="text" class="form-control" name="pain_location">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pain Frequency</label>
+                                <input type="text" class="form-control" name="pain_frequency">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pain Character</label>
+                                <input type="text" class="form-control" name="pain_character">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Educational Needs -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-graduation-cap me-2"></i>Educational Needs</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_medication_education">
+                                    <label class="form-check-label">Medication Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_diet_nutrition_education">
+                                    <label class="form-check-label">Diet & Nutrition Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_medical_equipment_education">
+                                    <label class="form-check-label">Medical Equipment Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_rehabilitation_education">
+                                    <label class="form-check-label">Rehabilitation Education</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_drug_interaction_education">
+                                    <label class="form-check-label">Drug Interaction Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_pain_symptom_education">
+                                    <label class="form-check-label">Pain Symptom Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="needs_fall_prevention_education">
+                                    <label class="form-check-label">Fall Prevention Education</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="other_needs">
+                                    <label class="form-check-label">Other Needs</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save me-2"></i>
+                            Submit Assessment
+                        </button>
+                        <a href="/" class="btn btn-secondary btn-lg ms-3">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Home
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/form-validation.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+/* Custom styles for tablet compatibility */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.icon-wrapper {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Form styles for tablet */
+.form-section {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-section h4 {
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Touch-friendly buttons for tablets */
+.btn-touch {
+    min-height: 48px;
+    min-width: 48px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .display-4 {
+        font-size: 2.5rem;
+    }
+
+    .btn-lg {
+        padding: 0.875rem 2rem;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-section {
+        padding: 1rem;
+    }
+
+    .display-4 {
+        font-size: 2rem;
+    }
+
+    .card-body {
+        padding: 2rem 1.5rem !important;
+    }
+}
+
+/* Vital signs grid for tablets */
+.vital-signs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Checkbox and radio button improvements for touch */
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.form-check-label {
+    padding-left: 0.5rem;
+    font-size: 1rem;
+}
+
+/* Progress indicator */
+.progress-steps {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    font-weight: bold;
+    margin: 0 0.5rem;
+}
+
+.step.active {
+    background: #007bff;
+    color: white;
+}
+
+.step.completed {
+    background: #28a745;
+    color: white;
+}
+
+/* Signature pad styling */
+.signature-pad {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Loading spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Print styles */
+@media print {
+    .btn, .form-section .card {
+        display: none !important;
+    }
+
+    .form-section {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+}

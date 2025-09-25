@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiology Assessment Form - Al-Shorouk Radiology</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/custom.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <h2 class="text-success mb-2">
+                        <i class="fas fa-x-ray me-2"></i>
+                        Radiology Assessment Form
+                    </h2>
+                    <p class="text-muted">SH.MR.FRM.04 - Radiology Preparation & Assessment</p>
+                </div>
+
+                <form id="radiologyForm" action="/submit-radiology-form" method="POST">
+                    <!-- Physician and Department Info -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-user-md me-2"></i>Physician & Department Information</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Treating Physician</label>
+                                <input type="text" class="form-control" name="treating_physician" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Department</label>
+                                <input type="text" class="form-control" name="department" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient Preparation -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-syringe me-2"></i>Patient Preparation</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Fasting Hours</label>
+                                <input type="number" class="form-control" name="fasting_hours" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Is Diabetic</label>
+                                <select class="form-select" name="is_diabetic">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Blood Sugar Level (mg/dL)</label>
+                                <input type="number" class="form-control" name="blood_sugar_level" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" class="form-control" name="weight_kg" step="0.1" min="0" max="500">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Height (cm)</label>
+                                <input type="number" class="form-control" name="height_cm" step="0.1" min="0" max="300">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Imaging Procedure Details -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-cogs me-2"></i>Imaging Procedure Details</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Dose Amount</label>
+                                <input type="number" class="form-control" name="dose_amount" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">CTDIvol</label>
+                                <input type="number" class="form-control" name="ctd1vol" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">DLP</label>
+                                <input type="number" class="form-control" name="dlp" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Uses Contrast</label>
+                                <select class="form-select" name="uses_contrast">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Kidney Function Value</label>
+                                <input type="number" class="form-control" name="kidney_function_value" step="0.01" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Study Information -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-file-medical me-2"></i>Study Information</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Is First Time</label>
+                                <select class="form-select" name="is_first_time">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Requires Report</label>
+                                <select class="form-select" name="requires_report">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Diagnosis</label>
+                                <textarea class="form-control" name="diagnosis" rows="3"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Reason for Study</label>
+                                <textarea class="form-control" name="reason_for_study" rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Content -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-stethoscope me-2"></i>Assessment Content</h4>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Findings</label>
+                                <textarea class="form-control" name="findings" rows="5" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Impression</label>
+                                <textarea class="form-control" name="impression" rows="4"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Recommendations</label>
+                                <textarea class="form-control" name="recommendations" rows="4"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Modality</label>
+                                <select class="form-select" name="modality">
+                                    <option value="">Select modality...</option>
+                                    <option value="CT">CT</option>
+                                    <option value="MRI">MRI</option>
+                                    <option value="X-Ray">X-Ray</option>
+                                    <option value="Ultrasound">Ultrasound</option>
+                                    <option value="Mammography">Mammography</option>
+                                    <option value="Nuclear Medicine">Nuclear Medicine</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Body Region</label>
+                                <input type="text" class="form-control" name="body_region">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Treatment History -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-history me-2"></i>Treatment History</h4>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Chemotherapy</label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="has_chemotherapy" id="has_chemotherapy">
+                                            <label class="form-check-label" for="has_chemotherapy">Has Chemotherapy</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <select class="form-select" name="chemo_type">
+                                            <option value="">Type...</option>
+                                            <option value="tablets">Tablets</option>
+                                            <option value="infusion">Infusion</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="number" class="form-control" name="chemo_sessions" placeholder="Sessions">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Radiotherapy</label>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="has_radiotherapy" id="has_radiotherapy">
+                                            <label class="form-check-label" for="has_radiotherapy">Has Radiotherapy</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control" name="radiotherapy_site" placeholder="Site">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="number" class="form-control" name="radiotherapy_sessions" placeholder="Sessions">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Previous Imaging History -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-images me-2"></i>Previous Imaging History</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_operations">
+                                    <label class="form-check-label">Operations</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_endoscopy">
+                                    <label class="form-check-label">Endoscopy</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_biopsies">
+                                    <label class="form-check-label">Biopsies</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_tc_mdp_bone_scan">
+                                    <label class="form-check-label">TC MDP Bone Scan</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_tc_dtpa_kidney_scan">
+                                    <label class="form-check-label">TC DTPA Kidney Scan</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_mri">
+                                    <label class="form-check-label">MRI</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_mammography">
+                                    <label class="form-check-label">Mammography</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_ct">
+                                    <label class="form-check-label">CT</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_xray">
+                                    <label class="form-check-label">X-Ray</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="has_ultrasound">
+                                    <label class="form-check-label">Ultrasound</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-success btn-lg px-5">
+                            <i class="fas fa-save me-2"></i>
+                            Submit Radiology Assessment
+                        </button>
+                        <a href="/" class="btn btn-secondary btn-lg ms-3">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Home
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/form-validation.js"></script>
+</body>
+</html>
