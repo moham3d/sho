@@ -3,50 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nursing Assessment Form - Al-Shorouk Radiology</title>
+    <title>Nursing Assessment Form - Al-Shorouk Radiology Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/css/custom.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .form-section h4 {
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .vital-signs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .vital-signs-grid > div {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        .signature-pad {
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body class="bg-light">
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-hospital-alt me-2"></i>
-                Al-Shorouk Radiology
-            </a>
-
-            <div class="d-flex align-items-center">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-home me-1"></i>Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nurse/my-assessments">
-                            <i class="fas fa-clipboard-list me-1"></i>My Assessments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nurse/search-patient">
-                            <i class="fas fa-search me-1"></i>New Assessment
-                        </a>
-                    </li>
-                </ul>
-                <span class="text-white me-3">
-                    <i class="fas fa-user me-1"></i>
-                    Welcome, <%= user.fullName %> (<%= user.role %>)
-                </span>
-                <form action="/logout" method="POST" class="d-inline">
-                    <button type="submit" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-sign-out-alt me-1"></i>Logout
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <%- include('navigation', { currentPage: 'assessment' }) %>
 
     <div class="container-fluid py-4">
         <div class="row justify-content-center">

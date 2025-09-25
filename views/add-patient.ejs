@@ -3,13 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Patient - Radiology Management System</title>
+    <title>Add New Patient - Al-Shorouk Radiology Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/css/custom.css" rel="stylesheet">
     <style>
         .navbar-brand {
             font-weight: bold;
+        }
+        .navbar-brand i {
+            color: #ffffff;
+        }
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .navbar-nav .nav-link:hover {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+        .navbar-nav .nav-link.active {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .user-info {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .user-role {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        .logout-btn {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
         }
         .card {
             border: none;
@@ -61,49 +92,7 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-hospital me-2"></i>Radiology Management
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-home me-1"></i>Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nurse/my-assessments">
-                            <i class="fas fa-clipboard-list me-1"></i>My Assessments
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nurse/search-patient">
-                            <i class="fas fa-search me-1"></i>New Assessment
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            <i class="fas fa-user-nurse me-1"></i>Welcome, <%= user.fullName %> (Nurse)
-                        </span>
-                    </li>
-                    <li class="nav-item">
-                        <form method="POST" action="/logout" class="d-inline">
-                            <button type="submit" class="btn btn-outline-light btn-sm">
-                                <i class="fas fa-sign-out-alt me-1"></i>Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <%- include('navigation', { currentPage: 'add-patient' }) %>
 
     <div class="container mt-4">
         <!-- Header -->
