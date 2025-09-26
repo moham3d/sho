@@ -1722,7 +1722,87 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
 });
 
 app.get('/doctor', requireAuth, requireRole('physician'), (req, res) => {
-    res.render('doctor-dashboard', { user: req.session, patient: null, error: null });
+    // Get completed nursing assessments that are ready for radiology assessment
+    // Only show patients who don't have a radiology assessment yet
+    db.all(`
+        SELECT
+            na.assessment_id,
+            pv.visit_id,
+            p.full_name as patient_name,
+            p.ssn,
+            p.medical_number,
+            pv.visit_date,
+            na.chief_complaint,
+            pv.primary_diagnosis,
+            na.assessed_at,
+            u.full_name as nurse_name
+        FROM nursing_assessments na
+        JOIN form_submissions fs ON na.submission_id = fs.submission_id
+        JOIN patient_visits pv ON fs.visit_id = pv.visit_id
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        LEFT JOIN users u ON na.assessed_by = u.user_id
+        WHERE fs.submission_status = 'submitted'
+        AND NOT EXISTS (
+            SELECT 1 FROM radiology_assessments ra
+            JOIN form_submissions fs2 ON ra.submission_id = fs2.submission_id
+            WHERE fs2.visit_id = pv.visit_id
+        )
+        ORDER BY na.assessed_at ASC
+        LIMIT 20
+    `, [], (err, completedAssessments) => {
+        if (err) {
+            console.error('Error fetching completed nursing assessments:', err);
+            return res.render('doctor-dashboard', { 
+                user: req.session, 
+                message: 'Error loading patient queue',
+                completedAssessments: []
+            });
+        }
+
+        res.render('doctor-dashboard', { 
+            user: req.session, 
+            message: null,
+            completedAssessments: completedAssessments || []
+        });
+    });
+});
+
+app.post('/doctor/start-radiology/:visitId', requireAuth, requireRole('physician'), (req, res) => {
+    const visitId = req.params.visitId;
+
+    // Get visit and patient info
+    db.get(`
+        SELECT pv.*, p.full_name, p.mobile_number, p.medical_number, p.date_of_birth, p.gender,
+               p.phone_number, p.address, p.emergency_contact_name, p.emergency_contact_phone, p.emergency_contact_relation
+        FROM patient_visits pv
+        JOIN patients p ON pv.patient_ssn = p.ssn
+        WHERE pv.visit_id = ?
+    `, [visitId], (err, visit) => {
+        if (err || !visit) {
+            console.error('Error fetching visit for radiology:', err);
+            return res.redirect('/doctor?error=Visit not found');
+        }
+
+        // Set session variables
+        req.session.selectedPatient = {
+            ssn: visit.patient_ssn,
+            full_name: visit.full_name,
+            mobile_number: visit.mobile_number,
+            medical_number: visit.medical_number,
+            date_of_birth: visit.date_of_birth,
+            gender: visit.gender,
+            phone_number: visit.phone_number,
+            address: visit.address,
+            emergency_contact_name: visit.emergency_contact_name,
+            emergency_contact_phone: visit.emergency_contact_phone,
+            emergency_contact_relation: visit.emergency_contact_relation
+        };
+
+        req.session.selectedVisit = visit;
+
+        // Redirect to radiology form
+        res.redirect('/radiology-form');
+    });
 });
 
 app.post('/doctor/search-patient', requireAuth, requireRole('physician'), (req, res) => {
@@ -2000,6 +2080,21 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
         return res.status(400).send('No patient visit selected');
     }
 
+    // Set conditional fields to null if not applicable
+    if (!formData.swelling) formData.swelling_location = null;
+    if (!formData.tumor_history) formData.tumor_location_type = null;
+    if (!formData.has_chemotherapy) {
+        formData.chemo_type = null;
+        formData.chemo_sessions = null;
+    }
+    if (!formData.has_radiotherapy) {
+        formData.radiotherapy_site = null;
+        formData.radiotherapy_sessions = null;
+    }
+    if (!formData.pain_numbness || formData.pain_numbness.trim() === '') {
+        formData.pain_numbness_location = null;
+    }
+
     // Handle signature storage
     const signatureData = formData.physician_signature;
     if (!signatureData || signatureData === '') {
@@ -2035,33 +2130,50 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
                 const radiologyId = 'radio-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
                 const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
-                // Insert into radiology_assessments
+                // Insert into radiology_assessments with all new fields
                 const sql = `
                     INSERT INTO radiology_assessments (
                         radiology_id, submission_id, treating_physician, department,
-                        fasting_hours, is_diabetic, blood_sugar_level, weight_kg, height_cm,
-                        dose_amount, ctd1vol, dlp, uses_contrast, kidney_function_value,
-                        is_first_time, requires_report, diagnosis, reason_for_study,
-                        findings, impression, recommendations, modality, body_region,
-                        has_chemotherapy, chemo_type, chemo_sessions, has_radiotherapy,
-                        radiotherapy_site, radiotherapy_sessions, has_operations, has_endoscopy,
-                        has_biopsies, has_tc_mdp_bone_scan, has_tc_dtpa_kidney_scan,
-                        has_mri, has_mammography, has_ct, has_xray, has_ultrasound,
-                        physician_signature_id, assessed_by
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        age, examination_date, fasting_hours, is_diabetic, blood_sugar_level, 
+                        weight_kg, height_cm, chronic_diseases, current_medications, fall_risk_medications,
+                        pacemaker, slats_screws_artificial_joints, gypsum_splint_presence, 
+                        xrays_before_splint, pregnancy_status, pain_numbness, pain_numbness_location,
+                        spinal_deformities, swelling, swelling_location, 
+                        headache_visual_troubles_hearing_problems_imbalance, fever,
+                        previous_operations, tumor_history, tumor_location_type, 
+                        previous_investigations, disc_problems, dose_amount, ctd1vol, dlp, 
+                        kv, mas, uses_contrast, kidney_function_value, is_first_time, 
+                        requires_report, diagnosis, reason_for_examination, findings, 
+                        impression, recommendations, modality, body_region, has_chemotherapy, 
+                        chemo_type, chemo_sessions, has_radiotherapy, radiotherapy_site, 
+                        radiotherapy_sessions, has_operations, has_endoscopy, has_biopsies, 
+                        has_tc_mdp_bone_scan, has_tc_dtpa_kidney_scan, has_mri, has_mammography, 
+                        has_ct, has_xray, has_ultrasound, physician_signature_id, assessed_by
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
 
                 const values = [
-                    radiologyId, submissionId, formData.treating_physician, formData.department,
-                    formData.fasting_hours, formData.is_diabetic === 'true' ? 1 : 0, formData.blood_sugar_level,
-                    formData.weight_kg, formData.height_cm, formData.dose_amount,
-                    formData.ctd1vol, formData.dlp, formData.uses_contrast === 'true' ? 1 : 0,
-                    formData.kidney_function_value, formData.is_first_time === 'true' ? 1 : 0,
-                    formData.requires_report === 'true' ? 1 : 0, formData.diagnosis, formData.reason_for_study,
-                    formData.findings, formData.impression, formData.recommendations,
-                    formData.modality, formData.body_region, formData.has_chemotherapy ? 1 : 0,
-                    formData.chemo_type, formData.chemo_sessions, formData.has_radiotherapy ? 1 : 0,
-                    formData.radiotherapy_site, formData.radiotherapy_sessions,
+                    radiologyId, submissionId, null, null,
+                    formData.age, formData.examination_date, formData.fasting_hours, 
+                    formData.is_diabetic === 'true' ? 1 : 0, formData.blood_sugar_level,
+                    formData.weight_kg, formData.height_cm, formData.chronic_diseases, 
+                    formData.current_medications, formData.fall_risk_medications,
+                    formData.pacemaker ? 1 : 0, formData.slats_screws_artificial_joints ? 1 : 0,
+                    formData.gypsum_splint_presence ? 1 : 0, formData.xrays_before_splint ? 1 : 0,
+                    formData.pregnancy_status ? 1 : 0, formData.pain_numbness, 
+                    formData.pain_numbness_location, formData.spinal_deformities ? 1 : 0,
+                    formData.swelling ? 1 : 0, formData.swelling_location,
+                    formData.headache_visual_troubles_hearing_problems_imbalance, 
+                    formData.fever ? 1 : 0, formData.previous_operations,
+                    formData.tumor_history ? 1 : 0, formData.tumor_location_type,
+                    formData.previous_investigations, formData.disc_problems ? 1 : 0,
+                    formData.dose_amount, formData.ctd1vol, formData.dlp, formData.kv, formData.mas,
+                    formData.uses_contrast === 'true' ? 1 : 0, formData.kidney_function_value,
+                    formData.is_first_time === 'true' ? 1 : 0, formData.requires_report === 'true' ? 1 : 0,
+                    formData.diagnosis, formData.reason_for_examination, formData.findings,
+                    formData.impression, formData.recommendations, formData.modality, formData.body_region,
+                    formData.has_chemotherapy ? 1 : 0, formData.chemo_type, formData.chemo_sessions,
+                    formData.has_radiotherapy ? 1 : 0, formData.radiotherapy_site, formData.radiotherapy_sessions,
                     formData.has_operations ? 1 : 0, formData.has_endoscopy ? 1 : 0,
                     formData.has_biopsies ? 1 : 0, formData.has_tc_mdp_bone_scan ? 1 : 0,
                     formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,

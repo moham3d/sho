@@ -102,245 +102,110 @@
             </div>
         </div>
 
-        <!-- Patient Search -->
+        <!-- Queue Information -->
         <div class="row justify-content-center mb-4">
-            <div class="col-lg-8">
+            <div class="col-lg-10">
                 <div class="card search-card">
-                    <div class="card-body p-4">
-                        <h4 class="card-title text-center mb-4">
-                            <i class="fas fa-id-card me-2"></i>Search Patient for Assessment
+                    <div class="card-body p-4 text-center">
+                        <h4 class="card-title mb-3">
+                            <i class="fas fa-clock me-2"></i>Patient Queue Status
                         </h4>
-                        <form method="POST" action="/doctor/search-patient">
-                            <div class="mb-4">
-                                <label for="ssn" class="form-label fs-5">Social Security Number</label>
-                                <input type="text" class="form-control form-control-lg ssn-input text-center"
-                                       id="ssn" name="ssn" placeholder="XXXXXXXXXXXXXXXX"
-                                       pattern="\d{14}" maxlength="14" required>
-                                <div class="form-text text-center">
-                                    <small>Format: 14 digits (e.g., 12345678901234)</small>
-                                </div>
-                            </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-light btn-custom">
-                                    <i class="fas fa-search me-2"></i>Search Patient
-                                </button>
-                            </div>
-                        </form>
+                        <p class="text-muted mb-0">
+                            Patients with completed nursing assessments appear below and are ready for radiology evaluation.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Error Message -->
-        <% if (error) { %>
+        <!-- Information Message -->
+        <% if (message) { %>
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="alert alert-danger text-center">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <%= error %>
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <%= message %>
                     </div>
                 </div>
             </div>
         <% } %>
 
-        <!-- Patient Found -->
-        <% if (patient) { %>
-            <div class="row justify-content-center mb-4">
-                <div class="col-lg-8">
-                    <div class="card patient-info">
-                        <div class="card-body">
-                            <h4 class="card-title text-success mb-3">
-                                <i class="fas fa-check-circle me-2"></i>Patient Selected for Assessment
-                            </h4>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Full Name:</strong> <%= patient.full_name %></p>
-                                    <p><strong>SSN:</strong> <%= patient.ssn %></p>
-                                    <p><strong>Medical Number:</strong> <%= patient.medical_number || 'Not provided' %></p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Mobile:</strong> <%= patient.mobile_number || 'Not provided' %></p>
-                                    <p><strong>Date of Birth:</strong> <%= patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'Not provided' %></p>
-                                    <p><strong>Gender:</strong> <%= patient.gender || 'Not provided' %></p>
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Ready for Radiology Assessment:</strong> You can now proceed to create a radiology assessment for this patient.
-                            </div>
-                            <div class="text-center">
-                                <a href="/radiology-form" class="btn btn-success btn-custom">
-                                    <i class="fas fa-x-ray me-2"></i>Start Radiology Assessment
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <% } %>
-
-        <!-- Quick Actions -->
-        <% if (patient) { %>
+        <!-- Completed Nursing Assessments -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card quick-actions">
-                    <div class="card-body text-center py-4">
-                        <h3 class="card-title mb-4">
-                            <i class="fas fa-bolt me-2"></i>Quick Actions
-                        </h3>
-                        <div class="row justify-content-center">
-                            <div class="col-md-6">
-                                <a href="/radiology-form" class="btn btn-light btn-custom w-100">
-                                    <i class="fas fa-x-ray me-2"></i>New Radiology Assessment
-                                    <br><small>SH.MR.FRM.04 - Imaging Report</small>
-                                </a>
+                <% if (completedAssessments && completedAssessments.length > 0) { %>
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="card-title mb-0">
+                                <i class="fas fa-clipboard-check me-2"></i>Patient Queue - Ready for Radiology Assessment
+                            </h4>
+                            <small>Patients with completed nursing assessments (<%= completedAssessments.length %> waiting)</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <% for (let i = 0; i < completedAssessments.length; i++) { let assessment = completedAssessments[i]; %>
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="card border-success">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <h6 class="card-title text-success">
+                                                            <i class="fas fa-user me-2"></i><%= assessment.patient_name %>
+                                                        </h6>
+                                                        <p class="card-text mb-1">
+                                                            <strong>SSN:</strong> <%= assessment.ssn %>
+                                                        </p>
+                                                        <p class="card-text mb-1">
+                                                            <strong>Medical #:</strong> <%= assessment.medical_number || 'N/A' %>
+                                                        </p>
+                                                        <p class="card-text mb-1">
+                                                            <strong>Visit Date:</strong> <%= new Date(assessment.visit_date).toLocaleDateString() %>
+                                                        </p>
+                                                        <p class="card-text mb-1">
+                                                            <strong>Chief Complaint:</strong> <%= assessment.chief_complaint || 'Not specified' %>
+                                                        </p>
+                                                        <p class="card-text mb-1">
+                                                            <strong>Assessed by:</strong> <%= assessment.nurse_name || 'Unknown' %>
+                                                        </p>
+                                                        <small class="text-muted">
+                                                            Completed: <%= new Date(assessment.assessed_at).toLocaleString() %>
+                                                        </small>
+                                                    </div>
+                                                    <div class="col-md-4 text-center">
+                                                        <form method="POST" action="/doctor/start-radiology/<%= assessment.visit_id %>">
+                                                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                                                <i class="fas fa-x-ray me-1"></i>Start Radiology<br>Assessment
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        <% } %>
-
-        <!-- Main Features -->
-        <div class="row g-4">
-            <!-- Radiology Assessment -->
-            <div class="col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-x-ray icon-large text-primary"></i>
-                        <h4 class="card-title">Radiology Assessment</h4>
-                        <p class="card-text text-muted">
-                            Complete comprehensive radiology assessments using SH.MR.FRM.04.
-                            Includes imaging findings, impressions, and recommendations.
-                        </p>
-                        <a href="/radiology-form" class="btn btn-primary btn-custom">
-                            <i class="fas fa-file-medical me-2"></i>Start Assessment
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Patient Reports -->
-            <div class="col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-file-alt icon-large text-info"></i>
-                        <h4 class="card-title">Patient Reports</h4>
-                        <p class="card-text text-muted">
-                            View and manage patient imaging reports.
-                            Access completed assessments and historical data.
-                        </p>
-                        <button class="btn btn-info btn-custom" disabled>
-                            <i class="fas fa-search me-2"></i>View Reports
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Imaging Queue -->
-            <div class="col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <i class="fas fa-list-check icon-large text-warning"></i>
-                        <h4 class="card-title">Imaging Queue</h4>
-                        <p class="card-text text-muted">
-                            Review pending imaging requests and prioritize cases.
-                            Manage your radiology workflow efficiently.
-                        </p>
-                        <button class="btn btn-warning btn-custom" disabled>
-                            <i class="fas fa-clock me-2"></i>View Queue
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Statistics -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card stats-card">
-                    <div class="card-body">
-                        <h4 class="card-title text-center mb-4">
-                            <i class="fas fa-chart-line me-2"></i>Your Statistics
-                        </h4>
-                        <div class="row text-center">
-                            <div class="col-md-3">
-                                <h2 class="display-4">0</h2>
-                                <p class="mb-0">Today's Reports</p>
-                            </div>
-                            <div class="col-md-3">
-                                <h2 class="display-4">0</h2>
-                                <p class="mb-0">This Week</p>
-                            </div>
-                            <div class="col-md-3">
-                                <h2 class="display-4">0</h2>
-                                <p class="mb-0">Pending Reviews</p>
-                            </div>
-                            <div class="col-md-3">
-                                <h2 class="display-4">0</h2>
-                                <p class="mb-0">Completed This Month</p>
-                            </div>
+                <% } else { %>
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <h4 class="card-title mb-0">
+                                <i class="fas fa-clipboard me-2"></i>Patient Queue - No Patients Waiting
+                            </h4>
+                            <small>All nursing assessments have been processed</small>
+                        </div>
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-inbox icon-large text-muted mb-3"></i>
+                            <h5 class="text-muted">No patients in queue</h5>
+                            <p class="text-muted">Patients will appear here once nurses complete their assessments.</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Help Section -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <i class="fas fa-question-circle me-2"></i>Quick Help
-                        </h5>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6><i class="fas fa-x-ray text-primary me-2"></i>Radiology Assessment Process</h6>
-                                <ol class="text-muted">
-                                    <li>Click "New Radiology Assessment" to start</li>
-                                    <li>Fill patient information and procedure details</li>
-                                    <li>Document imaging findings and impressions</li>
-                                    <li>Provide clinical recommendations</li>
-                                    <li>Submit the completed assessment</li>
-                                </ol>
-                            </div>
-                            <div class="col-md-6">
-                                <h6><i class="fas fa-file-medical text-success me-2"></i>SH.MR.FRM.04 Form</h6>
-                                <ul class="text-muted">
-                                    <li>Comprehensive radiology assessment form</li>
-                                    <li>Includes CT, MRI, X-Ray, Ultrasound modalities</li>
-                                    <li>Covers contrast usage and radiation dosing</li>
-                                    <li>Supports multiple imaging procedures</li>
-                                    <li>Integrated with patient management system</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <% } %>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-format SSN input (allow only digits)
-        document.getElementById('ssn').addEventListener('input', function(e) {
-            // Remove any non-digit characters
-            let value = e.target.value.replace(/\D/g, '');
-            // Limit to 14 digits
-            if (value.length > 14) {
-                value = value.slice(0, 14);
-            }
-            e.target.value = value;
-        });
 
-        // Focus on SSN input when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('ssn').focus();
-        });
-    </script>
 </body>
 </html>

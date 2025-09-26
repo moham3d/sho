@@ -83,10 +83,19 @@
                             <div class="col-md-6">
                                 <p><strong>Name:</strong> <%= patient.full_name %></p>
                                 <p><strong>SSN:</strong> <%= patient.ssn %></p>
-                            </div>
-                            <div class="col-md-6">
                                 <p><strong>Medical Number:</strong> <%= patient.medical_number || 'Not provided' %></p>
                                 <p><strong>Mobile:</strong> <%= patient.mobile_number || 'Not provided' %></p>
+                            </div>
+                            <div class="col-md-6">
+                                <% if (patient.date_of_birth) { %>
+                                    <p><strong>Date of Birth:</strong> <%= new Date(patient.date_of_birth).toLocaleDateString() %></p>
+                                    <p><strong>Age:</strong> <%= Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) %> years</p>
+                                <% } else { %>
+                                    <p><strong>Date of Birth:</strong> Not provided</p>
+                                    <p><strong>Age:</strong> Not provided</p>
+                                <% } %>
+                                <p><strong>Gender:</strong> <%= patient.gender || 'Not provided' %></p>
+                                <p><strong>Phone:</strong> <%= patient.phone_number || 'Not provided' %></p>
                             </div>
                         </div>
                     </div>
@@ -97,17 +106,138 @@
                     <% if (visit) { %>
                     <input type="hidden" name="visit_id" value="<%= visit.visit_id %>">
                     <% } %>
-                    <!-- Physician and Department Info -->
+                    <!-- Patient Information & Medical History -->
                     <div class="form-section">
-                        <h3><i class="fas fa-user-md me-2" aria-hidden="true"></i>Physician & Department Information</h3>
+                        <h3><i class="fas fa-user-injured me-2" aria-hidden="true"></i>Medical History & Clinical Information</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Treating Physician</label>
-                                <input type="text" class="form-control" name="treating_physician" value="<%= user.fullName %>" required aria-label="Name of the treating physician">
+                                <label class="form-label">Age: السن</label>
+                                <input type="number" class="form-control" name="age" min="0" max="150" value="<%= patient.date_of_birth ? Math.floor((new Date() - new Date(patient.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) : '' %>" aria-label="Patient's age">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Department</label>
-                                <input type="text" class="form-control" name="department" required aria-label="Medical department name">
+                                <label class="form-label">Examination Date: تاريخ الفحص</label>
+                                <input type="date" class="form-control" name="examination_date" value="<%= new Date().toISOString().split('T')[0] %>" aria-label="Date of examination">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Chronic Diseases: الأمراض المزمنة</label>
+                                <textarea class="form-control" name="chronic_diseases" rows="2" placeholder="List any chronic diseases" aria-label="Patient's chronic diseases"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Current Medications: الأدوية الحالية</label>
+                                <textarea class="form-control" name="current_medications" rows="2" placeholder="List current medications" aria-label="Patient's current medications"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Fall Risk Medications: أدوية تسبب نعاس أو دوار</label>
+                                <textarea class="form-control" name="fall_risk_medications" rows="2" placeholder="Medications causing drowsiness, dizziness, or imbalance" aria-label="Medications that may cause falls"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Devices & Implants -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-cogs me-2" aria-hidden="true"></i>Medical Devices & Implants</h3>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="pacemaker" aria-label="Patient has pacemaker">
+                                    <label class="form-check-label">Pacemaker: جهاز منظم لضربات القلب</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="slats_screws_artificial_joints" aria-label="Patient has metal implants">
+                                    <label class="form-check-label">Metal Implants: شرائح - مسامير - مفاصل صناعية</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="gypsum_splint_presence" aria-label="Gypsum splint present">
+                                    <label class="form-check-label">Gypsum Splint Present: يوجد جبيره جبس</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="xrays_before_splint" aria-label="X-rays taken before splint">
+                                    <label class="form-check-label">X-rays Before Splint: صور الأشعة قبل الجبيره</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="pregnancy_status" aria-label="Patient is pregnant">
+                                    <label class="form-check-label">Pregnancy: وجود حمل</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clinical Symptoms -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-stethoscope me-2" aria-hidden="true"></i>Clinical Symptoms</h3>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Pain/Numbness: ألم - تنميل - حرقان</label>
+                                <textarea class="form-control" name="pain_numbness" rows="2" placeholder="Describe pain, numbness, or burning sensation" aria-label="Pain and numbness description"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pain Location: مكان وامتداد الألم</label>
+                                <textarea class="form-control" name="pain_numbness_location" rows="2" placeholder="Location and extension of pain" aria-label="Pain location and extension"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="spinal_deformities" aria-label="Spinal deformities present">
+                                    <label class="form-check-label">Spinal Deformities: تشوهات أو إعوجاج في العمود الفقري</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="swelling" id="swelling" aria-label="Swelling present">
+                                    <label class="form-check-label">Swelling: تورم</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="swelling_location_container" style="display: none;">
+                                <label class="form-label">Swelling Location: مكان التورم</label>
+                                <input type="text" class="form-control" name="swelling_location" placeholder="Location of swelling" aria-label="Swelling location">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="fever" aria-label="Fever present">
+                                    <label class="form-check-label">Fever: ارتفاع درجة الحرارة</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Neurological Symptoms: صداع - مشاكل في النظر - السمع - عدم إتزان</label>
+                                <textarea class="form-control" name="headache_visual_troubles_hearing_problems_imbalance" rows="2" placeholder="Headache, visual problems, hearing problems, imbalance" aria-label="Neurological symptoms"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical History -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-history me-2" aria-hidden="true"></i>Medical History</h3>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Previous Operations: عمليات سابقة وتواريخها</label>
+                                <textarea class="form-control" name="previous_operations" rows="2" placeholder="Previous operations and dates" aria-label="Previous operations"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="tumor_history" id="tumor_history" aria-label="Tumor history">
+                                    <label class="form-check-label">Tumor History: تاريخ مرضى لأي أورام</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="tumor_location_container" style="display: none;">
+                                <label class="form-label">Tumor Location/Type: مكان ونوع الورم</label>
+                                <input type="text" class="form-control" name="tumor_location_type" placeholder="Tumor location and type" aria-label="Tumor location and type">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="disc_problems" aria-label="Disc problems">
+                                    <label class="form-check-label">Disc Problems: انزلاق غضروفي</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Previous Investigations: فحوصات أشعة سابقة</label>
+                                <textarea class="form-control" name="previous_investigations" rows="2" placeholder="Previous imaging investigations" aria-label="Previous investigations"></textarea>
                             </div>
                         </div>
                     </div>
@@ -144,7 +274,7 @@
 
                     <!-- Imaging Procedure Details -->
                     <div class="form-section">
-                        <h3><i class="fas fa-cogs me-2" aria-hidden="true"></i>Imaging Procedure Details</h3>
+                        <h3><i class="fas fa-radiation me-2" aria-hidden="true"></i>Imaging Technical Parameters</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Dose Amount</label>
@@ -155,8 +285,16 @@
                                 <input type="number" class="form-control" name="ctd1vol" step="0.01" min="0" aria-label="CT dose index volume">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">DLP</label>
+                                <label class="form-label">DLP (Dose Length Product)</label>
                                 <input type="number" class="form-control" name="dlp" step="0.01" min="0" aria-label="Dose length product">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">KV (Kilovoltage)</label>
+                                <input type="number" class="form-control" name="kv" step="0.1" min="0" aria-label="X-ray tube voltage in kilovolts">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">MAs (Milliampere-seconds)</label>
+                                <input type="number" class="form-control" name="mas" step="0.1" min="0" aria-label="X-ray tube current-time product in milliampere-seconds">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Uses Contrast</label>
@@ -195,8 +333,8 @@
                                 <textarea class="form-control" name="diagnosis" rows="3" aria-label="Patient's diagnosis information"></textarea>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Reason for Study</label>
-                                <textarea class="form-control" name="reason_for_study" rows="3" required aria-label="Clinical reason for performing this imaging study"></textarea>
+                                <label class="form-label">Reason for Examination: سبب اجراء الفحص</label>
+                                <textarea class="form-control" name="reason_for_examination" rows="3" required aria-label="Clinical reason for performing this imaging study"></textarea>
                             </div>
                         </div>
                     </div>
@@ -249,14 +387,14 @@
                                             <label class="form-check-label" for="has_chemotherapy">Has Chemotherapy</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-4" id="chemo_type_container" style="display: none;">
                                         <select class="form-select" name="chemo_type" aria-label="Type of chemotherapy administered">
                                             <option value="">Type...</option>
                                             <option value="tablets">Tablets</option>
                                             <option value="infusion">Infusion</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-4" id="chemo_sessions_container" style="display: none;">
                                         <input type="number" class="form-control" name="chemo_sessions" placeholder="Sessions" aria-label="Number of chemotherapy sessions">
                                     </div>
                                 </div>
@@ -270,10 +408,10 @@
                                             <label class="form-check-label" for="has_radiotherapy">Has Radiotherapy</label>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-4" id="radiotherapy_site_container" style="display: none;">
                                         <input type="text" class="form-control" name="radiotherapy_site" placeholder="Site" aria-label="Radiotherapy treatment site">
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-4" id="radiotherapy_sessions_container" style="display: none;">
                                         <input type="number" class="form-control" name="radiotherapy_sessions" placeholder="Sessions" aria-label="Number of radiotherapy sessions">
                                     </div>
                                 </div>
@@ -458,6 +596,70 @@
                     return false;
                 }
             });
+
+            // Conditional field display
+            function setupConditionalFields() {
+                // Swelling
+                const swellingCheckbox = document.getElementById('swelling');
+                const swellingLocationContainer = document.getElementById('swelling_location_container');
+                swellingCheckbox.addEventListener('change', function() {
+                    swellingLocationContainer.style.display = this.checked ? 'block' : 'none';
+                    if (!this.checked) {
+                        document.querySelector('[name="swelling_location"]').value = '';
+                    }
+                });
+
+                // Tumor History
+                const tumorCheckbox = document.getElementById('tumor_history');
+                const tumorLocationContainer = document.getElementById('tumor_location_container');
+                tumorCheckbox.addEventListener('change', function() {
+                    tumorLocationContainer.style.display = this.checked ? 'block' : 'none';
+                    if (!this.checked) {
+                        document.querySelector('[name="tumor_location_type"]').value = '';
+                    }
+                });
+
+                // Chemotherapy
+                const chemoCheckbox = document.getElementById('has_chemotherapy');
+                const chemoTypeContainer = document.getElementById('chemo_type_container');
+                const chemoSessionsContainer = document.getElementById('chemo_sessions_container');
+                chemoCheckbox.addEventListener('change', function() {
+                    chemoTypeContainer.style.display = this.checked ? 'block' : 'none';
+                    chemoSessionsContainer.style.display = this.checked ? 'block' : 'none';
+                    if (!this.checked) {
+                        document.querySelector('[name="chemo_type"]').value = '';
+                        document.querySelector('[name="chemo_sessions"]').value = '';
+                    }
+                });
+
+                // Radiotherapy
+                const radioCheckbox = document.getElementById('has_radiotherapy');
+                const radioSiteContainer = document.getElementById('radiotherapy_site_container');
+                const radioSessionsContainer = document.getElementById('radiotherapy_sessions_container');
+                radioCheckbox.addEventListener('change', function() {
+                    radioSiteContainer.style.display = this.checked ? 'block' : 'none';
+                    radioSessionsContainer.style.display = this.checked ? 'block' : 'none';
+                    if (!this.checked) {
+                        document.querySelector('[name="radiotherapy_site"]').value = '';
+                        document.querySelector('[name="radiotherapy_sessions"]').value = '';
+                    }
+                });
+
+                // Pain/Numbness - show location if pain is described
+                const painTextarea = document.querySelector('[name="pain_numbness"]');
+                const painLocationTextarea = document.querySelector('[name="pain_numbness_location"]');
+                const painLocationRow = painLocationTextarea.closest('.col-md-6');
+                painLocationRow.style.display = 'none'; // Initially hidden
+
+                painTextarea.addEventListener('input', function() {
+                    painLocationRow.style.display = this.value.trim() !== '' ? 'block' : 'none';
+                    if (this.value.trim() === '') {
+                        painLocationTextarea.value = '';
+                    }
+                });
+            }
+
+            setupConditionalFields();
         });
     </script>
 </body>

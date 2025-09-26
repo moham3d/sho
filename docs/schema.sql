@@ -138,6 +138,7 @@ CREATE TABLE nursing_assessments (
     is_amputee INTEGER DEFAULT 0,
     is_bedridden INTEGER DEFAULT 0,
     has_musculoskeletal_pain INTEGER DEFAULT 0,
+    musculoskeletal_pain_location TEXT,
     uses_walker INTEGER DEFAULT 0,
     uses_wheelchair INTEGER DEFAULT 0,
     uses_transfer_device INTEGER DEFAULT 0,
@@ -147,6 +148,7 @@ CREATE TABLE nursing_assessments (
 
     -- Pain assessment
     pain_intensity INTEGER CHECK (pain_intensity BETWEEN 0 AND 10),
+    pain_identified INTEGER DEFAULT 0,
     pain_location TEXT,
     pain_frequency TEXT,
     pain_duration TEXT,
@@ -177,8 +179,10 @@ CREATE TABLE nursing_assessments (
     surgery_anesthesia_score INTEGER,
     medication_score INTEGER,
     humpty_total_score INTEGER,
+    fall_child_risk_level TEXT,
 
     -- Educational needs
+    edu_no_needs_identified INTEGER DEFAULT 0,
     needs_medication_education INTEGER DEFAULT 0,
     needs_diet_nutrition_education INTEGER DEFAULT 0,
     needs_medical_equipment_education INTEGER DEFAULT 0,
@@ -225,12 +229,44 @@ CREATE TABLE radiology_assessments (
     treating_physician TEXT,
     department TEXT,
 
-    -- Patient preparation
+    -- Patient information
+    age INTEGER CHECK (age >= 0 AND age <= 150),
+    examination_date DATE,
+    
+    -- Patient preparation  
     fasting_hours INTEGER CHECK (fasting_hours >= 0),
     is_diabetic TEXT DEFAULT 'false',
     blood_sugar_level INTEGER CHECK (blood_sugar_level >= 0),
     weight_kg REAL CHECK (weight_kg > 0 AND weight_kg <= 500),
     height_cm REAL CHECK (height_cm > 0 AND height_cm <= 300),
+    
+    -- Medical history
+    chronic_diseases TEXT,
+    current_medications TEXT,
+    fall_risk_medications TEXT,
+    
+    -- Medical devices and implants
+    pacemaker INTEGER DEFAULT 0,
+    slats_screws_artificial_joints INTEGER DEFAULT 0,
+    gypsum_splint_presence INTEGER DEFAULT 0,
+    xrays_before_splint INTEGER DEFAULT 0,
+    pregnancy_status INTEGER DEFAULT 0,
+    
+    -- Clinical symptoms
+    pain_numbness TEXT,
+    pain_numbness_location TEXT,
+    spinal_deformities INTEGER DEFAULT 0,
+    swelling INTEGER DEFAULT 0,
+    swelling_location TEXT,
+    headache_visual_troubles_hearing_problems_imbalance TEXT,
+    fever INTEGER DEFAULT 0,
+    
+    -- Medical history details
+    previous_operations TEXT,
+    tumor_history INTEGER DEFAULT 0,
+    tumor_location_type TEXT,
+    previous_investigations TEXT,
+    disc_problems INTEGER DEFAULT 0,
 
     -- Imaging procedure details
     dose_amount REAL CHECK (dose_amount >= 0),
@@ -239,6 +275,8 @@ CREATE TABLE radiology_assessments (
     injection_site TEXT,
     ctd1vol REAL CHECK (ctd1vol >= 0),
     dlp REAL CHECK (dlp >= 0),
+    kv REAL CHECK (kv >= 0), -- Kilovoltage
+    mas REAL CHECK (mas >= 0), -- Milliampere-seconds
     uses_contrast TEXT DEFAULT 'false',
     kidney_function_value REAL CHECK (kidney_function_value >= 0),
 
@@ -251,7 +289,7 @@ CREATE TABLE radiology_assessments (
 
     -- Clinical information
     diagnosis TEXT,
-    reason_for_study TEXT,
+    reason_for_examination TEXT, -- Changed from reason_for_study to match form
 
     -- Assessment content (findings)
     findings TEXT NOT NULL,
