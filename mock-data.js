@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 
 const mockData = {
     users: [
-        { id: 'admin-uuid', username: 'admin', email: 'admin@example.com', fullName: 'Administrator', role: 'admin', password: 'admin' },
         { id: 'nurse-uuid', username: 'nurse', email: 'nurse@example.com', fullName: 'Nurse One', role: 'nurse', password: 'nurse' },
         { id: 'nurse2-uuid', username: 'nurse2', email: 'nurse2@example.com', fullName: 'Nurse Two', role: 'nurse', password: 'nurse' },
         { id: 'physician-uuid', username: 'doctor', email: 'doctor@example.com', fullName: 'Dr. Physician', role: 'physician', password: 'doctor' },
