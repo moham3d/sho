@@ -218,8 +218,8 @@
             const ctx = canvas.getContext('2d');
 
             let isDrawing = false;
-            let lastX = 0;
-            let lastY = 0;
+            let currentPath = [];
+            let allPaths = [];
 
             // Set canvas background
             ctx.fillStyle = 'white';
@@ -247,9 +247,13 @@
 
             function startDrawing(e) {
                 isDrawing = true;
-                [lastX, lastY] = getMousePos(e);
+                currentPath = [];
+                const [x, y] = getMousePos(e);
+                currentPath.push({x, y});
+                
+                // Also draw on canvas for visual feedback
                 ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
+                ctx.moveTo(x, y);
             }
 
             function draw(e) {
@@ -257,17 +261,19 @@
                 e.preventDefault();
 
                 const [x, y] = getMousePos(e);
+                currentPath.push({x, y});
+                
+                // Draw on canvas
                 ctx.lineTo(x, y);
                 ctx.stroke();
-
-                [lastX, lastY] = [x, y];
             }
 
             function stopDrawing() {
-                if (isDrawing) {
-                    isDrawing = false;
+                if (isDrawing && currentPath.length > 1) {
+                    allPaths.push([...currentPath]);
                     updateSignatureInput();
                 }
+                isDrawing = false;
             }
 
             function handleTouchStart(e) {
@@ -304,13 +310,34 @@
             function clearSignature() {
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+                allPaths = [];
+                currentPath = [];
                 signatureInput.value = '';
             }
 
+            function generateSVGSignature() {
+                if (allPaths.length === 0) return null;
+                
+                let svgPaths = '';
+                allPaths.forEach(path => {
+                    if (path.length < 2) return;
+                    let pathData = `M ${path[0].x} ${path[0].y}`;
+                    for (let i = 1; i < path.length; i++) {
+                        pathData += ` L ${path[i].x} ${path[i].y}`;
+                    }
+                    svgPaths += `<path d="${pathData}" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+                });
+                
+                const svg = `<svg width="800" height="200" xmlns="http://www.w3.org/2000/svg">${svgPaths}</svg>`;
+                return 'data:image/svg+xml;base64,' + btoa(svg);
+            }
+
             function updateSignatureInput() {
-                // Convert canvas to base64 data URL
-                const dataURL = canvas.toDataURL('image/png');
-                signatureInput.value = dataURL;
+                // Generate SVG instead of PNG
+                const svgData = generateSVGSignature();
+                if (svgData) {
+                    signatureInput.value = svgData;
+                }
             }
         });
     </script>

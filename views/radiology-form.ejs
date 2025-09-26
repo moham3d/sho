@@ -287,11 +287,25 @@
                             <div class="col-12">
                                 <p class="text-muted mb-3">Patient signature is required for this assessment.</p>
                                 <div class="border rounded p-3 bg-light">
-                                    <div class="text-center">
+                                    <div class="text-center" id="patientSignPrompt">
                                         <button type="button" class="btn btn-primary btn-lg" id="patientSignButton">
-                                            <i class="fas fa-signature me-2"></i>Patient Sign Here
+                                            <i class="fas fa-signature me-2"></i>Open Signature Pad
                                         </button>
-                                        <p class="text-muted mt-2">Click to capture patient signature</p>
+                                        <p class="text-muted mt-2">Click to open signature pad for patient to sign</p>
+                                    </div>
+                                    <div id="patientSignaturePad" style="display: none;">
+                                        <div class="text-center mb-3">
+                                            <h5>Please sign below</h5>
+                                            <canvas id="patientSignatureCanvas" width="400" height="200" style="border: 1px solid #ccc; background: white; cursor: crosshair;"></canvas>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-secondary me-2" id="clearPatientSignature">
+                                                    <i class="fas fa-eraser me-1"></i>Clear
+                                                </button>
+                                                <button type="button" class="btn btn-success" id="capturePatientSignature">
+                                                    <i class="fas fa-check me-1"></i>Sign & Confirm
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div id="patientSignatureContainer" style="display: none;">
                                         <div class="alert alert-success text-center">
@@ -360,6 +374,8 @@
             const signatureContainer = document.getElementById('signatureContainer');
             const signedContainer = document.getElementById('signedContainer');
             const patientSignatureContainer = document.getElementById('patientSignatureContainer');
+            const patientSignPrompt = document.getElementById('patientSignPrompt');
+            const patientSignaturePad = document.getElementById('patientSignaturePad');
             const appliedSignature = document.getElementById('appliedSignature');
             const patientAppliedSignature = document.getElementById('patientAppliedSignature');
 
@@ -368,15 +384,131 @@
             const userRole = '<%= user.role %>';
             const isAdmin = userRole === 'admin';
 
-            // Patient signature handling
+            const patientSignatureCanvas = document.getElementById('patientSignatureCanvas');
+            const ctx = patientSignatureCanvas.getContext('2d');
+            let isDrawing = false;
+            let currentPath = [];
+            let allPaths = [];
+
+            // Initialize canvas
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+
             patientSignButton.addEventListener('click', function() {
-                // For demo purposes, we'll use a placeholder signature
-                // In a real application, this would open a signature pad
-                const placeholderSignature = 'data:image/svg+xml;base64,' + btoa('<svg width="200" height="60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="30" font-family="Arial" font-size="16" fill="black">Patient Signature</text></svg>');
-                patientSignatureInput.value = placeholderSignature;
-                patientAppliedSignature.src = placeholderSignature;
+                patientSignPrompt.style.display = 'none';
+                patientSignaturePad.style.display = 'block';
+            });
+
+            // Drawing functions - record paths for SVG generation
+            function startDrawing(e) {
+                isDrawing = true;
+                currentPath = [];
+                const rect = patientSignatureCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                currentPath.push({x, y});
+                
+                // Also draw on canvas for visual feedback
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+                const rect = patientSignatureCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                currentPath.push({x, y});
+                
+                // Draw on canvas
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                if (isDrawing && currentPath.length > 0) {  // Changed from > 1 to > 0
+                    allPaths.push([...currentPath]);
+                }
+                isDrawing = false;
+            }
+
+            // Mouse events
+            patientSignatureCanvas.addEventListener('mousedown', startDrawing);
+            patientSignatureCanvas.addEventListener('mousemove', draw);
+            patientSignatureCanvas.addEventListener('mouseup', stopDrawing);
+            patientSignatureCanvas.addEventListener('mouseout', stopDrawing);
+
+            // Touch events for mobile
+            patientSignatureCanvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                startDrawing(touch);
+            });
+            patientSignatureCanvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                draw(touch);
+            });
+            patientSignatureCanvas.addEventListener('touchend', stopDrawing);
+
+            // Clear button
+            clearPatientSignature.addEventListener('click', function() {
+                ctx.clearRect(0, 0, patientSignatureCanvas.width, patientSignatureCanvas.height);
+                allPaths = [];
+                currentPath = [];
+            });
+
+            // Generate SVG from recorded paths
+            function generateSVGSignature() {
+                if (allPaths.length === 0) return null;
+                
+                try {
+                    let svgPaths = '';
+                    allPaths.forEach(path => {
+                        if (path.length === 0) return;
+                        if (path.length === 1) {
+                            // Single point - create a small dot
+                            const x = path[0].x;
+                            const y = path[0].y;
+                            svgPaths += `<circle cx="${x}" cy="${y}" r="1" fill="#000"/>`;
+                        } else {
+                            // Multiple points - create path
+                            let pathData = `M ${path[0].x} ${path[0].y}`;
+                            for (let i = 1; i < path.length; i++) {
+                                pathData += ` L ${path[i].x} ${path[i].y}`;
+                            }
+                            svgPaths += `<path d="${pathData}" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+                        }
+                    });
+                    
+                    if (svgPaths === '') return null;
+                    
+                    const svg = `<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">${svgPaths}</svg>`;
+                    return 'data:image/svg+xml;base64,' + btoa(svg);
+                } catch (error) {
+                    console.error('Error generating SVG signature:', error);
+                    return null;
+                }
+            }
+
+            // Capture signature
+            capturePatientSignature.addEventListener('click', function() {
+                const signatureData = generateSVGSignature();
+                if (!signatureData) {
+                    alert('Please draw your signature first.');
+                    return;
+                }
+                patientSignatureInput.value = signatureData;
+                patientAppliedSignature.src = signatureData;
+                patientSignaturePad.style.display = 'none';
                 patientSignatureContainer.style.display = 'block';
-                patientSignButton.style.display = 'none';
+                
+                // Log for debugging
+                console.log('Patient signature captured:', signatureData.substring(0, 50) + '...');
+                
+                // Visual feedback
+                patientSignButton.style.display = 'none'; // Hide the button since signature is captured
             });
 
             if (userSignature && userSignature !== 'null') {
@@ -436,6 +568,10 @@
             document.getElementById('radiologyForm').addEventListener('submit', function(e) {
                 const physicianSignatureData = physicianSignatureInput.value;
                 const patientSignatureData = patientSignatureInput.value;
+                
+                console.log('Form submission check - Physician signature:', physicianSignatureData ? 'present' : 'missing');
+                console.log('Form submission check - Patient signature:', patientSignatureData ? 'present' : 'missing');
+                
                 if (!physicianSignatureData || physicianSignatureData === '') {
                     e.preventDefault();
                     alert('Please sign the assessment before submitting.');
@@ -449,6 +585,9 @@
                 if (!patientSignatureData || patientSignatureData === '') {
                     e.preventDefault();
                     alert('Patient signature is required before submitting.');
+                    patientSignPrompt.style.display = 'block';
+                    patientSignaturePad.style.display = 'none';
+                    patientSignatureContainer.style.display = 'none';
                     patientSignButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     patientSignButton.style.borderColor = '#dc3545';
                     setTimeout(() => {
@@ -456,6 +595,8 @@
                     }, 3000);
                     return false;
                 }
+                
+                console.log('Form validation passed, proceeding with submission');
             });
 
             // Conditional field display

@@ -2074,7 +2074,9 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
 
 app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, res) => {
     const formData = req.body;
-    console.log('Radiology form submitted:', formData);
+    console.log('Radiology form submitted - Physician signature present:', !!formData.physician_signature);
+    console.log('Radiology form submitted - Patient signature present:', !!formData.patient_signature);
+    console.log('Patient signature length:', formData.patient_signature ? formData.patient_signature.length : 0);
 
     if (!req.session.selectedVisit) {
         return res.status(400).send('No patient visit selected');
@@ -2096,9 +2098,15 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
     }
 
     // Handle signature storage
-    const signatureData = formData.physician_signature;
-    if (!signatureData || signatureData === '') {
-        return res.status(400).send('Signature is required');
+    const physicianSignatureData = formData.physician_signature;
+    const patientSignatureData = formData.patient_signature;
+    
+    if (!physicianSignatureData || physicianSignatureData === '') {
+        return res.status(400).send('Physician signature is required');
+    }
+    
+    if (!patientSignatureData || patientSignatureData === '') {
+        return res.status(400).send('Patient signature is required');
     }
 
     // Check if user already has a signature
