@@ -217,10 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Responsive table adjustments for tablets
-    function adjustForTablet() {
-        const isTablet = window.innerWidth <= 768 && window.innerWidth > 576;
-        document.body.classList.toggle('tablet-view', isTablet);
+    // Function to announce field validation results
+    function announceFieldValidation(fieldName, isValid, errorMessage = '') {
+        const message = isValid ?
+            `${fieldName} validation passed` :
+            `${fieldName} validation failed: ${errorMessage}`;
+        announceToScreenReader(message, 'polite');
     }
 
     window.addEventListener('resize', adjustForTablet);
@@ -401,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastProgressUpdate = 0;
     const PROGRESS_UPDATE_THROTTLE = 1000; // 1 second
 
-    function updateFormProgress() {
+    function throttledUpdateFormProgress() {
         const now = Date.now();
         if (now - lastProgressUpdate < PROGRESS_UPDATE_THROTTLE) {
             return; // Throttle updates
@@ -457,11 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
             progressBar.setAttribute('aria-valuenow', percentage);
         }
     }
-
-    // Optimized auto-save with reduced frequency on mobile
-    const AUTO_SAVE_INTERVAL = navigator.userAgent.includes('Mobile') ? 60000 : 30000; // 1 min on mobile, 30 sec on desktop
-
-    // Initialize mobile accessibility features
     function initializeMobileAccessibility() {
         const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
         const isTouchDevice = 'ontouchstart' in window;
@@ -532,20 +529,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
                     if (deltaX > 0) {
                         // Swipe left - next section
-                        announceUserAction('Swipe left detected', 'navigating to next section');
+                        announceToScreenReader('Swipe left detected, navigating to next section', 'polite');
                     } else {
                         // Swipe right - previous section
-                        announceUserAction('Swipe right detected', 'navigating to previous section');
+                        announceToScreenReader('Swipe right detected, navigating to previous section', 'polite');
                     }
                 }
                 // Vertical swipe
                 else if (Math.abs(deltaY) > swipeThreshold) {
                     if (deltaY > 0) {
                         // Swipe up - scroll down
-                        announceUserAction('Swipe up detected', 'scrolling content');
+                        announceToScreenReader('Swipe up detected, scrolling content', 'polite');
                     } else {
                         // Swipe down - scroll up
-                        announceUserAction('Swipe down detected', 'scrolling content');
+                        announceToScreenReader('Swipe down detected, scrolling content', 'polite');
                     }
                 }
 
