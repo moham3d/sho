@@ -160,7 +160,17 @@ app.get('/admin/users/new', requireAuth, requireRole('admin'), (req, res) => {
 });
 
 app.post('/admin/users', requireAuth, requireRole('admin'), async (req, res) => {
-    const { username, email, full_name, role, password } = req.body;
+    const { username, email, full_name, role, password, user_signature } = req.body;
+
+    // Validate signature
+    if (!user_signature || user_signature === '') {
+        return res.render('user-form', {
+            user: req.session,
+            editUser: null,
+            isNew: true,
+            error: 'User signature is required'
+        });
+    }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -170,13 +180,39 @@ app.post('/admin/users', requireAuth, requireRole('admin'), async (req, res) => 
             [userId, username, email, full_name, role, hashedPassword], function(err) {
                 if (err) {
                     console.error('Database error:', err);
-                    return res.status(500).send('Error creating user');
+                    return res.render('user-form', {
+                        user: req.session,
+                        editUser: null,
+                        isNew: true,
+                        error: 'Error creating user: ' + err.message
+                    });
                 }
-                res.redirect('/admin');
+
+                // Save signature
+                const signatureId = 'sig-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                db.run('INSERT INTO user_signatures (signature_id, user_id, signature_data) VALUES (?, ?, ?)',
+                    [signatureId, userId, user_signature], function(sigErr) {
+                        if (sigErr) {
+                            console.error('Error saving signature:', sigErr);
+                            // User created but signature failed - could delete user or handle differently
+                            return res.render('user-form', {
+                                user: req.session,
+                                editUser: null,
+                                isNew: true,
+                                error: 'User created but error saving signature'
+                            });
+                        }
+                        res.redirect('/admin');
+                    });
             });
     } catch (error) {
         console.error('Password hashing error:', error);
-        res.status(500).send('Error creating user');
+        res.render('user-form', {
+            user: req.session,
+            editUser: null,
+            isNew: true,
+            error: 'Error creating user'
+        });
     }
 });
 
@@ -186,13 +222,39 @@ app.get('/admin/users/:id/edit', requireAuth, requireRole('admin'), (req, res) =
         if (err || !user) {
             return res.status(404).send('User not found');
         }
-        res.render('user-form', { user: req.session, editUser: user, isNew: false });
+
+        // Get user's signature if exists
+        db.get('SELECT signature_data FROM user_signatures WHERE user_id = ?', [userId], (err, signature) => {
+            if (signature) {
+                user.signature_data = signature.signature_data;
+            }
+            res.render('user-form', { user: req.session, editUser: user, isNew: false });
+        });
     });
 });
 
 app.post('/admin/users/:id', requireAuth, requireRole('admin'), async (req, res) => {
     const userId = req.params.id;
-    const { username, email, full_name, role, password, is_active } = req.body;
+    const { username, email, full_name, role, password, is_active, user_signature } = req.body;
+
+    // Validate signature
+    if (!user_signature || user_signature === '') {
+        // Get user data for re-rendering form
+        db.get('SELECT user_id, username, email, full_name, role, is_active FROM users WHERE user_id = ?', [userId], (err, user) => {
+            if (user) {
+                db.get('SELECT signature_data FROM user_signatures WHERE user_id = ?', [userId], (err, signature) => {
+                    if (signature) user.signature_data = signature.signature_data;
+                    return res.render('user-form', {
+                        user: req.session,
+                        editUser: user,
+                        isNew: false,
+                        error: 'User signature is required'
+                    });
+                });
+            }
+        });
+        return;
+    }
 
     let updateQuery = 'UPDATE users SET username = ?, email = ?, full_name = ?, role = ?, is_active = ? WHERE user_id = ?';
     let params = [username, email, full_name, role, is_active ? 1 : 0, userId];
@@ -208,7 +270,31 @@ app.post('/admin/users/:id', requireAuth, requireRole('admin'), async (req, res)
             console.error('Database error:', err);
             return res.status(500).send('Error updating user');
         }
-        res.redirect('/admin');
+
+        // Update or insert signature
+        db.get('SELECT signature_id FROM user_signatures WHERE user_id = ?', [userId], (err, existingSignature) => {
+            if (err) {
+                console.error('Error checking existing signature:', err);
+                return res.redirect('/admin');
+            }
+
+            const signatureId = existingSignature ? existingSignature.signature_id : 'sig-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            const signatureSql = existingSignature ?
+                'UPDATE user_signatures SET signature_data = ?, updated_at = CURRENT_TIMESTAMP WHERE signature_id = ?' :
+                'INSERT INTO user_signatures (signature_id, user_id, signature_data) VALUES (?, ?, ?)';
+
+            const signatureValues = existingSignature ?
+                [user_signature, signatureId] :
+                [signatureId, userId, user_signature];
+
+            db.run(signatureSql, signatureValues, function(sigErr) {
+                if (sigErr) {
+                    console.error('Error saving signature:', sigErr);
+                    // User updated but signature failed - could handle differently
+                }
+                res.redirect('/admin');
+            });
+        });
     });
 });
 
@@ -758,21 +844,25 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
             return res.status(404).send('Visit not found');
         }
 
-        // Check if assessment exists and get submission status
-        db.get(`
-            SELECT na.*, fs.submission_status
-            FROM nursing_assessments na
-            JOIN form_submissions fs ON na.submission_id = fs.submission_id
-            WHERE fs.visit_id = ?
-        `, [visitId], (err, result) => {
-            const assessment = result ? result : null;
-            const isDraft = result ? result.submission_status === 'draft' : false;
+        // Get user's signature
+        db.get('SELECT signature_data FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, userSignature) => {
+            // Check if assessment exists and get submission status
+            db.get(`
+                SELECT na.*, fs.submission_status
+                FROM nursing_assessments na
+                JOIN form_submissions fs ON na.submission_id = fs.submission_id
+                WHERE fs.visit_id = ?
+            `, [visitId], (err, result) => {
+                const assessment = result ? result : null;
+                const isDraft = result ? result.submission_status === 'draft' : false;
 
-            res.render('nurse-form', {
-                user: req.session,
-                visit: visit,
-                assessment: assessment,
-                isDraft: isDraft
+                res.render('nurse-form', {
+                    user: req.session,
+                    visit: visit,
+                    assessment: assessment,
+                    isDraft: isDraft,
+                    userSignature: userSignature ? userSignature.signature_data : null
+                });
             });
         });
     });
@@ -834,7 +924,16 @@ app.get('/radiology-form', requireAuth, requireRole('physician'), (req, res) => 
     if (!req.session.selectedPatient || !req.session.selectedVisit) {
         return res.redirect('/doctor');
     }
-    res.render('radiology-form', { user: req.session, patient: req.session.selectedPatient, visit: req.session.selectedVisit });
+
+    // Get user's signature
+    db.get('SELECT signature_data FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, userSignature) => {
+        res.render('radiology-form', {
+            user: req.session,
+            patient: req.session.selectedPatient,
+            visit: req.session.selectedVisit,
+            userSignature: userSignature ? userSignature.signature_data : null
+        });
+    });
 });
 
 // Form submission routes

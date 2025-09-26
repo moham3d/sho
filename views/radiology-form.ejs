@@ -333,19 +333,25 @@
                     </div>
 
                     <!-- Physician Signature -->
-                    <div class="form-section">
+                    <div class="form-section" id="signatureSection">
                         <h3><i class="fas fa-signature me-2" aria-hidden="true"></i>Physician Signature</h3>
                         <div class="row g-3">
                             <div class="col-12">
-                                <p class="text-muted mb-3">Please sign below to confirm that you have completed this radiology assessment accurately and completely.</p>
-                                <div class="signature-pad border rounded p-3 bg-light" id="signaturePad" style="height: 200px; cursor: crosshair;" role="img" aria-label="Digital signature pad for radiology assessment">
-                                    <canvas id="signatureCanvas" width="800" height="200" class="w-100 h-100" role="img" aria-label="Signature drawing area"></canvas>
+                                <p class="text-muted mb-3">Click the button below to sign and submit this radiology assessment.</p>
+                                <div id="signatureContainer">
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-success btn-lg" id="signFormButton">
+                                            <i class="fas fa-signature me-2"></i>Sign the Form
+                                        </button>
+                                        <p class="text-muted mt-2">This will apply your signature and lock the form for editing</p>
+                                    </div>
                                 </div>
-                                <div class="mt-2">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSignature" aria-label="Clear the signature and start over">
-                                        <i class="fas fa-eraser me-1" aria-hidden="true"></i>Clear Signature
-                                    </button>
-                                    <small class="text-muted ms-2">Click and drag to sign</small>
+                                <div id="signedContainer" style="display: none;">
+                                    <div class="alert alert-success text-center">
+                                        <h4><i class="fas fa-check-circle me-2"></i>Form Signed Successfully!</h4>
+                                        <p>Your signature has been applied to this assessment.</p>
+                                        <img id="appliedSignature" src="" alt="Applied signature" class="border rounded mt-3" style="max-height: 80px; background: white;">
+                                    </div>
                                 </div>
                                 <input type="hidden" name="physician_signature" id="physicianSignatureInput">
                             </div>
@@ -371,108 +377,71 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/form-validation.js"></script>
 
-    <!-- Signature Pad Script -->
+    <!-- Signature Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('signatureCanvas');
             const signatureInput = document.getElementById('physicianSignatureInput');
-            const clearButton = document.getElementById('clearSignature');
-            const ctx = canvas.getContext('2d');
+            const signFormButton = document.getElementById('signFormButton');
+            const signatureContainer = document.getElementById('signatureContainer');
+            const signedContainer = document.getElementById('signedContainer');
+            const appliedSignature = document.getElementById('appliedSignature');
 
-            let isDrawing = false;
-            let lastX = 0;
-            let lastY = 0;
+            // Check if user has existing signature
+            const userSignature = '<%= userSignature %>';
+            const userRole = '<%= user.role %>';
+            const isAdmin = userRole === 'admin';
 
-            // Set canvas background
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (userSignature && userSignature !== 'null') {
+                // User has signature, show sign button
+                signatureContainer.style.display = 'block';
+                signedContainer.style.display = 'none';
 
-            // Set drawing properties
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
+                // Handle sign form button
+                signFormButton.addEventListener('click', function() {
+                    // Show confirmation dialog
+                    const confirmed = confirm('⚠️ WARNING: Signing this assessment will mark it as completed and lock it for editing.\n\nOnce signed, you will not be able to make any further changes to this assessment.\n\nAre you sure you want to sign and complete this assessment?');
 
-            // Mouse events
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
+                    if (!confirmed) {
+                        return; // User cancelled
+                    }
 
-            // Touch events for mobile
-            canvas.addEventListener('touchstart', handleTouchStart);
-            canvas.addEventListener('touchmove', handleTouchMove);
-            canvas.addEventListener('touchend', stopDrawing);
+                    signatureInput.value = userSignature;
+                    appliedSignature.src = userSignature;
 
-            // Clear signature
-            clearButton.addEventListener('click', clearSignature);
+                    // Show signed confirmation
+                    signatureContainer.style.display = 'none';
+                    signedContainer.style.display = 'block';
 
-            function startDrawing(e) {
-                isDrawing = true;
-                [lastX, lastY] = getMousePos(e);
-                ctx.beginPath();
-                ctx.moveTo(lastX, lastY);
-            }
-
-            function draw(e) {
-                if (!isDrawing) return;
-                e.preventDefault();
-
-                const [x, y] = getMousePos(e);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-
-                [lastX, lastY] = [x, y];
-            }
-
-            function stopDrawing() {
-                if (isDrawing) {
-                    isDrawing = false;
-                    updateSignatureInput();
-                }
-            }
-
-            function handleTouchStart(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousedown', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
+                    // Disable form (unless admin)
+                    if (!isAdmin) {
+                        disableFormAfterSignature();
+                    }
                 });
-                canvas.dispatchEvent(mouseEvent);
+            } else {
+                // No signature - this shouldn't happen since signatures are required on user creation
+                signatureContainer.innerHTML = '<div class="alert alert-warning">No signature found. Please contact an administrator to set up your signature.</div>';
             }
 
-            function handleTouchMove(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: touch.clientX,
-                    clientY: touch.clientY
+            function disableFormAfterSignature() {
+                // Disable all form inputs except submit buttons
+                const form = document.getElementById('radiologyForm');
+                const inputs = form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]), select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    input.style.opacity = '0.6';
                 });
-                canvas.dispatchEvent(mouseEvent);
-            }
 
-            function getMousePos(e) {
-                const rect = canvas.getBoundingClientRect();
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-
-                return [
-                    (e.clientX - rect.left) * scaleX,
-                    (e.clientY - rect.top) * scaleY
-                ];
-            }
-
-            function clearSignature() {
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                signatureInput.value = '';
-            }
-
-            function updateSignatureInput() {
-                // Convert canvas to base64 data URL
-                const dataURL = canvas.toDataURL('image/png');
-                signatureInput.value = dataURL;
+                // Update signature section to show locked state
+                const signatureSection = document.getElementById('signatureSection');
+                signatureSection.innerHTML = `
+                    <h3><i class="fas fa-lock me-2" aria-hidden="true"></i>Form Signed and Locked</h3>
+                    <div class="alert alert-success">
+                        <h4><i class="fas fa-check-circle me-2"></i>Assessment Signed Successfully!</h4>
+                        <p>This radiology assessment has been signed and is now locked for editing.</p>
+                        <img src="${userSignature}" alt="Applied signature" class="border rounded mt-3" style="max-height: 80px; background: white;">
+                        <p class="text-muted mt-2">To make changes, please contact an administrator.</p>
+                    </div>
+                `;
             }
 
             // Form validation - check if signature exists before submission
@@ -481,10 +450,10 @@
                 if (!signatureData || signatureData === '') {
                     e.preventDefault();
                     alert('Please sign the assessment before submitting.');
-                    canvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    canvas.style.borderColor = '#dc3545';
+                    signFormButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    signFormButton.style.borderColor = '#dc3545';
                     setTimeout(() => {
-                        canvas.style.borderColor = '#dee2e6';
+                        signFormButton.style.borderColor = '';
                     }, 3000);
                     return false;
                 }
