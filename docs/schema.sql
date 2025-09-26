@@ -153,7 +153,7 @@ CREATE TABLE nursing_assessments (
     pain_character TEXT,
     action_taken TEXT,
 
-    -- Fall risk assessment (Morse Scale)
+    -- Fall risk assessment (Morse Scale) - Updated for new implementation
     fall_history_3months INTEGER DEFAULT 0,
     secondary_diagnosis INTEGER DEFAULT 0,
     ambulatory_aid TEXT CHECK (ambulatory_aid IN ('none', 'bed_rest_chair', 'crutches_walker', 'furniture')),
@@ -161,6 +161,12 @@ CREATE TABLE nursing_assessments (
     gait_status TEXT CHECK (gait_status IN ('normal', 'weak', 'impaired')),
     mental_status TEXT CHECK (mental_status IN ('oriented', 'forgets_limitations', 'unaware')),
     morse_total_score INTEGER,
+    morse_risk_level TEXT,
+
+    -- New comprehensive fall risk assessments (JSON format)
+    morse_scale TEXT, -- JSON: {history_falling, secondary_diagnosis, ambulatory_aid, iv_therapy, gait, mental_status, total_score, risk_level}
+    pediatric_fall_risk TEXT, -- JSON: {developmental_stage, activity_level, medication_use, environmental_factors, previous_falls, cognitive_factors, total_score, risk_level}
+    elderly_assessment TEXT, -- JSON: {orientation, memory, bathing, dressing, toileting, medication_count, high_risk_meds, falls, incontinence, delirium, living_situation, social_support, total_score, risk_level}
 
     -- Pediatric fall risk (Humpty Dumpty Scale)
     age_score INTEGER,
@@ -182,7 +188,7 @@ CREATE TABLE nursing_assessments (
     needs_fall_prevention_education INTEGER DEFAULT 0,
     other_needs INTEGER DEFAULT 0,
     other_needs_desc TEXT,
-
+    
     -- Elderly assessment
     daily_activities TEXT CHECK (daily_activities IN ('independent', 'needs_help', 'dependent')),
     cognitive_assessment TEXT CHECK (cognitive_assessment IN ('normal', 'mild_delirium', 'moderate_delirium', 'severe_delirium')),
@@ -334,10 +340,6 @@ CREATE INDEX idx_submissions_status ON form_submissions(submission_status);
 -- Assessment indexes
 CREATE INDEX idx_nursing_assessment ON nursing_assessments(submission_id);
 CREATE INDEX idx_radiology_assessment ON radiology_assessments(submission_id);
-
--- Document indexes
-CREATE INDEX idx_documents_visit ON visit_documents(visit_id);
-CREATE INDEX idx_documents_type ON visit_documents(document_type);
 
 -- Audit indexes
 CREATE INDEX idx_audit_table_record ON audit_log(table_name, record_id);

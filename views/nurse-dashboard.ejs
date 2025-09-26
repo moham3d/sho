@@ -258,8 +258,8 @@
                                                         <td>
                                                             <div class="btn-group btn-group-sm" role="group">
                                                                 <% if (visit.assessment_id) { %>
-                                                                    <a href="/nurse/assessment/<%= visit.visit_id %>" class="btn btn-outline-primary" title="Continue Assessment" aria-label="Continue assessment for <%= visit.patient_name %>">
-                                                                        <i class="fas fa-edit" aria-hidden="true"></i> Continue
+                                                                    <a href="/nurse/assessment/<%= visit.visit_id %>" class="btn btn-outline-primary" title="<%= visit.is_draft ? 'Continue Assessment' : 'View Assessment' %>" aria-label="<%= visit.is_draft ? 'Continue' : 'View' %> assessment for <%= visit.patient_name %>">
+                                                                        <i class="fas fa-<%= visit.is_draft ? 'edit' : 'eye' %>" aria-hidden="true"></i> <%= visit.is_draft ? 'Continue' : 'View' %>
                                                                     </a>
                                                                 <% } else { %>
                                                                     <a href="/nurse/assessment/<%= visit.visit_id %>" class="btn btn-success" title="Start Assessment" aria-label="Start assessment for <%= visit.patient_name %>">

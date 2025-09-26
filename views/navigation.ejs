@@ -11,7 +11,6 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <% if (user && user.role === 'admin') { %>
                         <li class="nav-item">
@@ -25,21 +24,7 @@
                             </a>
                         </li>
                     <% } else if (user && user.role === 'nurse') { %>
-                        <li class="nav-item">
-                            <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/">
-                                <i class="fas fa-home me-1" aria-hidden="true"></i>Home
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <%= currentPage === 'assessments' ? 'active' : '' %>" href="/nurse/my-assessments">
-                                <i class="fas fa-clipboard-list me-1" aria-hidden="true"></i>My Assessments
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link <%= currentPage === 'search-patient' ? 'active' : '' %>" href="/nurse/search-patient">
-                                <i class="fas fa-search me-1" aria-hidden="true"></i>New Assessment
-                            </a>
-                        </li>
+
                     <% } else if (user && user.role === 'physician') { %>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/">

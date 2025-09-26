@@ -1696,19 +1696,24 @@ app.get('/nurse/assessment/:visitId', requireAuth, requireRole('nurse'), (req, r
         db.get('SELECT signature_data FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, userSignature) => {
             // Check if assessment exists and get submission status
             db.get(`
-                SELECT na.*, fs.submission_status
+                SELECT na.*, fs.submission_status, us.signature_data as assessment_signature
                 FROM nursing_assessments na
                 JOIN form_submissions fs ON na.submission_id = fs.submission_id
+                LEFT JOIN user_signatures us ON na.nurse_signature_id = us.signature_id
                 WHERE fs.visit_id = ?
             `, [visitId], (err, result) => {
                 const assessment = result ? result : null;
                 const isDraft = result ? result.submission_status === 'draft' : false;
+                const isCompleted = result ? result.submission_status === 'submitted' : false;
+                const assessmentSignature = result ? result.assessment_signature : null;
 
                 res.render('nurse-form', {
                     user: req.session,
                     visit: visit,
                     assessment: assessment,
                     isDraft: isDraft,
+                    isCompleted: isCompleted,
+                    assessmentSignature: assessmentSignature,
                     userSignature: userSignature ? userSignature.signature_data : null
                 });
             });
@@ -1799,50 +1804,101 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
     });
 
     // Check if assessment already exists
-    db.get('SELECT na.*, fs.submission_id FROM nursing_assessments na JOIN form_submissions fs ON na.submission_id = fs.submission_id WHERE fs.visit_id = ?', [visitId], (err, existingAssessment) => {
+    db.get('SELECT na.*, fs.submission_id, fs.submission_status FROM nursing_assessments na JOIN form_submissions fs ON na.submission_id = fs.submission_id WHERE fs.visit_id = ?', [visitId], (err, existingAssessment) => {
         if (err) {
             console.error('Error checking existing assessment:', err);
             return res.status(500).send('Database error');
         }
 
-        // Handle signature storage
-        const signatureData = formData.nurse_signature;
-        if (!signatureData || signatureData === '') {
-            return res.status(400).send('Signature is required');
+        // Prevent updates to completed assessments
+        if (existingAssessment && existingAssessment.submission_status === 'submitted') {
+            return res.status(403).send('This assessment has been completed and cannot be modified. Please contact an administrator if changes are needed.');
         }
 
-        // Check if user already has a signature
-        db.get('SELECT signature_id FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, existingSignature) => {
-            if (err) {
-                console.error('Error checking existing signature:', err);
-                return res.status(500).send('Database error');
-            }
+        // Handle signature storage - only required for final submissions
+        const signatureData = formData.nurse_signature;
+        if (!isDraft && (!signatureData || signatureData === '')) {
+            return res.status(400).send('Signature is required for final submission');
+        }
 
-            const signatureId = existingSignature ? existingSignature.signature_id : 'sig-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-
-            const signatureSql = existingSignature ?
-                'UPDATE user_signatures SET signature_data = ?, updated_at = CURRENT_TIMESTAMP WHERE signature_id = ?' :
-                'INSERT INTO user_signatures (signature_id, user_id, signature_data) VALUES (?, ?, ?)';
-
-            const signatureValues = existingSignature ?
-                [signatureData, signatureId] :
-                [signatureId, req.session.userId, signatureData];
-
-            db.run(signatureSql, signatureValues, function(sigErr) {
-                if (sigErr) {
-                    console.error('Error saving signature:', sigErr);
-                    return res.status(500).send('Error saving signature');
+        // Only process signature for final submissions
+        if (!isDraft) {
+            // Check if user already has a signature
+            db.get('SELECT signature_id FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, existingSignature) => {
+                if (err) {
+                    console.error('Error checking existing signature:', err);
+                    return res.status(500).send('Database error');
                 }
 
-                // Now proceed with form submission using signature_id reference
-                proceedWithFormSubmission(signatureId, existingAssessment);
+                const signatureId = existingSignature ? existingSignature.signature_id : 'sig-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+                const signatureSql = existingSignature ?
+                    'UPDATE user_signatures SET signature_data = ?, updated_at = CURRENT_TIMESTAMP WHERE signature_id = ?' :
+                    'INSERT INTO user_signatures (signature_id, user_id, signature_data) VALUES (?, ?, ?)';
+
+                const signatureValues = existingSignature ?
+                    [signatureData, signatureId] :
+                    [signatureId, req.session.userId, signatureData];
+
+                db.run(signatureSql, signatureValues, function(sigErr) {
+                    if (sigErr) {
+                        console.error('Error saving signature:', sigErr);
+                        return res.status(500).send('Error saving signature');
+                    }
+
+                    // Now proceed with form submission using signature_id reference
+                    proceedWithFormSubmission(signatureId, existingAssessment);
+                });
             });
-        });
+        } else {
+            // For drafts, proceed without signature
+            proceedWithFormSubmission(null, existingAssessment);
+        }
     });
 
     function proceedWithFormSubmission(signatureId, existingAssessment) {
         const submissionId = existingAssessment ? existingAssessment.submission_id : 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         const assessmentId = existingAssessment ? existingAssessment.assessment_id : 'nurse-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+        // Prepare fall risk assessment data
+        const morseScaleData = {
+            history_falling: formData.morse_history_falling,
+            secondary_diagnosis: formData.morse_secondary_diagnosis,
+            ambulatory_aid: formData.morse_ambulatory_aid,
+            iv_therapy: formData.morse_iv_therapy,
+            gait: formData.morse_gait,
+            mental_status: formData.morse_mental_status,
+            total_score: parseInt(formData.morse_total_score) || 0,
+            risk_level: formData.morse_risk_level || 'Low Risk'
+        };
+
+        const pediatricFallRiskData = {
+            developmental_stage: formData.pediatric_developmental_stage,
+            activity_level: formData.pediatric_activity_level,
+            medication_use: formData.pediatric_medication_use,
+            environmental_factors: formData.pediatric_environmental_factors,
+            previous_falls: formData.pediatric_previous_falls,
+            cognitive_factors: formData.pediatric_cognitive_factors,
+            total_score: parseInt(formData.pediatric_total_score) || 0,
+            risk_level: formData.pediatric_risk_level || 'Low Risk'
+        };
+
+        const elderlyAssessmentData = {
+            orientation: formData.elderly_orientation,
+            memory: formData.elderly_memory,
+            bathing: formData.elderly_bathing,
+            dressing: formData.elderly_dressing,
+            toileting: formData.elderly_toileting,
+            medication_count: formData.elderly_medication_count,
+            high_risk_meds: formData.elderly_high_risk_meds ? 1 : 0,
+            falls: formData.elderly_falls ? 1 : 0,
+            incontinence: formData.elderly_incontinence ? 1 : 0,
+            delirium: formData.elderly_delirium ? 1 : 0,
+            living_situation: formData.elderly_living_situation,
+            social_support: formData.elderly_social_support,
+            total_score: parseInt(formData.elderly_total_score) || 0,
+            risk_level: formData.elderly_risk_level || 'Low Risk'
+        };
 
         const sql = existingAssessment ?
             `UPDATE nursing_assessments SET
@@ -1854,7 +1910,8 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 has_git_problems = ?, has_weight_loss = ?, has_weight_gain = ?, feeding_status = ?, hygiene_status = ?,
                 toileting_status = ?, ambulation_status = ?, uses_walker = ?, uses_wheelchair = ?, uses_transfer_device = ?,
                 uses_other_equipment = ?, pain_intensity = ?, pain_location = ?, pain_frequency = ?,
-                pain_character = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
+                pain_character = ?, morse_total_score = ?, morse_risk_level = ?, morse_scale = ?,
+                pediatric_fall_risk = ?, elderly_assessment = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
                 needs_medical_equipment_education = ?, needs_rehabilitation_education = ?, needs_drug_interaction_education = ?,
                 needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature_id = ?
              WHERE assessment_id = ?` :
@@ -1865,11 +1922,11 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 psychological_problem, is_smoker, has_allergies, medication_allergies, food_allergies, other_allergies,
                 diet_type, appetite, has_git_problems, has_weight_loss, has_weight_gain, feeding_status, hygiene_status,
                 toileting_status, ambulation_status, uses_walker, uses_wheelchair, uses_transfer_device, uses_other_equipment,
-                pain_intensity, pain_location, pain_frequency, pain_character,
-                needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
+                pain_intensity, pain_location, pain_frequency, pain_character, morse_total_score, morse_risk_level, morse_scale,
+                pediatric_fall_risk, elderly_assessment, needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
                 needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
                 needs_fall_prevention_education, other_needs, nurse_signature_id, assessed_by, assessed_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const values = existingAssessment ? [
             formData.mode_of_arrival, formData.age, formData.chief_complaint, formData.accompanied_by, formData.language_spoken,
@@ -1881,7 +1938,8 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
             formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0,
             formData.uses_other_equipment ? 1 : 0, formData.pain_intensity, formData.pain_location, formData.pain_frequency,
-            formData.pain_character, formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
+            formData.pain_character, formData.morse_total_score, formData.morse_risk_level, JSON.stringify(morseScaleData),
+            JSON.stringify(pediatricFallRiskData), JSON.stringify(elderlyAssessmentData), formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
             formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId, assessmentId
@@ -1896,7 +1954,8 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
             formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0,
             formData.uses_other_equipment ? 1 : 0, formData.pain_intensity, formData.pain_location, formData.pain_frequency,
-            formData.pain_character, formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
+            formData.pain_character, formData.morse_total_score, formData.morse_risk_level, JSON.stringify(morseScaleData),
+            JSON.stringify(pediatricFallRiskData), JSON.stringify(elderlyAssessmentData), formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
             formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId, req.session.userId,

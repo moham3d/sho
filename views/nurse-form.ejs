@@ -114,17 +114,17 @@
                         <h3><i class="fas fa-info-circle me-2" aria-hidden="true"></i>Basic Assessment Information</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Mode of Arrival</label>
+                                <label class="form-label">Mode of Arrival: حالة الوصول</label>
                                 <select class="form-select" name="mode_of_arrival" required aria-label="Select patient's mode of arrival">
-                                    <option value="">Select mode...</option>
-                                    <option value="ambulatory" <%= assessment && assessment.mode_of_arrival === 'ambulatory' ? 'selected' : '' %>>Ambulatory</option>
-                                    <option value="wheelchair" <%= assessment && assessment.mode_of_arrival === 'wheelchair' ? 'selected' : '' %>>Wheelchair</option>
-                                    <option value="stretcher" <%= assessment && assessment.mode_of_arrival === 'stretcher' ? 'selected' : '' %>>Stretcher</option>
-                                    <option value="other" <%= assessment && assessment.mode_of_arrival === 'other' ? 'selected' : '' %>>Other</option>
+                                    <option value="walking" <%= assessment && assessment.mode_of_arrival === 'walking' ? 'selected' : '' %>>Walking - مشي</option>
+                                    <option value="ambulatory" <%= assessment && assessment.mode_of_arrival === 'ambulatory' ? 'selected' : '' %>>Ambulatory - متحرك</option>
+                                    <option value="wheelchair" <%= assessment && assessment.mode_of_arrival === 'wheelchair' ? 'selected' : '' %>>Wheelchair - كرسي متحرك</option>
+                                    <option value="stretcher" <%= assessment && assessment.mode_of_arrival === 'stretcher' ? 'selected' : '' %>>Stretcher - نقالة</option>
+                                    <option value="other" <%= assessment && assessment.mode_of_arrival === 'other' ? 'selected' : '' %>>Other - أخرى</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Age</label>
+                                <label class="form-label">Age: العمر</label>
                                 <input type="number" class="form-control" name="age" id="ageField" min="0" max="150" required value="<%= assessment ? assessment.age : '' %>" aria-label="Patient's age in years" aria-describedby="ageHelp">
                                 <small class="text-muted" id="ageHelp">Auto-calculated from patient's date of birth</small>
                             </div>
@@ -133,16 +133,16 @@
                                 <textarea class="form-control" name="chief_complaint" rows="3" required aria-label="Patient's chief complaint in Arabic and English"><%= assessment ? assessment.chief_complaint : '' %></textarea>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Accompanied By</label>
+                                <label class="form-label">Accompanied by: المرافق </label>
                                 <select class="form-select" name="accompanied_by" aria-label="Person accompanying the patient">
                                     <option value="">Select...</option>
-                                    <option value="spouse" <%= assessment && assessment.accompanied_by === 'spouse' ? 'selected' : '' %>>Spouse</option>
-                                    <option value="relative" <%= assessment && assessment.accompanied_by === 'relative' ? 'selected' : '' %>>Relative</option>
-                                    <option value="other" <%= assessment && assessment.accompanied_by === 'other' ? 'selected' : '' %>>Other</option>
+                                    <option value="spouse" <%= assessment && assessment.accompanied_by === 'spouse' ? 'selected' : '' %>>Spouse - الزوج</option>
+                                    <option value="relative" <%= assessment && assessment.accompanied_by === 'relative' ? 'selected' : '' %>>Relative - قريب</option>
+                                    <option value="other" <%= assessment && assessment.accompanied_by === 'other' ? 'selected' : '' %>>Other - أخرى</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Language Spoken</label>
+                                <label class="form-label">Language Spoken: اللغة</label>
                                 <select class="form-select" name="language_spoken" aria-label="Primary language spoken by patient">
                                     <option value="arabic" <%= (!assessment || assessment.language_spoken === 'arabic') ? 'selected' : '' %>>Arabic</option>
                                     <option value="english" <%= assessment && assessment.language_spoken === 'english' ? 'selected' : '' %>>English</option>
@@ -154,42 +154,42 @@
 
                     <!-- Vital Signs -->
                     <div class="form-section">
-                        <h3><i class="fas fa-heartbeat me-2" aria-hidden="true"></i>Vital Signs</h3>
+                        <h3><i class="fas fa-heartbeat me-2" aria-hidden="true"></i>Vital Signs: العلامات الحيوية</h3>
                         <div class="vital-signs-grid">
                             <div>
-                                <label class="form-label">Temperature (°C)</label>
+                                <label class="form-label">Temperature (°C): درجة الحرارة</label>
                                 <input type="number" class="form-control" name="temperature_celsius" step="0.1" min="30" max="45" value="<%= assessment ? assessment.temperature_celsius : '' %>" aria-label="Body temperature in Celsius">
                             </div>
                             <div>
-                                <label class="form-label">Pulse (BPM)</label>
+                                <label class="form-label">Pulse (BPM): النبض</label>
                                 <input type="number" class="form-control" name="pulse_bpm" min="30" max="200" value="<%= assessment ? assessment.pulse_bpm : '' %>" aria-label="Heart rate in beats per minute">
                             </div>
                             <div>
-                                <label class="form-label">Blood Pressure (Systolic)</label>
+                                <label class="form-label">Blood Pressure (Systolic): ضغط الدم (الانقباضي)</label>
                                 <input type="number" class="form-control" name="blood_pressure_systolic" min="70" max="250" value="<%= assessment ? assessment.blood_pressure_systolic : '' %>" aria-label="Systolic blood pressure in mmHg">
                             </div>
                             <div>
-                                <label class="form-label">Blood Pressure (Diastolic)</label>
+                                <label class="form-label">Blood Pressure (Diastolic): ضغط الدم (الانبساطي)</label>
                                 <input type="number" class="form-control" name="blood_pressure_diastolic" min="40" max="150" value="<%= assessment ? assessment.blood_pressure_diastolic : '' %>" aria-label="Diastolic blood pressure in mmHg">
                             </div>
                             <div>
-                                <label class="form-label">Respiratory Rate</label>
+                                <label class="form-label">Respiratory Rate: معدل التنفس</label>
                                 <input type="number" class="form-control" name="respiratory_rate_per_min" min="8" max="60" value="<%= assessment ? assessment.respiratory_rate_per_min : '' %>" aria-label="Respiratory rate in breaths per minute">
                             </div>
                             <div>
-                                <label class="form-label">Oxygen Saturation (%)</label>
+                                <label class="form-label">Oxygen Saturation (%): تشبع الأكسجين</label>
                                 <input type="number" class="form-control" name="oxygen_saturation_percent" step="0.1" min="70" max="100" value="<%= assessment ? assessment.oxygen_saturation_percent : '' %>" aria-label="Blood oxygen saturation percentage">
                             </div>
                             <div>
-                                <label class="form-label">Blood Sugar (mg/dL)</label>
+                                <label class="form-label">Blood Sugar (mg/dL): سكر الدم</label>
                                 <input type="number" class="form-control" name="blood_sugar_mg_dl" min="0" value="<%= assessment ? assessment.blood_sugar_mg_dl : '' %>" aria-label="Blood glucose level in mg/dL">
                             </div>
                             <div>
-                                <label class="form-label">Weight (kg)</label>
+                                <label class="form-label">Weight (kg): الوزن</label>
                                 <input type="number" class="form-control" name="weight_kg" step="0.1" min="0" max="500" value="<%= assessment ? assessment.weight_kg : '' %>" aria-label="Patient weight in kilograms">
                             </div>
                             <div>
-                                <label class="form-label">Height (cm)</label>
+                                <label class="form-label">Height (cm): الطول</label>
                                 <input type="number" class="form-control" name="height_cm" step="0.1" min="0" max="300" value="<%= assessment ? assessment.height_cm : '' %>" aria-label="Patient height in centimeters">
                             </div>
                         </div>
@@ -197,40 +197,42 @@
 
                     <!-- Psychosocial Assessment -->
                     <div class="form-section">
-                        <h3><i class="fas fa-brain me-2" aria-hidden="true"></i>Psychosocial Assessment</h3>
+                        <h3><i class="fas fa-brain me-2" aria-hidden="true"></i>Psychosocial Assessment: التقييم النفسي الاجتماعي</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Psychological Problem</label>
+                                <label class="form-label">Psychological Problem: المشكلة النفسية</label>
                                 <select class="form-select" name="psychological_problem" aria-label="Patient's current psychological condition">
-                                    <option value="none" <%= assessment && assessment.psychological_problem === 'none' ? 'selected' : '' %>>None</option>
-                                    <option value="depressed" <%= assessment && assessment.psychological_problem === 'depressed' ? 'selected' : '' %>>Depressed</option>
-                                    <option value="agitated" <%= assessment && assessment.psychological_problem === 'agitated' ? 'selected' : '' %>>Agitated</option>
-                                    <option value="anxious" <%= assessment && assessment.psychological_problem === 'anxious' ? 'selected' : '' %>>Anxious</option>
-                                    <option value="isolated" <%= assessment && assessment.psychological_problem === 'isolated' ? 'selected' : '' %>>Isolated</option>
-                                    <option value="confused" <%= assessment && assessment.psychological_problem === 'confused' ? 'selected' : '' %>>Confused</option>
-                                    <option value="other" <%= assessment && assessment.psychological_problem === 'other' ? 'selected' : '' %>>Other</option>
+                                    <option value="none" <%= assessment && assessment.psychological_problem === 'none' ? 'selected' : '' %>>None: لا شيء</option>
+                                    <option value="depressed" <%= assessment && assessment.psychological_problem === 'depressed' ? 'selected' : '' %>>Depressed: مكتئب</option>
+                                    <option value="agitated" <%= assessment && assessment.psychological_problem === 'agitated' ? 'selected' : '' %>>Agitated: مضطرب</option>
+                                    <option value="anxious" <%= assessment && assessment.psychological_problem === 'anxious' ? 'selected' : '' %>>Anxious: قلق</option>
+                                    <option value="isolated" <%= assessment && assessment.psychological_problem === 'isolated' ? 'selected' : '' %>>Isolated: منعزل</option>
+                                    <option value="confused" <%= assessment && assessment.psychological_problem === 'confused' ? 'selected' : '' %>>Confused: مرتبك</option>
+                                    <option value="other" <%= assessment && assessment.psychological_problem === 'other' ? 'selected' : '' %>>Other: أخرى</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Smoker</label>
+                                <label class="form-label">Smoker: مدخن</label>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" name="is_smoker" <%= assessment && assessment.is_smoker ? 'checked' : '' %> aria-label="Patient is a smoker">
                                 </div>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Allergies</label>
+                                <label class="form-label">Allergies: الحساسية</label>
                                 <div class="row">
                                     <div class="col-md-4">
+                                        <% if (assessment && (assessment.has_allergies || assessment.medication_allergies || assessment.food_allergies || assessment.other_allergies)) { %>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="has_allergies" id="has_allergies" <%= assessment && assessment.has_allergies ? 'checked' : '' %> aria-label="Patient has allergies">
-                                            <label class="form-check-label" for="has_allergies">Has Allergies</label>
+                                            <label class="form-check-label" for="has_allergies">Has Allergies: لديه حساسية</label>
                                         </div>
+                                        <% } %>
                                     </div>
                                 </div>
                                 <div class="mt-2">
-                                    <input type="text" class="form-control" name="medication_allergies" placeholder="Medication allergies" value="<%= assessment ? assessment.medication_allergies : '' %>" aria-label="List of medication allergies">
-                                    <input type="text" class="form-control mt-2" name="food_allergies" placeholder="Food allergies" value="<%= assessment ? assessment.food_allergies : '' %>" aria-label="List of food allergies">
-                                    <input type="text" class="form-control mt-2" name="other_allergies" placeholder="Other allergies" value="<%= assessment ? assessment.other_allergies : '' %>" aria-label="List of other allergies">
+                                    <input type="text" class="form-control" name="medication_allergies" placeholder="Medication allergies: لديه حساسية تجاه الأدوية" value="<%= assessment ? assessment.medication_allergies : '' %>" aria-label="List of medication allergies">
+                                    <input type="text" class="form-control mt-2" name="food_allergies" placeholder="Food allergies: لديه حساسية تجاه الطعام" value="<%= assessment ? assessment.food_allergies : '' %>" aria-label="List of food allergies">
+                                    <input type="text" class="form-control mt-2" name="other_allergies" placeholder="Other allergies: حساسية أخرى" value="<%= assessment ? assessment.other_allergies : '' %>" aria-label="List of other allergies">
                                 </div>
                             </div>
                         </div>
@@ -238,41 +240,41 @@
 
                     <!-- Nutritional Screening -->
                     <div class="form-section">
-                        <h3><i class="fas fa-utensils me-2" aria-hidden="true"></i>Nutritional Screening</h3>
+                        <h3><i class="fas fa-utensils me-2" aria-hidden="true"></i>Nutritional Screening: تقييم التغذية</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Diet Type</label>
+                                <label class="form-label">Diet Type: نوع الحمية</label>
                                 <select class="form-select" name="diet_type" aria-label="Patient's prescribed diet type">
-                                    <option value="regular" <%= (!assessment || assessment.diet_type === 'regular') ? 'selected' : '' %>>Regular</option>
-                                    <option value="special" <%= assessment && assessment.diet_type === 'special' ? 'selected' : '' %>>Special</option>
+                                    <option value="regular" <%= (!assessment || assessment.diet_type === 'regular') ? 'selected' : '' %>>Regular: عادي</option>
+                                    <option value="special" <%= assessment && assessment.diet_type === 'special' ? 'selected' : '' %>>Special: خاص</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Appetite</label>
+                                <label class="form-label">Appetite: الشهية</label>
                                 <select class="form-select" name="appetite" aria-label="Patient's current appetite level">
-                                    <option value="good" <%= assessment && assessment.appetite === 'good' ? 'selected' : '' %>>Good</option>
-                                    <option value="poor" <%= assessment && assessment.appetite === 'poor' ? 'selected' : '' %>>Poor</option>
+                                    <option value="good" <%= assessment && assessment.appetite === 'good' ? 'selected' : '' %>>Good: جيد</option>
+                                    <option value="poor" <%= assessment && assessment.appetite === 'poor' ? 'selected' : '' %>>Poor: ضعيف</option>
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Nutritional Issues</label>
+                                <label class="form-label">Nutritional Issues: مشاكل التغذية</label>
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="has_git_problems" <%= assessment && assessment.has_git_problems ? 'checked' : '' %> aria-label="Patient has gastrointestinal problems">
-                                            <label class="form-check-label">GI Problems</label>
+                                            <label class="form-check-label">GI Problems: مشاكل الجهاز الهضمي</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="has_weight_loss" <%= assessment && assessment.has_weight_loss ? 'checked' : '' %> aria-label="Patient has experienced weight loss">
-                                            <label class="form-check-label">Weight Loss</label>
+                                            <label class="form-check-label">Weight Loss: فقدان الوزن</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="has_weight_gain" <%= assessment && assessment.has_weight_gain ? 'checked' : '' %> aria-label="Patient has experienced weight gain">
-                                            <label class="form-check-label">Weight Gain</label>
+                                            <label class="form-check-label">Weight Gain: زيادة الوزن</label>
                                         </div>
                                     </div>
                                 </div>
@@ -282,65 +284,65 @@
 
                     <!-- Functional Assessment -->
                     <div class="form-section">
-                        <h3><i class="fas fa-wheelchair me-2" aria-hidden="true"></i>Functional Assessment</h3>
+                        <h3><i class="fas fa-wheelchair me-2" aria-hidden="true"></i>Functional Assessment: التقييم الوظيفي</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Feeding Status</label>
+                                <label class="form-label">Feeding Status: حالة التغذية</label>
                                 <select class="form-select" name="feeding_status" aria-label="Patient's feeding independence level">
-                                    <option value="independent" <%= assessment && assessment.feeding_status === 'independent' ? 'selected' : '' %>>Independent</option>
-                                    <option value="needs_supervision" <%= assessment && assessment.feeding_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
-                                    <option value="totally_dependent" <%= assessment && assessment.feeding_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
+                                    <option value="independent" <%= assessment && assessment.feeding_status === 'independent' ? 'selected' : '' %>>Independent: مستقل</option>
+                                    <option value="needs_supervision" <%= assessment && assessment.feeding_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision: يحتاج إلى إشراف</option>
+                                    <option value="totally_dependent" <%= assessment && assessment.feeding_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent: يعتمد كليًا</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Hygiene Status</label>
+                                <label class="form-label">Hygiene Status: حالة النظافة</label>
                                 <select class="form-select" name="hygiene_status" aria-label="Patient's hygiene independence level">
-                                    <option value="independent" <%= assessment && assessment.hygiene_status === 'independent' ? 'selected' : '' %>>Independent</option>
-                                    <option value="needs_supervision" <%= assessment && assessment.hygiene_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
-                                    <option value="totally_dependent" <%= assessment && assessment.hygiene_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
+                                    <option value="independent" <%= assessment && assessment.hygiene_status === 'independent' ? 'selected' : '' %>>Independent: مستقل</option>
+                                    <option value="needs_supervision" <%= assessment && assessment.hygiene_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision: يحتاج إلى إشراف</option>
+                                    <option value="totally_dependent" <%= assessment && assessment.hygiene_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent: يعتمد كليًا</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Toileting Status</label>
+                                <label class="form-label">Toileting Status: حالة التبرز</label>
                                 <select class="form-select" name="toileting_status" aria-label="Patient's toileting independence level">
-                                    <option value="independent" <%= assessment && assessment.toileting_status === 'independent' ? 'selected' : '' %>>Independent</option>
-                                    <option value="needs_supervision" <%= assessment && assessment.toileting_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
-                                    <option value="totally_dependent" <%= assessment && assessment.toileting_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
+                                    <option value="independent" <%= assessment && assessment.toileting_status === 'independent' ? 'selected' : '' %>>Independent: مستقل</option>
+                                    <option value="needs_supervision" <%= assessment && assessment.toileting_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision: يحتاج إلى إشراف</option>
+                                    <option value="totally_dependent" <%= assessment && assessment.toileting_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent: يعتمد كليًا</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Ambulation Status</label>
+                                <label class="form-label">Ambulation Status: حالة المشي</label>
                                 <select class="form-select" name="ambulation_status" aria-label="Patient's walking independence level">
-                                    <option value="independent" <%= assessment && assessment.ambulation_status === 'independent' ? 'selected' : '' %>>Independent</option>
-                                    <option value="needs_supervision" <%= assessment && assessment.ambulation_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
-                                    <option value="totally_dependent" <%= assessment && assessment.ambulation_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
+                                    <option value="independent" <%= assessment && assessment.ambulation_status === 'independent' ? 'selected' : '' %>>Independent: مستقل</option>
+                                    <option value="needs_supervision" <%= assessment && assessment.ambulation_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision: يحتاج إلى إشراف</option>
+                                    <option value="totally_dependent" <%= assessment && assessment.ambulation_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent: يعتمد كليًا</option>
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Assistive Equipment</label>
+                                <label class="form-label">Assistive Equipment: الأجهزة المساعدة</label>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="uses_walker" <%= assessment && assessment.uses_walker ? 'checked' : '' %> aria-label="Patient uses a walker">
-                                            <label class="form-check-label">Walker</label>
+                                            <label class="form-check-label">Walker: مشاية</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="uses_wheelchair" <%= assessment && assessment.uses_wheelchair ? 'checked' : '' %> aria-label="Patient uses a wheelchair">
-                                            <label class="form-check-label">Wheelchair</label>
+                                            <label class="form-check-label">Wheelchair: كرسي متحرك</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="uses_transfer_device" <%= assessment && assessment.uses_transfer_device ? 'checked' : '' %> aria-label="Patient uses a transfer device">
-                                            <label class="form-check-label">Transfer Device</label>
+                                            <label class="form-check-label">Transfer Device: جهاز نقل</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="uses_other_equipment" <%= assessment && assessment.uses_other_equipment ? 'checked' : '' %> aria-label="Patient uses other assistive equipment">
-                                            <label class="form-check-label">Other</label>
+                                            <label class="form-check-label">Other: أخرى</label>
                                         </div>
                                     </div>
                                 </div>
@@ -368,6 +370,415 @@
                             <div class="col-md-6">
                                 <label class="form-label">Pain Character</label>
                                 <input type="text" class="form-control" name="pain_character" value="<%= assessment ? assessment.pain_character : '' %>" aria-label="Description of patient's pain character">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Morse Fall Scale Assessment -->
+                    <div class="form-section" id="morseFallScaleSection">
+                        <h3><i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>Morse Fall Scale Assessment: مقياس مورز لخطر السقوط</h3>
+                        <div class="alert alert-info">
+                            <strong>Fall Risk Categories:</strong> 0-10 (Low), 11-20 (Medium), 21-30 (High), 31+ (Very High)
+                        </div>
+                        <div class="row g-3">
+                            <!-- History of Falling -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">1. History of Falling: تاريخ السقوط</label>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_history_falling" value="0" <%= assessment && assessment.morse_history_falling === '0' ? 'checked' : '' %> data-score="0" aria-label="No history of falling">
+                                    <label class="form-check-label">No (0 points): لا</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_history_falling" value="25" <%= assessment && assessment.morse_history_falling === '25' ? 'checked' : '' %> data-score="25" aria-label="Yes history of falling">
+                                    <label class="form-check-label">Yes (25 points): نعم</label>
+                                </div>
+                            </div>
+
+                            <!-- Secondary Diagnosis -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">2. Secondary Diagnosis: تشخيص ثانوي</label>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_secondary_diagnosis" value="0" <%= assessment && assessment.morse_secondary_diagnosis === '0' ? 'checked' : '' %> data-score="0" aria-label="No secondary diagnosis">
+                                    <label class="form-check-label">No (0 points): لا</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_secondary_diagnosis" value="15" <%= assessment && assessment.morse_secondary_diagnosis === '15' ? 'checked' : '' %> data-score="15" aria-label="Yes secondary diagnosis">
+                                    <label class="form-check-label">Yes (15 points): نعم</label>
+                                </div>
+                            </div>
+
+                            <!-- Ambulatory Aid -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">3. Ambulatory Aid: أداة المشي المساعدة</label>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_ambulatory_aid" value="0" <%= assessment && assessment.morse_ambulatory_aid === '0' ? 'checked' : '' %> data-score="0" aria-label="No ambulatory aid">
+                                    <label class="form-check-label">None (0 points): لا شيء</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_ambulatory_aid" value="15" <%= assessment && assessment.morse_ambulatory_aid === '15' ? 'checked' : '' %> data-score="15" aria-label="Cane or crutch">
+                                    <label class="form-check-label">Cane/Crutch (15 points): عصا/عكاز</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_ambulatory_aid" value="20" <%= assessment && assessment.morse_ambulatory_aid === '20' ? 'checked' : '' %> data-score="20" aria-label="Walker">
+                                    <label class="form-check-label">Walker (20 points): مشاية</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_ambulatory_aid" value="30" <%= assessment && assessment.morse_ambulatory_aid === '30' ? 'checked' : '' %> data-score="30" aria-label="Furniture for support">
+                                    <label class="form-check-label">Furniture (30 points): الأثاث</label>
+                                </div>
+                            </div>
+
+                            <!-- IV Therapy -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">4. IV Therapy: علاج وريدي</label>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_iv_therapy" value="0" <%= assessment && assessment.morse_iv_therapy === '0' ? 'checked' : '' %> data-score="0" aria-label="No IV therapy">
+                                    <label class="form-check-label">No (0 points): لا</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_iv_therapy" value="20" <%= assessment && assessment.morse_iv_therapy === '20' ? 'checked' : '' %> data-score="20" aria-label="Yes IV therapy">
+                                    <label class="form-check-label">Yes (20 points): نعم</label>
+                                </div>
+                            </div>
+
+                            <!-- Gait -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">5. Gait: المشي</label>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_gait" value="0" <%= assessment && assessment.morse_gait === '0' ? 'checked' : '' %> data-score="0" aria-label="Normal gait">
+                                    <label class="form-check-label">Normal (0 points): طبيعي</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_gait" value="10" <%= assessment && assessment.morse_gait === '10' ? 'checked' : '' %> data-score="10" aria-label="Weak gait">
+                                    <label class="form-check-label">Weak (10 points): ضعيف</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_gait" value="20" <%= assessment && assessment.morse_gait === '20' ? 'checked' : '' %> data-score="20" aria-label="Impaired gait">
+                                    <label class="form-check-label">Impaired (20 points): معاق</label>
+                                </div>
+                            </div>
+
+                            <!-- Mental Status -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">6. Mental Status: الحالة العقلية</label>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_mental_status" value="0" <%= assessment && assessment.morse_mental_status === '0' ? 'checked' : '' %> data-score="0" aria-label="Oriented mental status">
+                                    <label class="form-check-label">Oriented (0 points): واعي</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input morse-radio" type="radio" name="morse_mental_status" value="15" <%= assessment && assessment.morse_mental_status === '15' ? 'checked' : '' %> data-score="15" aria-label="Confused or impaired mental status">
+                                    <label class="form-check-label">Confused/Impaired (15 points): مرتبك/معاق</label>
+                                </div>
+                            </div>
+
+                            <!-- Total Score Display -->
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Morse Fall Scale Total Score</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h2 class="text-primary" id="morseTotalScore">0</h2>
+                                                <p class="mb-0">Total Points</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h4 class="text-warning" id="morseRiskLevel">Low Risk</h4>
+                                                <p class="mb-0">Risk Category</p>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="morse_total_score" id="morseTotalScoreInput" value="<%= assessment ? assessment.morse_total_score : 0 %>">
+                                        <input type="hidden" name="morse_risk_level" id="morseRiskLevelInput" value="<%= assessment ? assessment.morse_risk_level : 'Low Risk' %>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pediatric Fall Risk Assessment -->
+                    <div class="form-section" id="pediatricFallRiskSection" style="display: none;">
+                        <h3><i class="fas fa-child me-2" aria-hidden="true"></i>Pediatric Fall Risk Assessment: تقييم خطر السقوط للأطفال</h3>
+                        <div class="alert alert-info">
+                            <strong>This assessment is shown for patients under 18 years old.</strong>
+                        </div>
+                        <div class="row g-3">
+                            <!-- Developmental Stage -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">1. Developmental Stage: مرحلة النمو</label>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_developmental_stage" value="0" <%= assessment && assessment.pediatric_developmental_stage === '0' ? 'checked' : '' %> data-score="0" aria-label="Age appropriate development">
+                                    <label class="form-check-label">Age Appropriate (0 points): مناسب للعمر</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_developmental_stage" value="1" <%= assessment && assessment.pediatric_developmental_stage === '1' ? 'checked' : '' %> data-score="1" aria-label="Delayed development">
+                                    <label class="form-check-label">Delayed (1 point): متأخر</label>
+                                </div>
+                            </div>
+
+                            <!-- Activity Level -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">2. Activity Level: مستوى النشاط</label>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_activity_level" value="0" <%= assessment && assessment.pediatric_activity_level === '0' ? 'checked' : '' %> data-score="0" aria-label="Normal activity level">
+                                    <label class="form-check-label">Normal (0 points): طبيعي</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_activity_level" value="1" <%= assessment && assessment.pediatric_activity_level === '1' ? 'checked' : '' %> data-score="1" aria-label="Increased activity level">
+                                    <label class="form-check-label">Increased (1 point): مرتفع</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_activity_level" value="2" <%= assessment && assessment.pediatric_activity_level === '2' ? 'checked' : '' %> data-score="2" aria-label="Decreased activity level">
+                                    <label class="form-check-label">Decreased (2 points): منخفض</label>
+                                </div>
+                            </div>
+
+                            <!-- Medication Use -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">3. Medication Use: استخدام الأدوية</label>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_medication_use" value="0" <%= assessment && assessment.pediatric_medication_use === '0' ? 'checked' : '' %> data-score="0" aria-label="No medications affecting balance">
+                                    <label class="form-check-label">None (0 points): لا شيء</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_medication_use" value="1" <%= assessment && assessment.pediatric_medication_use === '1' ? 'checked' : '' %> data-score="1" aria-label="One medication affecting balance">
+                                    <label class="form-check-label">One (1 point): واحد</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_medication_use" value="2" <%= assessment && assessment.pediatric_medication_use === '2' ? 'checked' : '' %> data-score="2" aria-label="Multiple medications affecting balance">
+                                    <label class="form-check-label">Multiple (2 points): متعدد</label>
+                                </div>
+                            </div>
+
+                            <!-- Environmental Factors -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">4. Environmental Factors: العوامل البيئية</label>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_environmental_factors" value="0" <%= assessment && assessment.pediatric_environmental_factors === '0' ? 'checked' : '' %> data-score="0" aria-label="Safe environment">
+                                    <label class="form-check-label">Safe (0 points): آمن</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_environmental_factors" value="1" <%= assessment && assessment.pediatric_environmental_factors === '1' ? 'checked' : '' %> data-score="1" aria-label="Moderate risk environment">
+                                    <label class="form-check-label">Moderate Risk (1 point): خطر متوسط</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_environmental_factors" value="2" <%= assessment && assessment.pediatric_environmental_factors === '2' ? 'checked' : '' %> data-score="2" aria-label="High risk environment">
+                                    <label class="form-check-label">High Risk (2 points): خطر عالي</label>
+                                </div>
+                            </div>
+
+                            <!-- Previous Falls -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">5. Previous Falls: السقوط السابق</label>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_previous_falls" value="0" <%= assessment && assessment.pediatric_previous_falls === '0' ? 'checked' : '' %> data-score="0" aria-label="No previous falls">
+                                    <label class="form-check-label">None (0 points): لا شيء</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_previous_falls" value="1" <%= assessment && assessment.pediatric_previous_falls === '1' ? 'checked' : '' %> data-score="1" aria-label="One previous fall">
+                                    <label class="form-check-label">One (1 point): واحد</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_previous_falls" value="2" <%= assessment && assessment.pediatric_previous_falls === '2' ? 'checked' : '' %> data-score="2" aria-label="Multiple previous falls">
+                                    <label class="form-check-label">Multiple (2 points): متعدد</label>
+                                </div>
+                            </div>
+
+                            <!-- Cognitive/Behavioral Factors -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">6. Cognitive/Behavioral Factors: العوامل المعرفية/السلوكية</label>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_cognitive_factors" value="0" <%= assessment && assessment.pediatric_cognitive_factors === '0' ? 'checked' : '' %> data-score="0" aria-label="Normal cognitive function">
+                                    <label class="form-check-label">Normal (0 points): طبيعي</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_cognitive_factors" value="1" <%= assessment && assessment.pediatric_cognitive_factors === '1' ? 'checked' : '' %> data-score="1" aria-label="Mild impairment">
+                                    <label class="form-check-label">Mild Impairment (1 point): ضعف خفيف</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input pediatric-radio" type="radio" name="pediatric_cognitive_factors" value="2" <%= assessment && assessment.pediatric_cognitive_factors === '2' ? 'checked' : '' %> data-score="2" aria-label="Significant impairment">
+                                    <label class="form-check-label">Significant Impairment (2 points): ضعف كبير</label>
+                                </div>
+                            </div>
+
+                            <!-- Total Score Display -->
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Pediatric Fall Risk Total Score</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h2 class="text-primary" id="pediatricTotalScore">0</h2>
+                                                <p class="mb-0">Total Points</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h4 class="text-warning" id="pediatricRiskLevel">Low Risk</h4>
+                                                <p class="mb-0">Risk Category</p>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="pediatric_total_score" id="pediatricTotalScoreInput" value="<%= assessment ? assessment.pediatric_total_score : 0 %>">
+                                        <input type="hidden" name="pediatric_risk_level" id="pediatricRiskLevelInput" value="<%= assessment ? assessment.pediatric_risk_level : 'Low Risk' %>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Elderly Assessment Evaluation -->
+                    <div class="form-section" id="elderlyAssessmentSection" style="display: none;">
+                        <h3><i class="fas fa-user-plus me-2" aria-hidden="true"></i>Elderly Assessment Evaluation: تقييم كبار السن</h3>
+                        <div class="alert alert-info">
+                            <strong>This assessment is shown for patients 65 years and older.</strong>
+                        </div>
+
+                        <!-- Cognitive Screening -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2"><i class="fas fa-brain me-2"></i>Cognitive Screening: فحص الإدراك</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Orientation: التوجه</label>
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-radio" type="radio" name="elderly_orientation" value="0" <%= assessment && assessment.elderly_orientation === '0' ? 'checked' : '' %> data-score="0" aria-label="Oriented to time, place, and person">
+                                    <label class="form-check-label">Oriented (0 points): واعي</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-radio" type="radio" name="elderly_orientation" value="1" <%= assessment && assessment.elderly_orientation === '1' ? 'checked' : '' %> data-score="1" aria-label="Disoriented">
+                                    <label class="form-check-label">Disoriented (1 point): غير واعي</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Memory: الذاكرة</label>
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-radio" type="radio" name="elderly_memory" value="0" <%= assessment && assessment.elderly_memory === '0' ? 'checked' : '' %> data-score="0" aria-label="Intact memory">
+                                    <label class="form-check-label">Intact (0 points): سليمة</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-radio" type="radio" name="elderly_memory" value="1" <%= assessment && assessment.elderly_memory === '1' ? 'checked' : '' %> data-score="1" aria-label="Impaired memory">
+                                    <label class="form-check-label">Impaired (1 point): ضعيفة</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Functional Assessment -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2"><i class="fas fa-hands me-2"></i>Functional Assessment (ADLs): التقييم الوظيفي</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Bathing: الاستحمام</label>
+                                <select class="form-select elderly-select" name="elderly_bathing" aria-label="Bathing independence level">
+                                    <option value="0" <%= assessment && assessment.elderly_bathing === '0' ? 'selected' : '' %> data-score="0">Independent (0 points): مستقل</option>
+                                    <option value="1" <%= assessment && assessment.elderly_bathing === '1' ? 'selected' : '' %> data-score="1">Needs Help (1 point): يحتاج مساعدة</option>
+                                    <option value="2" <%= assessment && assessment.elderly_bathing === '2' ? 'selected' : '' %> data-score="2">Dependent (2 points): يعتمد كليًا</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Dressing: اللبس</label>
+                                <select class="form-select elderly-select" name="elderly_dressing" aria-label="Dressing independence level">
+                                    <option value="0" <%= assessment && assessment.elderly_dressing === '0' ? 'selected' : '' %> data-score="0">Independent (0 points): مستقل</option>
+                                    <option value="1" <%= assessment && assessment.elderly_dressing === '1' ? 'selected' : '' %> data-score="1">Needs Help (1 point): يحتاج مساعدة</option>
+                                    <option value="2" <%= assessment && assessment.elderly_dressing === '2' ? 'selected' : '' %> data-score="2">Dependent (2 points): يعتمد كليًا</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Toileting: التبرز</label>
+                                <select class="form-select elderly-select" name="elderly_toileting" aria-label="Toileting independence level">
+                                    <option value="0" <%= assessment && assessment.elderly_toileting === '0' ? 'selected' : '' %> data-score="0">Independent (0 points): مستقل</option>
+                                    <option value="1" <%= assessment && assessment.elderly_toileting === '1' ? 'selected' : '' %> data-score="1">Needs Help (1 point): يحتاج مساعدة</option>
+                                    <option value="2" <%= assessment && assessment.elderly_toileting === '2' ? 'selected' : '' %> data-score="2">Dependent (2 points): يعتمد كليًا</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Medication Review -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2"><i class="fas fa-pills me-2"></i>Medication Review: مراجعة الأدوية</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Number of Medications: عدد الأدوية</label>
+                                <select class="form-select elderly-select" name="elderly_medication_count" aria-label="Number of medications">
+                                    <option value="0" <%= assessment && assessment.elderly_medication_count === '0' ? 'selected' : '' %> data-score="0">0-4 medications (0 points): 0-4 أدوية</option>
+                                    <option value="1" <%= assessment && assessment.elderly_medication_count === '1' ? 'selected' : '' %> data-score="1">5-9 medications (1 point): 5-9 أدوية</option>
+                                    <option value="2" <%= assessment && assessment.elderly_medication_count === '2' ? 'selected' : '' %> data-score="2">10+ medications (2 points): 10+ أدوية</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">High-Risk Medications: الأدوية عالية الخطورة</label>
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-checkbox" type="checkbox" name="elderly_high_risk_meds" <%= assessment && assessment.elderly_high_risk_meds ? 'checked' : '' %> data-score="1" aria-label="Taking high-risk medications">
+                                    <label class="form-check-label">Taking high-risk medications (1 point): يتناول أدوية عالية الخطورة</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Geriatric Syndromes -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2"><i class="fas fa-exclamation-triangle me-2"></i>Geriatric Syndromes: متلازمات الشيخوخة</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-checkbox" type="checkbox" name="elderly_falls" <%= assessment && assessment.elderly_falls ? 'checked' : '' %> data-score="1" aria-label="History of falls">
+                                    <label class="form-check-label">Recent Falls (1 point): سقوط حديث</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-checkbox" type="checkbox" name="elderly_incontinence" <%= assessment && assessment.elderly_incontinence ? 'checked' : '' %> data-score="1" aria-label="Urinary incontinence">
+                                    <label class="form-check-label">Incontinence (1 point): سلس البول</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input elderly-checkbox" type="checkbox" name="elderly_delirium" <%= assessment && assessment.elderly_delirium ? 'checked' : '' %> data-score="2" aria-label="Delirium">
+                                    <label class="form-check-label">Delirium (2 points): هلوسة</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Support -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2"><i class="fas fa-users me-2"></i>Social Support: الدعم الاجتماعي</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Living Situation: وضع المعيشة</label>
+                                <select class="form-select elderly-select" name="elderly_living_situation" aria-label="Living situation">
+                                    <option value="0" <%= assessment && assessment.elderly_living_situation === '0' ? 'selected' : '' %> data-score="0">Lives with family/support (0 points): يعيش مع العائلة/الدعم</option>
+                                    <option value="1" <%= assessment && assessment.elderly_living_situation === '1' ? 'selected' : '' %> data-score="1">Lives alone (1 point): يعيش وحده</option>
+                                    <option value="2" <%= assessment && assessment.elderly_living_situation === '2' ? 'selected' : '' %> data-score="2">Nursing home/institution (2 points): دار رعاية/مؤسسة</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Social Support Available: الدعم الاجتماعي المتاح</label>
+                                <select class="form-select elderly-select" name="elderly_social_support" aria-label="Social support availability">
+                                    <option value="0" <%= assessment && assessment.elderly_social_support === '0' ? 'selected' : '' %> data-score="0">Strong support system (0 points): نظام دعم قوي</option>
+                                    <option value="1" <%= assessment && assessment.elderly_social_support === '1' ? 'selected' : '' %> data-score="1">Limited support (1 point): دعم محدود</option>
+                                    <option value="2" <%= assessment && assessment.elderly_social_support === '2' ? 'selected' : '' %> data-score="2">No support system (2 points): لا يوجد نظام دعم</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Total Score Display -->
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">Elderly Assessment Total Score</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h2 class="text-primary" id="elderlyTotalScore">0</h2>
+                                                <p class="mb-0">Total Points</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h4 class="text-warning" id="elderlyRiskLevel">Low Risk</h4>
+                                                <p class="mb-0">Risk Category</p>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="elderly_total_score" id="elderlyTotalScoreInput" value="<%= assessment ? assessment.elderly_total_score : 0 %>">
+                                        <input type="hidden" name="elderly_risk_level" id="elderlyRiskLevelInput" value="<%= assessment ? assessment.elderly_risk_level : 'Low Risk' %>">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -469,6 +880,53 @@
     <!-- Signature Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if assessment is completed
+            const isCompleted = '<%= isCompleted %>' === 'true';
+            const assessmentSignature = '<%= assessmentSignature %>';
+
+            if (isCompleted) {
+                // Disable all form inputs for completed assessments
+                const form = document.getElementById('nurseForm');
+                const inputs = form.querySelectorAll('input:not([type="hidden"]), select, textarea, button');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    input.style.opacity = '0.6';
+                });
+
+                // Hide submit buttons and show completed message
+                const submitBtn = document.getElementById('submitBtn');
+                const draftBtn = document.getElementById('draftBtn');
+                const backBtn = document.querySelector('a[href="/"]');
+
+                if (submitBtn) submitBtn.style.display = 'none';
+                if (draftBtn) draftBtn.style.display = 'none';
+
+                // Update back button text
+                if (backBtn) {
+                    backBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i>Back to Dashboard';
+                }
+
+                // Show completed assessment message
+                const signatureSection = document.getElementById('signatureSection');
+                signatureSection.innerHTML = `
+                    <h3><i class="fas fa-check-circle me-2" aria-hidden="true"></i>Assessment Completed</h3>
+                    <div class="alert alert-success">
+                        <h4><i class="fas fa-lock me-2"></i>This nursing assessment has been completed and signed.</h4>
+                        <p>The assessment is locked for editing. To make changes, please contact an administrator.</p>
+                        ${assessmentSignature ? `<img src="${assessmentSignature}" alt="Assessment signature" class="border rounded mt-3" style="max-height: 80px; background: white;">` : ''}
+                        <p class="text-muted mt-2">Signed by the assessing nurse</p>
+                    </div>
+                `;
+
+                // Add visual indicator to the page
+                const mainContent = document.getElementById('main-content');
+                const completedBanner = document.createElement('div');
+                completedBanner.className = 'alert alert-info text-center mb-4';
+                completedBanner.innerHTML = '<h4><i class="fas fa-info-circle me-2"></i>This assessment has been completed and is read-only</h4>';
+                mainContent.insertBefore(completedBanner, mainContent.firstChild);
+
+                return; // Exit early for completed assessments
+            }
             // Auto-populate age from patient's date of birth
             const patientDOB = '<%= visit.date_of_birth %>';
             const ageField = document.getElementById('ageField');
@@ -504,13 +962,7 @@
 
                 // Handle sign form button
                 signFormButton.addEventListener('click', function() {
-                    // Show confirmation dialog
-                    const confirmed = confirm('⚠️ WARNING: Signing this assessment will mark it as completed and lock it for editing.\n\nOnce signed, you will not be able to make any further changes to this assessment.\n\nAre you sure you want to sign and complete this assessment?');
-
-                    if (!confirmed) {
-                        return; // User cancelled
-                    }
-
+                    // For signing, we just set the signature - form will be disabled after final submission
                     signatureInput.value = userSignature;
                     appliedSignature.src = userSignature;
 
@@ -518,10 +970,8 @@
                     signatureContainer.style.display = 'none';
                     signedContainer.style.display = 'block';
 
-                    // Disable form (unless admin)
-                    if (!isAdmin) {
-                        disableFormAfterSignature();
-                    }
+                    // Note: Form will be disabled only after final submission on the server side
+                    // Draft saves don't disable the form
                 });
             } else {
                 // No signature - this shouldn't happen since signatures are required on user creation
@@ -550,20 +1000,216 @@
                 `;
             }
 
-            // Form validation - check if signature exists before submission
+            // Form validation - check if signature exists before final submission only
             document.getElementById('nurseForm').addEventListener('submit', function(e) {
-                const signatureData = signatureInput.value;
-                if (!signatureData || signatureData === '') {
-                    e.preventDefault();
-                    alert('Please sign the assessment before submitting.');
-                    signFormButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    signFormButton.style.borderColor = '#dc3545';
-                    setTimeout(() => {
-                        signFormButton.style.borderColor = '';
-                    }, 3000);
-                    return false;
+                // Check if this is a draft submission
+                const submitButton = e.submitter;
+                const isDraft = submitButton && submitButton.value === 'draft';
+
+                // Only require signature for final submissions, not drafts
+                if (!isDraft) {
+                    const signatureData = signatureInput.value;
+                    if (!signatureData || signatureData === '') {
+                        e.preventDefault();
+                        alert('Please sign the assessment before submitting.');
+                        signFormButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        signFormButton.style.borderColor = '#dc3545';
+                        setTimeout(() => {
+                            signFormButton.style.borderColor = '';
+                        }, 3000);
+                        return false;
+                    }
                 }
             });
+
+            // Morse Fall Scale calculation
+            function calculateMorseScore() {
+                let totalScore = 0;
+                const morseRadios = document.querySelectorAll('.morse-radio:checked');
+
+                morseRadios.forEach(radio => {
+                    totalScore += parseInt(radio.getAttribute('data-score')) || 0;
+                });
+
+                // Update total score display
+                document.getElementById('morseTotalScore').textContent = totalScore;
+                document.getElementById('morseTotalScoreInput').value = totalScore;
+
+                // Determine risk level
+                let riskLevel = '';
+                if (totalScore <= 10) {
+                    riskLevel = 'Low Risk';
+                } else if (totalScore <= 20) {
+                    riskLevel = 'Medium Risk';
+                } else if (totalScore <= 30) {
+                    riskLevel = 'High Risk';
+                } else {
+                    riskLevel = 'Very High Risk';
+                }
+
+                document.getElementById('morseRiskLevel').textContent = riskLevel;
+                document.getElementById('morseRiskLevelInput').value = riskLevel;
+
+                // Update risk level color
+                const riskElement = document.getElementById('morseRiskLevel');
+                riskElement.className = 'text-warning'; // Reset class
+                if (riskLevel === 'Low Risk') {
+                    riskElement.className = 'text-success';
+                } else if (riskLevel === 'Medium Risk') {
+                    riskElement.className = 'text-warning';
+                } else if (riskLevel === 'High Risk') {
+                    riskElement.className = 'text-danger';
+                } else {
+                    riskElement.className = 'text-danger fw-bold';
+                }
+            }
+
+            // Add event listeners to Morse scale radio buttons
+            document.querySelectorAll('.morse-radio').forEach(radio => {
+                radio.addEventListener('change', calculateMorseScore);
+            });
+
+            // Calculate initial Morse score on page load
+            calculateMorseScore();
+
+            // Pediatric Fall Risk calculation
+            function calculatePediatricScore() {
+                let totalScore = 0;
+                const pediatricRadios = document.querySelectorAll('.pediatric-radio:checked');
+
+                pediatricRadios.forEach(radio => {
+                    totalScore += parseInt(radio.getAttribute('data-score')) || 0;
+                });
+
+                // Update total score display
+                document.getElementById('pediatricTotalScore').textContent = totalScore;
+                document.getElementById('pediatricTotalScoreInput').value = totalScore;
+
+                // Determine risk level
+                let riskLevel = '';
+                if (totalScore <= 2) {
+                    riskLevel = 'Low Risk';
+                } else if (totalScore <= 4) {
+                    riskLevel = 'Medium Risk';
+                } else {
+                    riskLevel = 'High Risk';
+                }
+
+                document.getElementById('pediatricRiskLevel').textContent = riskLevel;
+                document.getElementById('pediatricRiskLevelInput').value = riskLevel;
+
+                // Update risk level color
+                const riskElement = document.getElementById('pediatricRiskLevel');
+                riskElement.className = 'text-warning'; // Reset class
+                if (riskLevel === 'Low Risk') {
+                    riskElement.className = 'text-success';
+                } else if (riskLevel === 'Medium Risk') {
+                    riskElement.className = 'text-warning';
+                } else {
+                    riskElement.className = 'text-danger';
+                }
+            }
+
+            // Add event listeners to Pediatric scale radio buttons
+            document.querySelectorAll('.pediatric-radio').forEach(radio => {
+                radio.addEventListener('change', calculatePediatricScore);
+            });
+
+            // Calculate initial Pediatric score on page load
+            calculatePediatricScore();
+
+            // Elderly Assessment calculation
+            function calculateElderlyScore() {
+                let totalScore = 0;
+
+                // Radio buttons
+                const elderlyRadios = document.querySelectorAll('.elderly-radio:checked');
+                elderlyRadios.forEach(radio => {
+                    totalScore += parseInt(radio.getAttribute('data-score')) || 0;
+                });
+
+                // Select dropdowns
+                const elderlySelects = document.querySelectorAll('.elderly-select');
+                elderlySelects.forEach(select => {
+                    const selectedOption = select.options[select.selectedIndex];
+                    totalScore += parseInt(selectedOption.getAttribute('data-score')) || 0;
+                });
+
+                // Checkboxes
+                const elderlyCheckboxes = document.querySelectorAll('.elderly-checkbox:checked');
+                elderlyCheckboxes.forEach(checkbox => {
+                    totalScore += parseInt(checkbox.getAttribute('data-score')) || 0;
+                });
+
+                // Update total score display
+                document.getElementById('elderlyTotalScore').textContent = totalScore;
+                document.getElementById('elderlyTotalScoreInput').value = totalScore;
+
+                // Determine risk level
+                let riskLevel = '';
+                if (totalScore <= 3) {
+                    riskLevel = 'Low Risk';
+                } else if (totalScore <= 6) {
+                    riskLevel = 'Medium Risk';
+                } else {
+                    riskLevel = 'High Risk';
+                }
+
+                document.getElementById('elderlyRiskLevel').textContent = riskLevel;
+                document.getElementById('elderlyRiskLevelInput').value = riskLevel;
+
+                // Update risk level color
+                const riskElement = document.getElementById('elderlyRiskLevel');
+                riskElement.className = 'text-warning'; // Reset class
+                if (riskLevel === 'Low Risk') {
+                    riskElement.className = 'text-success';
+                } else if (riskLevel === 'Medium Risk') {
+                    riskElement.className = 'text-warning';
+                } else {
+                    riskElement.className = 'text-danger';
+                }
+            }
+
+            // Add event listeners to Elderly assessment elements
+            document.querySelectorAll('.elderly-radio, .elderly-select, .elderly-checkbox').forEach(element => {
+                element.addEventListener('change', calculateElderlyScore);
+            });
+
+            // Calculate initial Elderly score on page load
+            calculateElderlyScore();
+
+            // Age-based assessment logic
+            function toggleFallRiskAssessments() {
+                const ageField = document.getElementById('ageField');
+                const age = parseInt(ageField.value) || 0;
+
+                const morseSection = document.getElementById('morseFallScaleSection');
+                const pediatricSection = document.getElementById('pediatricFallRiskSection');
+                const elderlySection = document.getElementById('elderlyAssessmentSection');
+
+                if (age >= 65) {
+                    // Show elderly assessment, hide others
+                    morseSection.style.display = 'none';
+                    pediatricSection.style.display = 'none';
+                    elderlySection.style.display = 'block';
+                } else if (age < 18 && age > 0) {
+                    // Show pediatric assessment, hide others
+                    morseSection.style.display = 'none';
+                    pediatricSection.style.display = 'block';
+                    elderlySection.style.display = 'none';
+                } else {
+                    // Show Morse assessment, hide others
+                    morseSection.style.display = 'block';
+                    pediatricSection.style.display = 'none';
+                    elderlySection.style.display = 'none';
+                }
+            }
+
+            // Add event listener to age field
+            document.getElementById('ageField').addEventListener('input', toggleFallRiskAssessments);
+
+            // Initial toggle based on current age
+            toggleFallRiskAssessments();
         });
     </script>
 </body>
