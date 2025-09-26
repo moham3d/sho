@@ -110,18 +110,9 @@
 </head>
 <body>
     <!-- Navigation -->
-    <%- include('navigation', { currentPage: 'visits' }) %>
+    <%- include('navigation', { currentPage: 'admin' }) %>
 
-    <div class="container mt-4">
-        <!-- Notification -->
-        <% if (notification) { %>
-            <div class="alert alert-<%= notification.type === 'success' ? 'success' : 'danger' %> alert-dismissible fade show" role="alert" id="notificationAlert">
-                <i class="fas fa-<%= notification.type === 'success' ? 'check-circle' : 'exclamation-triangle' %> me-2"></i>
-                <%= notification.message %>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <% } %>
-
+    <div class="container mt-4" id="main-content" role="main">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -129,7 +120,7 @@
                 <nav aria-label="breadcrumb" class="mb-3">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="/"><i class="fas fa-home me-1"></i>Home</a>
+                            <a href="/"><i class="fas fa-home me-1" aria-hidden="true"></i>Home</a>
                         </li>
                         <li class="breadcrumb-item">
                             <a href="/admin">Admin</a>
@@ -140,12 +131,12 @@
 
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h2><i class="fas fa-calendar-check me-2"></i>Visit Management</h2>
-                        <p class="text-muted">View and manage patient visits across all departments</p>
+                        <h2><i class="fas fa-calendar-check me-2" aria-hidden="true"></i>Visit Management</h2>
+                        <p class="text-muted">Manage patient visits and appointments</p>
                     </div>
-                    <div>
-                        <span class="badge bg-primary fs-6">Total Visits: <%= visits.length %></span>
-                    </div>
+                    <a href="/admin/visits/new" class="btn btn-info btn-custom">
+                        <i class="fas fa-plus me-2" aria-hidden="true"></i>Add New Visit
+                    </a>
                 </div>
             </div>
         </div>
