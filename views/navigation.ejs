@@ -11,5 +11,32 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            <ul class="navbar-nav">
+                <% if (user) { %>
+                    <li class="nav-item">
+                        <span class="nav-link user-info">
+                            <% if (user.role === 'admin') { %>
+                                <i class="fas fa-user-shield me-1" aria-hidden="true"></i>
+                            <% } else if (user.role === 'nurse') { %>
+                                <i class="fas fa-user-nurse me-1" aria-hidden="true"></i>
+                            <% } else if (user.role === 'physician') { %>
+                                <i class="fas fa-user-md me-1" aria-hidden="true"></i>
+                            <% } else { %>
+                                <i class="fas fa-user me-1" aria-hidden="true"></i>
+                            <% } %>
+                            Welcome, <%= user.fullName %> <span class="user-role">(<%= user.role %>)</span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="/logout" class="d-inline">
+                            <button type="submit" class="btn btn-outline-light btn-sm logout-btn" aria-label="Logout from the system">
+                                <i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i>Logout
+                            </button>
+                        </form>
+                    </li>
+                <% } %>
+            </ul>
+            </div>
+
         </div>
     </nav>

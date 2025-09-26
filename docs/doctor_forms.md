@@ -29,7 +29,7 @@ CREATE TABLE radiology_examination_form (
     previous_operations TEXT COMMENT 'عمليات سابقة وتواريخها',
     tumor_history BOOLEAN COMMENT 'تاريخ مرضى لأي أورام',
     tumor_location_type TEXT COMMENT 'مكان ونوع الورم',
-    previous_investigations TEXT COMMENT 'فحوصات أشعة سابقة',
+    previous_radiation_investigations TEXT COMMENT 'فحوصات أشعة سابقة',
     disc_problems BOOLEAN COMMENT 'انزلاق غضروفي',
     fall_risk_medications TEXT COMMENT 'أدوية تسبب نعاس أو دوار أو عدم اتزان',
     current_medications TEXT COMMENT 'أدوية حاليا',

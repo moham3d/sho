@@ -2133,52 +2133,24 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
                 // Insert into radiology_assessments with all new fields
                 const sql = `
                     INSERT INTO radiology_assessments (
-                        radiology_id, submission_id, treating_physician, department,
-                        age, examination_date, fasting_hours, is_diabetic, blood_sugar_level, 
-                        weight_kg, height_cm, chronic_diseases, current_medications, fall_risk_medications,
-                        pacemaker, slats_screws_artificial_joints, gypsum_splint_presence, 
-                        xrays_before_splint, pregnancy_status, pain_numbness, pain_numbness_location,
-                        spinal_deformities, swelling, swelling_location, 
-                        headache_visual_troubles_hearing_problems_imbalance, fever,
-                        previous_operations, tumor_history, tumor_location_type, 
-                        previous_investigations, disc_problems, dose_amount, ctd1vol, dlp, 
-                        kv, mas, uses_contrast, kidney_function_value, is_first_time, 
-                        requires_report, diagnosis, reason_for_examination, findings, 
-                        impression, recommendations, modality, body_region, has_chemotherapy, 
-                        chemo_type, chemo_sessions, has_radiotherapy, radiotherapy_site, 
-                        radiotherapy_sessions, has_operations, has_endoscopy, has_biopsies, 
-                        has_tc_mdp_bone_scan, has_tc_dtpa_kidney_scan, has_mri, has_mammography, 
-                        has_ct, has_xray, has_ultrasound, physician_signature_id, assessed_by
+                        radiology_id, submission_id, patient_full_name, examination_date, mobile_number, gender, age, medical_number, date_of_birth, diagnosis, ctd1vol, dlp, kv, mas, reason_for_examination, gypsum_splint_presence, xrays_before_splint, chronic_diseases, pacemaker, slats_screws_artificial_joints, pregnancy_status, pain_numbness, pain_numbness_location, spinal_deformities, swelling, swelling_location, headache_visual_troubles_hearing_problems_imbalance, fever, previous_operations, tumor_history, tumor_location_type, previous_investigations, disc_problems, fall_risk_medications, current_medications, patient_signature, doctor_signature, form_number, assessed_by
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
 
                 const values = [
-                    radiologyId, submissionId, null, null,
-                    formData.age, formData.examination_date, formData.fasting_hours, 
-                    formData.is_diabetic === 'true' ? 1 : 0, formData.blood_sugar_level,
-                    formData.weight_kg, formData.height_cm, formData.chronic_diseases, 
-                    formData.current_medications, formData.fall_risk_medications,
-                    formData.pacemaker ? 1 : 0, formData.slats_screws_artificial_joints ? 1 : 0,
-                    formData.gypsum_splint_presence ? 1 : 0, formData.xrays_before_splint ? 1 : 0,
-                    formData.pregnancy_status ? 1 : 0, formData.pain_numbness, 
-                    formData.pain_numbness_location, formData.spinal_deformities ? 1 : 0,
+                    radiologyId, submissionId, req.session.selectedPatient.full_name, formData.examination_date,
+                    req.session.selectedPatient.mobile_number, req.session.selectedPatient.gender, formData.age,
+                    req.session.selectedPatient.medical_number, req.session.selectedPatient.date_of_birth,
+                    formData.diagnosis, formData.ctd1vol, formData.dlp, formData.kv, formData.mas,
+                    formData.reason_for_examination, formData.gypsum_splint_presence ? 1 : 0,
+                    formData.xrays_before_splint ? 1 : 0, formData.chronic_diseases, formData.pacemaker ? 1 : 0,
+                    formData.slats_screws_artificial_joints ? 1 : 0, formData.pregnancy_status ? 1 : 0,
+                    formData.pain_numbness, formData.pain_numbness_location, formData.spinal_deformities ? 1 : 0,
                     formData.swelling ? 1 : 0, formData.swelling_location,
-                    formData.headache_visual_troubles_hearing_problems_imbalance, 
-                    formData.fever ? 1 : 0, formData.previous_operations,
-                    formData.tumor_history ? 1 : 0, formData.tumor_location_type,
-                    formData.previous_investigations, formData.disc_problems ? 1 : 0,
-                    formData.dose_amount, formData.ctd1vol, formData.dlp, formData.kv, formData.mas,
-                    formData.uses_contrast === 'true' ? 1 : 0, formData.kidney_function_value,
-                    formData.is_first_time === 'true' ? 1 : 0, formData.requires_report === 'true' ? 1 : 0,
-                    formData.diagnosis, formData.reason_for_examination, formData.findings,
-                    formData.impression, formData.recommendations, formData.modality, formData.body_region,
-                    formData.has_chemotherapy ? 1 : 0, formData.chemo_type, formData.chemo_sessions,
-                    formData.has_radiotherapy ? 1 : 0, formData.radiotherapy_site, formData.radiotherapy_sessions,
-                    formData.has_operations ? 1 : 0, formData.has_endoscopy ? 1 : 0,
-                    formData.has_biopsies ? 1 : 0, formData.has_tc_mdp_bone_scan ? 1 : 0,
-                    formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
-                    formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
-                    formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, signatureId, req.session.userId
+                    formData.headache_visual_troubles_hearing_problems_imbalance, formData.fever ? 1 : 0,
+                    formData.previous_operations, formData.tumor_history ? 1 : 0, formData.tumor_location_type,
+                    formData.previous_investigations, formData.disc_problems ? 1 : 0, formData.fall_risk_medications,
+                    formData.current_medications, formData.patient_signature, signatureId, 'SH.MR.FRM.03', req.session.userId
                 ];
 
                 db.run(sql, values, function(err) {
@@ -2189,7 +2161,7 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
 
                     // Create form submission record
                     db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by, submission_status) VALUES (?, ?, ?, ?, ?)',
-                        [submissionId, req.session.selectedVisit.visit_id, 'form-04-uuid', req.session.userId, 'submitted'], function(err) {
+                        [submissionId, req.session.selectedVisit.visit_id, 'form-03-uuid', req.session.userId, 'submitted'], function(err) {
                             if (err) {
                                 console.error('Error creating form submission:', err);
                             }

@@ -57,7 +57,7 @@
                         <i class="fas fa-x-ray me-2" aria-hidden="true"></i>
                         Radiology Assessment Form
                     </h2>
-                    <p class="text-muted">SH.MR.FRM.04 - Radiology Preparation & Assessment</p>
+                    <p class="text-muted">SH.MR.FRM.03 - Radiology Assessment Form</p>
 
                     <!-- Progress Indicator -->
                     <div class="progress mt-3" style="height: 25px;">
@@ -242,44 +242,10 @@
                         </div>
                     </div>
 
-                    <!-- Patient Preparation -->
+                    <!-- Technical Parameters -->
                     <div class="form-section">
-                        <h3><i class="fas fa-syringe me-2" aria-hidden="true"></i>Patient Preparation</h3>
+                        <h3><i class="fas fa-radiation me-2" aria-hidden="true"></i>Technical Parameters</h3>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Fasting Hours</label>
-                                <input type="number" class="form-control" name="fasting_hours" min="0" aria-label="Number of hours patient has been fasting">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Is Diabetic</label>
-                                <select class="form-select" name="is_diabetic" aria-label="Whether the patient is diabetic">
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Blood Sugar Level (mg/dL)</label>
-                                <input type="number" class="form-control" name="blood_sugar_level" min="0" aria-label="Patient's blood sugar level in mg/dL">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Weight (kg)</label>
-                                <input type="number" class="form-control" name="weight_kg" step="0.1" min="0" max="500" aria-label="Patient's weight in kilograms">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Height (cm)</label>
-                                <input type="number" class="form-control" name="height_cm" step="0.1" min="0" max="300" aria-label="Patient's height in centimeters">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Imaging Procedure Details -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-radiation me-2" aria-hidden="true"></i>Imaging Technical Parameters</h3>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Dose Amount</label>
-                                <input type="number" class="form-control" name="dose_amount" step="0.01" min="0" aria-label="Radiation dose amount">
-                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">CTDIvol</label>
                                 <input type="number" class="form-control" name="ctd1vol" step="0.01" min="0" aria-label="CT dose index volume">
@@ -296,38 +262,13 @@
                                 <label class="form-label">MAs (Milliampere-seconds)</label>
                                 <input type="number" class="form-control" name="mas" step="0.1" min="0" aria-label="X-ray tube current-time product in milliampere-seconds">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Uses Contrast</label>
-                                <select class="form-select" name="uses_contrast" aria-label="Whether the procedure uses contrast material">
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Kidney Function Value</label>
-                                <input type="number" class="form-control" name="kidney_function_value" step="0.01" min="0" aria-label="Patient's kidney function value">
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Study Information -->
+                    <!-- Diagnosis and Reason -->
                     <div class="form-section">
-                        <h3><i class="fas fa-file-medical me-2" aria-hidden="true"></i>Study Information</h3>
+                        <h3><i class="fas fa-file-medical me-2" aria-hidden="true"></i>Diagnosis and Reason</h3>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Is First Time</label>
-                                <select class="form-select" name="is_first_time" aria-label="Whether this is the patient's first imaging study">
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Requires Report</label>
-                                <select class="form-select" name="requires_report" aria-label="Whether this study requires a formal report">
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
                             <div class="col-12">
                                 <label class="form-label">Diagnosis</label>
                                 <textarea class="form-control" name="diagnosis" rows="3" aria-label="Patient's diagnosis information"></textarea>
@@ -339,133 +280,27 @@
                         </div>
                     </div>
 
-                    <!-- Assessment Content -->
+                    <!-- Patient Signature -->
                     <div class="form-section">
-                        <h3><i class="fas fa-stethoscope me-2" aria-hidden="true"></i>Assessment Content</h3>
+                        <h3><i class="fas fa-signature me-2" aria-hidden="true"></i>Patient Signature</h3>
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label">Findings</label>
-                                <textarea class="form-control" name="findings" rows="5" required aria-label="Radiological findings from the imaging study"></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Impression</label>
-                                <textarea class="form-control" name="impression" rows="4" aria-label="Radiologist's impression of the findings"></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Recommendations</label>
-                                <textarea class="form-control" name="recommendations" rows="4" aria-label="Recommended follow-up actions or additional studies"></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Modality</label>
-                                <select class="form-select" name="modality" aria-label="Imaging modality used for the study">
-                                    <option value="">Select modality...</option>
-                                    <option value="CT">CT</option>
-                                    <option value="MRI">MRI</option>
-                                    <option value="X-Ray">X-Ray</option>
-                                    <option value="Ultrasound">Ultrasound</option>
-                                    <option value="Mammography">Mammography</option>
-                                    <option value="Nuclear Medicine">Nuclear Medicine</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Body Region</label>
-                                <input type="text" class="form-control" name="body_region" aria-label="Body region or area examined in the study">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Treatment History -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-history me-2" aria-hidden="true"></i>Treatment History</h3>
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Chemotherapy</label>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="has_chemotherapy" id="has_chemotherapy" aria-label="Patient has received chemotherapy">
-                                            <label class="form-check-label" for="has_chemotherapy">Has Chemotherapy</label>
+                                <p class="text-muted mb-3">Patient signature is required for this assessment.</p>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="text-center">
+                                        <button type="button" class="btn btn-primary btn-lg" id="patientSignButton">
+                                            <i class="fas fa-signature me-2"></i>Patient Sign Here
+                                        </button>
+                                        <p class="text-muted mt-2">Click to capture patient signature</p>
+                                    </div>
+                                    <div id="patientSignatureContainer" style="display: none;">
+                                        <div class="alert alert-success text-center">
+                                            <h5><i class="fas fa-check-circle me-2"></i>Patient Signature Captured!</h5>
+                                            <img id="patientAppliedSignature" src="" alt="Patient signature" class="border rounded mt-3" style="max-height: 80px; background: white;">
                                         </div>
                                     </div>
-                                    <div class="col-md-4" id="chemo_type_container" style="display: none;">
-                                        <select class="form-select" name="chemo_type" aria-label="Type of chemotherapy administered">
-                                            <option value="">Type...</option>
-                                            <option value="tablets">Tablets</option>
-                                            <option value="infusion">Infusion</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4" id="chemo_sessions_container" style="display: none;">
-                                        <input type="number" class="form-control" name="chemo_sessions" placeholder="Sessions" aria-label="Number of chemotherapy sessions">
-                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Radiotherapy</label>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="has_radiotherapy" id="has_radiotherapy" aria-label="Patient has received radiotherapy">
-                                            <label class="form-check-label" for="has_radiotherapy">Has Radiotherapy</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4" id="radiotherapy_site_container" style="display: none;">
-                                        <input type="text" class="form-control" name="radiotherapy_site" placeholder="Site" aria-label="Radiotherapy treatment site">
-                                    </div>
-                                    <div class="col-md-4" id="radiotherapy_sessions_container" style="display: none;">
-                                        <input type="number" class="form-control" name="radiotherapy_sessions" placeholder="Sessions" aria-label="Number of radiotherapy sessions">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Previous Imaging History -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-images me-2" aria-hidden="true"></i>Previous Imaging History</h3>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_operations" aria-label="Patient has had surgical operations">
-                                    <label class="form-check-label">Operations</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_endoscopy" aria-label="Patient has had endoscopy procedures">
-                                    <label class="form-check-label">Endoscopy</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_biopsies" aria-label="Patient has had biopsy procedures">
-                                    <label class="form-check-label">Biopsies</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_tc_mdp_bone_scan" aria-label="Patient has had TC MDP bone scan">
-                                    <label class="form-check-label">TC MDP Bone Scan</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_tc_dtpa_kidney_scan" aria-label="Patient has had TC DTPA kidney scan">
-                                    <label class="form-check-label">TC DTPA Kidney Scan</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_mri" aria-label="Patient has had MRI imaging">
-                                    <label class="form-check-label">MRI</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_mammography" aria-label="Patient has had mammography">
-                                    <label class="form-check-label">Mammography</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_ct" aria-label="Patient has had CT imaging">
-                                    <label class="form-check-label">CT</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_xray" aria-label="Patient has had X-ray imaging">
-                                    <label class="form-check-label">X-Ray</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="has_ultrasound" aria-label="Patient has had ultrasound imaging">
-                                    <label class="form-check-label">Ultrasound</label>
-                                </div>
+                                <input type="hidden" name="patient_signature" id="patientSignatureInput">
                             </div>
                         </div>
                     </div>
@@ -518,16 +353,31 @@
     <!-- Signature Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const signatureInput = document.getElementById('physicianSignatureInput');
+            const physicianSignatureInput = document.getElementById('physicianSignatureInput');
+            const patientSignatureInput = document.getElementById('patientSignatureInput');
             const signFormButton = document.getElementById('signFormButton');
+            const patientSignButton = document.getElementById('patientSignButton');
             const signatureContainer = document.getElementById('signatureContainer');
             const signedContainer = document.getElementById('signedContainer');
+            const patientSignatureContainer = document.getElementById('patientSignatureContainer');
             const appliedSignature = document.getElementById('appliedSignature');
+            const patientAppliedSignature = document.getElementById('patientAppliedSignature');
 
             // Check if user has existing signature
             const userSignature = '<%= userSignature %>';
             const userRole = '<%= user.role %>';
             const isAdmin = userRole === 'admin';
+
+            // Patient signature handling
+            patientSignButton.addEventListener('click', function() {
+                // For demo purposes, we'll use a placeholder signature
+                // In a real application, this would open a signature pad
+                const placeholderSignature = 'data:image/svg+xml;base64,' + btoa('<svg width="200" height="60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="30" font-family="Arial" font-size="16" fill="black">Patient Signature</text></svg>');
+                patientSignatureInput.value = placeholderSignature;
+                patientAppliedSignature.src = placeholderSignature;
+                patientSignatureContainer.style.display = 'block';
+                patientSignButton.style.display = 'none';
+            });
 
             if (userSignature && userSignature !== 'null') {
                 // User has signature, show sign button
@@ -543,7 +393,7 @@
                         return; // User cancelled
                     }
 
-                    signatureInput.value = userSignature;
+                    physicianSignatureInput.value = userSignature;
                     appliedSignature.src = userSignature;
 
                     // Show signed confirmation
@@ -582,16 +432,27 @@
                 `;
             }
 
-            // Form validation - check if signature exists before submission
+            // Form validation - check if signatures exist before submission
             document.getElementById('radiologyForm').addEventListener('submit', function(e) {
-                const signatureData = signatureInput.value;
-                if (!signatureData || signatureData === '') {
+                const physicianSignatureData = physicianSignatureInput.value;
+                const patientSignatureData = patientSignatureInput.value;
+                if (!physicianSignatureData || physicianSignatureData === '') {
                     e.preventDefault();
                     alert('Please sign the assessment before submitting.');
                     signFormButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     signFormButton.style.borderColor = '#dc3545';
                     setTimeout(() => {
                         signFormButton.style.borderColor = '';
+                    }, 3000);
+                    return false;
+                }
+                if (!patientSignatureData || patientSignatureData === '') {
+                    e.preventDefault();
+                    alert('Patient signature is required before submitting.');
+                    patientSignButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    patientSignButton.style.borderColor = '#dc3545';
+                    setTimeout(() => {
+                        patientSignButton.style.borderColor = '';
                     }, 3000);
                     return false;
                 }
@@ -616,32 +477,6 @@
                     tumorLocationContainer.style.display = this.checked ? 'block' : 'none';
                     if (!this.checked) {
                         document.querySelector('[name="tumor_location_type"]').value = '';
-                    }
-                });
-
-                // Chemotherapy
-                const chemoCheckbox = document.getElementById('has_chemotherapy');
-                const chemoTypeContainer = document.getElementById('chemo_type_container');
-                const chemoSessionsContainer = document.getElementById('chemo_sessions_container');
-                chemoCheckbox.addEventListener('change', function() {
-                    chemoTypeContainer.style.display = this.checked ? 'block' : 'none';
-                    chemoSessionsContainer.style.display = this.checked ? 'block' : 'none';
-                    if (!this.checked) {
-                        document.querySelector('[name="chemo_type"]').value = '';
-                        document.querySelector('[name="chemo_sessions"]').value = '';
-                    }
-                });
-
-                // Radiotherapy
-                const radioCheckbox = document.getElementById('has_radiotherapy');
-                const radioSiteContainer = document.getElementById('radiotherapy_site_container');
-                const radioSessionsContainer = document.getElementById('radiotherapy_sessions_container');
-                radioCheckbox.addEventListener('change', function() {
-                    radioSiteContainer.style.display = this.checked ? 'block' : 'none';
-                    radioSessionsContainer.style.display = this.checked ? 'block' : 'none';
-                    if (!this.checked) {
-                        document.querySelector('[name="radiotherapy_site"]').value = '';
-                        document.querySelector('[name="radiotherapy_sessions"]').value = '';
                     }
                 });
 

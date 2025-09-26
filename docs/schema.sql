@@ -225,33 +225,33 @@ CREATE TABLE radiology_assessments (
     radiology_id TEXT PRIMARY KEY, -- Using TEXT for UUID
     submission_id TEXT NOT NULL REFERENCES form_submissions(submission_id) ON DELETE CASCADE,
 
-    -- Physician and department info
-    treating_physician TEXT,
-    department TEXT,
-
-    -- Patient information
-    age INTEGER CHECK (age >= 0 AND age <= 150),
+    -- Patient information (from doctor_forms.md)
+    patient_full_name TEXT,
     examination_date DATE,
-    
-    -- Patient preparation  
-    fasting_hours INTEGER CHECK (fasting_hours >= 0),
-    is_diabetic TEXT DEFAULT 'false',
-    blood_sugar_level INTEGER CHECK (blood_sugar_level >= 0),
-    weight_kg REAL CHECK (weight_kg > 0 AND weight_kg <= 500),
-    height_cm REAL CHECK (height_cm > 0 AND height_cm <= 300),
-    
-    -- Medical history
-    chronic_diseases TEXT,
-    current_medications TEXT,
-    fall_risk_medications TEXT,
-    
-    -- Medical devices and implants
-    pacemaker INTEGER DEFAULT 0,
-    slats_screws_artificial_joints INTEGER DEFAULT 0,
+    mobile_number TEXT,
+    gender TEXT,
+    age INTEGER CHECK (age >= 0 AND age <= 150),
+    medical_number TEXT,
+    date_of_birth DATE,
+    diagnosis TEXT,
+
+    -- Technical parameters
+    ctd1vol REAL CHECK (ctd1vol >= 0),
+    dlp REAL CHECK (dlp >= 0),
+    kv REAL CHECK (kv >= 0),
+    mas REAL CHECK (mas >= 0),
+
+    -- Examination details
+    reason_for_examination TEXT,
+
+    -- Medical devices and conditions
     gypsum_splint_presence INTEGER DEFAULT 0,
     xrays_before_splint INTEGER DEFAULT 0,
+    chronic_diseases TEXT,
+    pacemaker INTEGER DEFAULT 0,
+    slats_screws_artificial_joints INTEGER DEFAULT 0,
     pregnancy_status INTEGER DEFAULT 0,
-    
+
     -- Clinical symptoms
     pain_numbness TEXT,
     pain_numbness_location TEXT,
@@ -260,77 +260,24 @@ CREATE TABLE radiology_assessments (
     swelling_location TEXT,
     headache_visual_troubles_hearing_problems_imbalance TEXT,
     fever INTEGER DEFAULT 0,
-    
-    -- Medical history details
+
+    -- Medical history
     previous_operations TEXT,
     tumor_history INTEGER DEFAULT 0,
     tumor_location_type TEXT,
     previous_investigations TEXT,
     disc_problems INTEGER DEFAULT 0,
+    fall_risk_medications TEXT,
+    current_medications TEXT,
 
-    -- Imaging procedure details
-    dose_amount REAL CHECK (dose_amount >= 0),
-    preparation_time TEXT,
-    injection_time TEXT,
-    injection_site TEXT,
-    ctd1vol REAL CHECK (ctd1vol >= 0),
-    dlp REAL CHECK (dlp >= 0),
-    kv REAL CHECK (kv >= 0), -- Kilovoltage
-    mas REAL CHECK (mas >= 0), -- Milliampere-seconds
-    uses_contrast TEXT DEFAULT 'false',
-    kidney_function_value REAL CHECK (kidney_function_value >= 0),
+    -- Signatures
+    patient_signature TEXT,
+    doctor_signature TEXT,
 
-    -- Study information
-    is_first_time TEXT DEFAULT 'true',
-    is_comparison TEXT DEFAULT 'false',
-    previous_study_code TEXT,
-    requires_report TEXT DEFAULT 'true',
-    requires_cd TEXT DEFAULT 'false',
-
-    -- Clinical information
-    diagnosis TEXT,
-    reason_for_examination TEXT, -- Changed from reason_for_study to match form
-
-    -- Assessment content (findings)
-    findings TEXT NOT NULL,
-    impression TEXT,
-    recommendations TEXT,
-
-    -- Technical details
-    modality TEXT,
-    body_region TEXT,
-    contrast_used TEXT,
-
-    -- Treatment history
-    has_chemotherapy INTEGER DEFAULT 0,
-    chemo_type TEXT CHECK (chemo_type IN ('tablets', 'infusion')),
-    chemo_details TEXT,
-    chemo_sessions INTEGER,
-    chemo_last_date DATE,
-    has_radiotherapy INTEGER DEFAULT 0,
-    radiotherapy_site TEXT,
-    radiotherapy_sessions INTEGER,
-    radiotherapy_last_date DATE,
-    has_hormonal_treatment INTEGER DEFAULT 0,
-    hormonal_last_dose_date DATE,
-    other_treatments TEXT,
-
-    -- Previous imaging history
-    has_operations INTEGER DEFAULT 0,
-    has_endoscopy INTEGER DEFAULT 0,
-    has_biopsies INTEGER DEFAULT 0,
-    has_tc_mdp_bone_scan INTEGER DEFAULT 0,
-    has_tc_dtpa_kidney_scan INTEGER DEFAULT 0,
-    has_mri INTEGER DEFAULT 0,
-    has_mammography INTEGER DEFAULT 0,
-    has_ct INTEGER DEFAULT 0,
-    has_xray INTEGER DEFAULT 0,
-    has_ultrasound INTEGER DEFAULT 0,
-    has_other_imaging INTEGER DEFAULT 0,
-    other_imaging_desc TEXT,
+    -- Form metadata
+    form_number TEXT DEFAULT 'SH.MR.FRM.03',
 
     -- Audit fields
-    physician_signature_id TEXT REFERENCES user_signatures(signature_id), -- Reference to user's signature
     assessed_by TEXT NOT NULL REFERENCES users(user_id),
     assessed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -397,4 +344,4 @@ END;
 -- Insert form definitions
 INSERT INTO form_definitions (form_id, form_code, form_name, form_version, form_description, form_role) VALUES
 ('form-05-uuid', 'SH.MR.FRM.05', 'Nursing Screening & Assessment', '1.0', 'Comprehensive nursing assessment and screening form', 'nurse'),
-('form-04-uuid', 'SH.MR.FRM.04', 'Radiology Assessment', '1.0', 'Radiology preparation and assessment form', 'physician');
+('form-03-uuid', 'SH.MR.FRM.03', 'Radiology Assessment', '1.0', 'Radiology preparation and assessment form', 'physician');
