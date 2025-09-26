@@ -48,7 +48,7 @@ function requireRole(role) {
 }
 
 // Database setup
-const db = new sqlite3.Database('c:\\Users\\Mohamed\\Desktop\\sho\\database.db', (err) => {
+const db = new sqlite3.Database('database.db', (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
@@ -603,7 +603,8 @@ app.post('/nurse/search-patient', requireAuth, requireRole('nurse'), (req, res) 
                     patient: null,
                     error: 'Patient not found. Please register the patient first.',
                     visitId: null,
-                    currentVisits: currentVisits || []
+                    currentVisits: currentVisits || [],
+                    searchedSSN: ssn // Pass the searched SSN to the template
                 });
             }
 

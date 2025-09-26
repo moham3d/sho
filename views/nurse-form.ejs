@@ -15,7 +15,7 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        .form-section h4 {
+        .form-section h3 {
             color: #495057;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
@@ -46,36 +46,44 @@
     <!-- Navigation -->
     <%- include('navigation', { currentPage: 'assessment' }) %>
 
-    <div class="container-fluid py-4">
+    <main class="container-fluid py-4" id="main-content">
         <div class="row justify-content-center">
             <div class="col-12 col-lg-10">
                 <!-- Header -->
-                <div class="text-center mb-4">
-                    <h2 class="text-primary mb-2">
-                        <i class="fas fa-user-nurse me-2"></i>
+                <header class="text-center mb-4">
+                    <h1 class="text-primary mb-2">
+                        <i class="fas fa-user-nurse me-2" aria-hidden="true"></i>
                         Nursing Assessment Form
-                    </h2>
+                    </h1>
                     <p class="text-muted">SH.MR.FRM.05 - Comprehensive Patient Screening</p>
 
                     <!-- Progress Indicator -->
-                    <div class="progress mt-3" style="height: 25px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="formProgress">
+                    <div class="progress mt-3" style="height: 25px;" role="progressbar" aria-label="Form completion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div class="progress-bar bg-success" style="width: 0%" id="formProgress">
                             <span class="progress-text">0% Complete</span>
                         </div>
                     </div>
                     <small class="text-muted mt-1 d-block">
                         Form Completion Progress
-                        <i class="fas fa-save text-success ms-2" title="Auto-save is enabled"></i>
+                        <i class="fas fa-save text-success ms-2" title="Auto-save is enabled" aria-hidden="true"></i>
                         <small class="text-success">Auto-save active</small>
                     </small>
-                </div>
+
+                    <!-- Status Announcements -->
+                    <div id="formStatusAnnouncements" class="sr-only" aria-live="polite" aria-atomic="true">
+                        Form progress: 0% complete. Auto-save is active.
+                    </div>
+                    <div id="autoSaveAnnouncements" class="sr-only" aria-live="assertive" aria-atomic="true">
+                        <!-- Auto-save status announcements will appear here -->
+                    </div>
+                </header>
 
                 <!-- Patient Information -->
                 <div class="card mb-4 border-primary">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-user me-2"></i>Patient Information
-                        </h5>
+                        <h3 class="mb-0">
+                            <i class="fas fa-user me-2" aria-hidden="true"></i>Patient Information
+                        </h3>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -103,11 +111,11 @@
                     <input type="hidden" name="visit_id" value="<%= visit.visit_id %>">
                     <!-- Basic Assessment Info -->
                     <div class="form-section">
-                        <h4><i class="fas fa-info-circle me-2"></i>Basic Assessment Information</h4>
+                        <h3><i class="fas fa-info-circle me-2" aria-hidden="true"></i>Basic Assessment Information</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Mode of Arrival</label>
-                                <select class="form-select" name="mode_of_arrival" required>
+                                <select class="form-select" name="mode_of_arrival" required aria-label="Select patient's mode of arrival">
                                     <option value="">Select mode...</option>
                                     <option value="ambulatory" <%= assessment && assessment.mode_of_arrival === 'ambulatory' ? 'selected' : '' %>>Ambulatory</option>
                                     <option value="wheelchair" <%= assessment && assessment.mode_of_arrival === 'wheelchair' ? 'selected' : '' %>>Wheelchair</option>
@@ -117,16 +125,16 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Age</label>
-                                <input type="number" class="form-control" name="age" id="ageField" min="0" max="150" required value="<%= assessment ? assessment.age : '' %>">
-                                <small class="text-muted">Auto-calculated from patient's date of birth</small>
+                                <input type="number" class="form-control" name="age" id="ageField" min="0" max="150" required value="<%= assessment ? assessment.age : '' %>" aria-label="Patient's age in years" aria-describedby="ageHelp">
+                                <small class="text-muted" id="ageHelp">Auto-calculated from patient's date of birth</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Chief Complaint (الشكوي الحالية)</label>
-                                <textarea class="form-control" name="chief_complaint" rows="3" required><%= assessment ? assessment.chief_complaint : '' %></textarea>
+                                <textarea class="form-control" name="chief_complaint" rows="3" required aria-label="Patient's chief complaint in Arabic and English"><%= assessment ? assessment.chief_complaint : '' %></textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Accompanied By</label>
-                                <select class="form-select" name="accompanied_by">
+                                <select class="form-select" name="accompanied_by" aria-label="Person accompanying the patient">
                                     <option value="">Select...</option>
                                     <option value="spouse" <%= assessment && assessment.accompanied_by === 'spouse' ? 'selected' : '' %>>Spouse</option>
                                     <option value="relative" <%= assessment && assessment.accompanied_by === 'relative' ? 'selected' : '' %>>Relative</option>
@@ -135,7 +143,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Language Spoken</label>
-                                <select class="form-select" name="language_spoken">
+                                <select class="form-select" name="language_spoken" aria-label="Primary language spoken by patient">
                                     <option value="arabic" <%= (!assessment || assessment.language_spoken === 'arabic') ? 'selected' : '' %>>Arabic</option>
                                     <option value="english" <%= assessment && assessment.language_spoken === 'english' ? 'selected' : '' %>>English</option>
                                     <option value="other" <%= assessment && assessment.language_spoken === 'other' ? 'selected' : '' %>>Other</option>
@@ -146,54 +154,54 @@
 
                     <!-- Vital Signs -->
                     <div class="form-section">
-                        <h4><i class="fas fa-heartbeat me-2"></i>Vital Signs</h4>
+                        <h3><i class="fas fa-heartbeat me-2" aria-hidden="true"></i>Vital Signs</h3>
                         <div class="vital-signs-grid">
                             <div>
                                 <label class="form-label">Temperature (°C)</label>
-                                <input type="number" class="form-control" name="temperature_celsius" step="0.1" min="30" max="45" value="<%= assessment ? assessment.temperature_celsius : '' %>">
+                                <input type="number" class="form-control" name="temperature_celsius" step="0.1" min="30" max="45" value="<%= assessment ? assessment.temperature_celsius : '' %>" aria-label="Body temperature in Celsius">
                             </div>
                             <div>
                                 <label class="form-label">Pulse (BPM)</label>
-                                <input type="number" class="form-control" name="pulse_bpm" min="30" max="200" value="<%= assessment ? assessment.pulse_bpm : '' %>">
+                                <input type="number" class="form-control" name="pulse_bpm" min="30" max="200" value="<%= assessment ? assessment.pulse_bpm : '' %>" aria-label="Heart rate in beats per minute">
                             </div>
                             <div>
                                 <label class="form-label">Blood Pressure (Systolic)</label>
-                                <input type="number" class="form-control" name="blood_pressure_systolic" min="70" max="250" value="<%= assessment ? assessment.blood_pressure_systolic : '' %>">
+                                <input type="number" class="form-control" name="blood_pressure_systolic" min="70" max="250" value="<%= assessment ? assessment.blood_pressure_systolic : '' %>" aria-label="Systolic blood pressure in mmHg">
                             </div>
                             <div>
                                 <label class="form-label">Blood Pressure (Diastolic)</label>
-                                <input type="number" class="form-control" name="blood_pressure_diastolic" min="40" max="150" value="<%= assessment ? assessment.blood_pressure_diastolic : '' %>">
+                                <input type="number" class="form-control" name="blood_pressure_diastolic" min="40" max="150" value="<%= assessment ? assessment.blood_pressure_diastolic : '' %>" aria-label="Diastolic blood pressure in mmHg">
                             </div>
                             <div>
                                 <label class="form-label">Respiratory Rate</label>
-                                <input type="number" class="form-control" name="respiratory_rate_per_min" min="8" max="60" value="<%= assessment ? assessment.respiratory_rate_per_min : '' %>">
+                                <input type="number" class="form-control" name="respiratory_rate_per_min" min="8" max="60" value="<%= assessment ? assessment.respiratory_rate_per_min : '' %>" aria-label="Respiratory rate in breaths per minute">
                             </div>
                             <div>
                                 <label class="form-label">Oxygen Saturation (%)</label>
-                                <input type="number" class="form-control" name="oxygen_saturation_percent" step="0.1" min="70" max="100" value="<%= assessment ? assessment.oxygen_saturation_percent : '' %>">
+                                <input type="number" class="form-control" name="oxygen_saturation_percent" step="0.1" min="70" max="100" value="<%= assessment ? assessment.oxygen_saturation_percent : '' %>" aria-label="Blood oxygen saturation percentage">
                             </div>
                             <div>
                                 <label class="form-label">Blood Sugar (mg/dL)</label>
-                                <input type="number" class="form-control" name="blood_sugar_mg_dl" min="0" value="<%= assessment ? assessment.blood_sugar_mg_dl : '' %>">
+                                <input type="number" class="form-control" name="blood_sugar_mg_dl" min="0" value="<%= assessment ? assessment.blood_sugar_mg_dl : '' %>" aria-label="Blood glucose level in mg/dL">
                             </div>
                             <div>
                                 <label class="form-label">Weight (kg)</label>
-                                <input type="number" class="form-control" name="weight_kg" step="0.1" min="0" max="500" value="<%= assessment ? assessment.weight_kg : '' %>">
+                                <input type="number" class="form-control" name="weight_kg" step="0.1" min="0" max="500" value="<%= assessment ? assessment.weight_kg : '' %>" aria-label="Patient weight in kilograms">
                             </div>
                             <div>
                                 <label class="form-label">Height (cm)</label>
-                                <input type="number" class="form-control" name="height_cm" step="0.1" min="0" max="300" value="<%= assessment ? assessment.height_cm : '' %>">
+                                <input type="number" class="form-control" name="height_cm" step="0.1" min="0" max="300" value="<%= assessment ? assessment.height_cm : '' %>" aria-label="Patient height in centimeters">
                             </div>
                         </div>
                     </div>
 
                     <!-- Psychosocial Assessment -->
                     <div class="form-section">
-                        <h4><i class="fas fa-brain me-2"></i>Psychosocial Assessment</h4>
+                        <h3><i class="fas fa-brain me-2" aria-hidden="true"></i>Psychosocial Assessment</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Psychological Problem</label>
-                                <select class="form-select" name="psychological_problem">
+                                <select class="form-select" name="psychological_problem" aria-label="Patient's current psychological condition">
                                     <option value="none" <%= assessment && assessment.psychological_problem === 'none' ? 'selected' : '' %>>None</option>
                                     <option value="depressed" <%= assessment && assessment.psychological_problem === 'depressed' ? 'selected' : '' %>>Depressed</option>
                                     <option value="agitated" <%= assessment && assessment.psychological_problem === 'agitated' ? 'selected' : '' %>>Agitated</option>
@@ -206,7 +214,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Smoker</label>
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="is_smoker" <%= assessment && assessment.is_smoker ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="is_smoker" <%= assessment && assessment.is_smoker ? 'checked' : '' %> aria-label="Patient is a smoker">
                                 </div>
                             </div>
                             <div class="col-12">
@@ -214,15 +222,15 @@
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="has_allergies" id="has_allergies" <%= assessment && assessment.has_allergies ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="has_allergies" id="has_allergies" <%= assessment && assessment.has_allergies ? 'checked' : '' %> aria-label="Patient has allergies">
                                             <label class="form-check-label" for="has_allergies">Has Allergies</label>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mt-2">
-                                    <input type="text" class="form-control" name="medication_allergies" placeholder="Medication allergies" value="<%= assessment ? assessment.medication_allergies : '' %>">
-                                    <input type="text" class="form-control mt-2" name="food_allergies" placeholder="Food allergies" value="<%= assessment ? assessment.food_allergies : '' %>">
-                                    <input type="text" class="form-control mt-2" name="other_allergies" placeholder="Other allergies" value="<%= assessment ? assessment.other_allergies : '' %>">
+                                    <input type="text" class="form-control" name="medication_allergies" placeholder="Medication allergies" value="<%= assessment ? assessment.medication_allergies : '' %>" aria-label="List of medication allergies">
+                                    <input type="text" class="form-control mt-2" name="food_allergies" placeholder="Food allergies" value="<%= assessment ? assessment.food_allergies : '' %>" aria-label="List of food allergies">
+                                    <input type="text" class="form-control mt-2" name="other_allergies" placeholder="Other allergies" value="<%= assessment ? assessment.other_allergies : '' %>" aria-label="List of other allergies">
                                 </div>
                             </div>
                         </div>
@@ -230,39 +238,40 @@
 
                     <!-- Nutritional Screening -->
                     <div class="form-section">
-                        <h4><i class="fas fa-utensils me-2"></i>Nutritional Screening</h4>
+                        <h3><i class="fas fa-utensils me-2" aria-hidden="true"></i>Nutritional Screening</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Diet Type</label>
-                                <select class="form-select" name="diet_type">
+                                <select class="form-select" name="diet_type" aria-label="Patient's prescribed diet type">
                                     <option value="regular" <%= (!assessment || assessment.diet_type === 'regular') ? 'selected' : '' %>>Regular</option>
                                     <option value="special" <%= assessment && assessment.diet_type === 'special' ? 'selected' : '' %>>Special</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Appetite</label>
-                                <select class="form-select" name="appetite">
+                                <select class="form-select" name="appetite" aria-label="Patient's current appetite level">
                                     <option value="good" <%= assessment && assessment.appetite === 'good' ? 'selected' : '' %>>Good</option>
                                     <option value="poor" <%= assessment && assessment.appetite === 'poor' ? 'selected' : '' %>>Poor</option>
                                 </select>
                             </div>
                             <div class="col-12">
+                                <label class="form-label">Nutritional Issues</label>
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="has_git_problems" <%= assessment && assessment.has_git_problems ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="has_git_problems" <%= assessment && assessment.has_git_problems ? 'checked' : '' %> aria-label="Patient has gastrointestinal problems">
                                             <label class="form-check-label">GI Problems</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="has_weight_loss" <%= assessment && assessment.has_weight_loss ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="has_weight_loss" <%= assessment && assessment.has_weight_loss ? 'checked' : '' %> aria-label="Patient has experienced weight loss">
                                             <label class="form-check-label">Weight Loss</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="has_weight_gain" <%= assessment && assessment.has_weight_gain ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="has_weight_gain" <%= assessment && assessment.has_weight_gain ? 'checked' : '' %> aria-label="Patient has experienced weight gain">
                                             <label class="form-check-label">Weight Gain</label>
                                         </div>
                                     </div>
@@ -273,11 +282,11 @@
 
                     <!-- Functional Assessment -->
                     <div class="form-section">
-                        <h4><i class="fas fa-wheelchair me-2"></i>Functional Assessment</h4>
+                        <h3><i class="fas fa-wheelchair me-2" aria-hidden="true"></i>Functional Assessment</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Feeding Status</label>
-                                <select class="form-select" name="feeding_status">
+                                <select class="form-select" name="feeding_status" aria-label="Patient's feeding independence level">
                                     <option value="independent" <%= assessment && assessment.feeding_status === 'independent' ? 'selected' : '' %>>Independent</option>
                                     <option value="needs_supervision" <%= assessment && assessment.feeding_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
                                     <option value="totally_dependent" <%= assessment && assessment.feeding_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
@@ -285,7 +294,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Hygiene Status</label>
-                                <select class="form-select" name="hygiene_status">
+                                <select class="form-select" name="hygiene_status" aria-label="Patient's hygiene independence level">
                                     <option value="independent" <%= assessment && assessment.hygiene_status === 'independent' ? 'selected' : '' %>>Independent</option>
                                     <option value="needs_supervision" <%= assessment && assessment.hygiene_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
                                     <option value="totally_dependent" <%= assessment && assessment.hygiene_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
@@ -293,7 +302,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Toileting Status</label>
-                                <select class="form-select" name="toileting_status">
+                                <select class="form-select" name="toileting_status" aria-label="Patient's toileting independence level">
                                     <option value="independent" <%= assessment && assessment.toileting_status === 'independent' ? 'selected' : '' %>>Independent</option>
                                     <option value="needs_supervision" <%= assessment && assessment.toileting_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
                                     <option value="totally_dependent" <%= assessment && assessment.toileting_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
@@ -301,7 +310,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Ambulation Status</label>
-                                <select class="form-select" name="ambulation_status">
+                                <select class="form-select" name="ambulation_status" aria-label="Patient's walking independence level">
                                     <option value="independent" <%= assessment && assessment.ambulation_status === 'independent' ? 'selected' : '' %>>Independent</option>
                                     <option value="needs_supervision" <%= assessment && assessment.ambulation_status === 'needs_supervision' ? 'selected' : '' %>>Needs Supervision</option>
                                     <option value="totally_dependent" <%= assessment && assessment.ambulation_status === 'totally_dependent' ? 'selected' : '' %>>Totally Dependent</option>
@@ -312,25 +321,25 @@
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="uses_walker" <%= assessment && assessment.uses_walker ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="uses_walker" <%= assessment && assessment.uses_walker ? 'checked' : '' %> aria-label="Patient uses a walker">
                                             <label class="form-check-label">Walker</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="uses_wheelchair" <%= assessment && assessment.uses_wheelchair ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="uses_wheelchair" <%= assessment && assessment.uses_wheelchair ? 'checked' : '' %> aria-label="Patient uses a wheelchair">
                                             <label class="form-check-label">Wheelchair</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="uses_transfer_device" <%= assessment && assessment.uses_transfer_device ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="uses_transfer_device" <%= assessment && assessment.uses_transfer_device ? 'checked' : '' %> aria-label="Patient uses a transfer device">
                                             <label class="form-check-label">Transfer Device</label>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="uses_other_equipment" <%= assessment && assessment.uses_other_equipment ? 'checked' : '' %>>
+                                            <input class="form-check-input" type="checkbox" name="uses_other_equipment" <%= assessment && assessment.uses_other_equipment ? 'checked' : '' %> aria-label="Patient uses other assistive equipment">
                                             <label class="form-check-label">Other</label>
                                         </div>
                                     </div>
@@ -341,65 +350,65 @@
 
                     <!-- Pain Assessment -->
                     <div class="form-section">
-                        <h4><i class="fas fa-exclamation-triangle me-2"></i>Pain Assessment</h4>
+                        <h3><i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>Pain Assessment</h3>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Pain Intensity (0-10)</label>
-                                <input type="range" class="form-range" name="pain_intensity" min="0" max="10" value="<%= assessment ? assessment.pain_intensity : 0 %>" oninput="this.nextElementSibling.value = this.value">
+                                <input type="range" class="form-range" name="pain_intensity" min="0" max="10" value="<%= assessment ? assessment.pain_intensity : 0 %>" oninput="this.nextElementSibling.value = this.value" aria-label="Pain intensity level" aria-valuemin="0" aria-valuemax="10" aria-valuenow="<%= assessment ? assessment.pain_intensity : 0 %>">
                                 <output><%= assessment ? assessment.pain_intensity : 0 %></output>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Pain Location</label>
-                                <input type="text" class="form-control" name="pain_location" value="<%= assessment ? assessment.pain_location : '' %>">
+                                <input type="text" class="form-control" name="pain_location" value="<%= assessment ? assessment.pain_location : '' %>" aria-label="Location of patient's pain">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Pain Frequency</label>
-                                <input type="text" class="form-control" name="pain_frequency" value="<%= assessment ? assessment.pain_frequency : '' %>">
+                                <input type="text" class="form-control" name="pain_frequency" value="<%= assessment ? assessment.pain_frequency : '' %>" aria-label="Frequency of patient's pain">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Pain Character</label>
-                                <input type="text" class="form-control" name="pain_character" value="<%= assessment ? assessment.pain_character : '' %>">
+                                <input type="text" class="form-control" name="pain_character" value="<%= assessment ? assessment.pain_character : '' %>" aria-label="Description of patient's pain character">
                             </div>
                         </div>
                     </div>
 
                     <!-- Educational Needs -->
                     <div class="form-section">
-                        <h4><i class="fas fa-graduation-cap me-2"></i>Educational Needs</h4>
+                        <h3><i class="fas fa-graduation-cap me-2" aria-hidden="true"></i>Educational Needs</h3>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_medication_education" <%= assessment && assessment.needs_medication_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_medication_education" <%= assessment && assessment.needs_medication_education ? 'checked' : '' %> aria-label="Patient needs medication education">
                                     <label class="form-check-label">Medication Education</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_diet_nutrition_education" <%= assessment && assessment.needs_diet_nutrition_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_diet_nutrition_education" <%= assessment && assessment.needs_diet_nutrition_education ? 'checked' : '' %> aria-label="Patient needs diet and nutrition education">
                                     <label class="form-check-label">Diet & Nutrition Education</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_medical_equipment_education" <%= assessment && assessment.needs_medical_equipment_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_medical_equipment_education" <%= assessment && assessment.needs_medical_equipment_education ? 'checked' : '' %> aria-label="Patient needs medical equipment education">
                                     <label class="form-check-label">Medical Equipment Education</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_rehabilitation_education" <%= assessment && assessment.needs_rehabilitation_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_rehabilitation_education" <%= assessment && assessment.needs_rehabilitation_education ? 'checked' : '' %> aria-label="Patient needs rehabilitation education">
                                     <label class="form-check-label">Rehabilitation Education</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_drug_interaction_education" <%= assessment && assessment.needs_drug_interaction_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_drug_interaction_education" <%= assessment && assessment.needs_drug_interaction_education ? 'checked' : '' %> aria-label="Patient needs drug interaction education">
                                     <label class="form-check-label">Drug Interaction Education</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_pain_symptom_education" <%= assessment && assessment.needs_pain_symptom_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_pain_symptom_education" <%= assessment && assessment.needs_pain_symptom_education ? 'checked' : '' %> aria-label="Patient needs pain symptom education">
                                     <label class="form-check-label">Pain Symptom Education</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="needs_fall_prevention_education" <%= assessment && assessment.needs_fall_prevention_education ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="needs_fall_prevention_education" <%= assessment && assessment.needs_fall_prevention_education ? 'checked' : '' %> aria-label="Patient needs fall prevention education">
                                     <label class="form-check-label">Fall Prevention Education</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="other_needs" <%= assessment && assessment.other_needs ? 'checked' : '' %>>
+                                    <input class="form-check-input" type="checkbox" name="other_needs" <%= assessment && assessment.other_needs ? 'checked' : '' %> aria-label="Patient has other educational needs">
                                     <label class="form-check-label">Other Needs</label>
                                 </div>
                             </div>
@@ -408,16 +417,16 @@
 
                     <!-- Nurse Signature -->
                     <div class="form-section">
-                        <h4><i class="fas fa-signature me-2"></i>Nurse Signature</h4>
+                        <h3><i class="fas fa-signature me-2" aria-hidden="true"></i>Nurse Signature</h3>
                         <div class="row g-3">
                             <div class="col-12">
                                 <p class="text-muted mb-3">Please sign below to confirm that you have completed this nursing assessment accurately and completely.</p>
-                                <div class="signature-pad border rounded p-3 bg-light" id="signaturePad" style="height: 200px; cursor: crosshair;">
-                                    <canvas id="signatureCanvas" width="800" height="200" class="w-100 h-100"></canvas>
+                                <div class="signature-pad border rounded p-3 bg-light" id="signaturePad" style="height: 200px; cursor: crosshair;" role="img" aria-label="Digital signature pad for nurse assessment">
+                                    <canvas id="signatureCanvas" width="800" height="200" class="w-100 h-100" role="img" aria-label="Signature drawing area"></canvas>
                                 </div>
                                 <div class="mt-2">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSignature">
-                                        <i class="fas fa-eraser me-1"></i>Clear Signature
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSignature" aria-label="Clear the signature and start over">
+                                        <i class="fas fa-eraser me-1" aria-hidden="true"></i>Clear Signature
                                     </button>
                                     <small class="text-muted ms-2">Click and drag to sign</small>
                                 </div>
@@ -428,23 +437,25 @@
 
                     <!-- Submit Button -->
                     <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg px-5">
-                            <i class="fas fa-save me-2"></i>
-                            Submit Assessment
+                        <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn" aria-label="Submit the completed nursing assessment" aria-describedby="submitStatus">
+                            <i class="fas fa-save me-2" aria-hidden="true"></i>
+                            <span id="submitBtnText">Submit Assessment</span>
                         </button>
-                        <button type="submit" name="action" value="draft" class="btn btn-warning btn-lg px-4 me-3">
-                            <i class="fas fa-draft me-2"></i>
-                            Save as Draft
+                        <div id="submitStatus" class="sr-only" aria-live="polite">Ready to submit assessment</div>
+                        <button type="submit" name="action" value="draft" class="btn btn-warning btn-lg px-4 me-3" id="draftBtn" aria-label="Save assessment as draft for later completion" aria-describedby="draftStatus">
+                            <i class="fas fa-draft me-2" aria-hidden="true"></i>
+                            <span id="draftBtnText">Save as Draft</span>
                         </button>
-                        <a href="/" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-arrow-left me-2"></i>
+                        <div id="draftStatus" class="sr-only" aria-live="polite">Ready to save as draft</div>
+                        <a href="/" class="btn btn-secondary btn-lg" aria-label="Return to home page without saving">
+                            <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
                             Back to Home
                         </a>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/form-validation.js"></script>
@@ -478,9 +489,31 @@
             let lastX = 0;
             let lastY = 0;
 
-            // Set canvas background
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Make signature pad focusable and add keyboard support
+            const signaturePad = document.getElementById('signaturePad');
+            signaturePad.setAttribute('tabindex', '0');
+            signaturePad.setAttribute('aria-label', 'Signature pad - use mouse or touch to sign');
+
+            // Keyboard support for signature pad
+            signaturePad.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    // Focus on canvas for drawing
+                    canvas.focus();
+                }
+            });
+
+            // Make canvas focusable for keyboard users
+            canvas.setAttribute('tabindex', '0');
+            canvas.setAttribute('aria-label', 'Signature drawing area - click and drag to sign');
+
+            // Clear signature with keyboard shortcut (Ctrl+Z)
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                    e.preventDefault();
+                    clearSignature();
+                }
+            });
 
             // Set drawing properties
             ctx.strokeStyle = '#000';

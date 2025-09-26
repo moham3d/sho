@@ -75,7 +75,7 @@
         }
         .patient-details {
             font-size: 0.875em;
-            color: #6c757d;
+            color: #495057;
         }
         .assessment-status .badge {
             font-size: 0.75em;
@@ -98,6 +98,9 @@
     <%- include('navigation', { currentPage: 'search-patient' }) %>
 
     <div class="container mt-4">
+        <!-- Screen Reader Announcements -->
+        <div id="sr-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -112,12 +115,12 @@
         <% if (error) { %>
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="error-message">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div class="alert alert-danger" role="alert" aria-live="assertive">
+                        <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
                         <%= error %>
                         <% if (error.includes('Patient not found')) { %>
                             <div class="text-center mt-3">
-                                <a href="/nurse/add-patient" class="btn btn-primary">
+                                <a href="/nurse/add-patient<%= typeof searchedSSN !== 'undefined' ? '?ssn=' + encodeURIComponent(searchedSSN) : '' %>" class="btn btn-primary">
                                     <i class="fas fa-user-plus me-2"></i>Add New Patient
                                 </a>
                             </div>
@@ -128,9 +131,9 @@
         <% } %>
 
         <!-- Client-side Error Message -->
-        <div class="row mb-4" id="clientErrorContainer" style="display: none;">
+        <div class="row mb-4" id="clientErrorContainer" style="display: none;" aria-live="assertive" role="alert">
             <div class="col-12">
-                <div class="error-message" id="clientErrorMessage">
+                <div class="alert alert-danger" id="clientErrorMessage">
                     <!-- Error content will be inserted here by JavaScript -->
                 </div>
             </div>
@@ -141,30 +144,36 @@
             <div class="col-lg-8">
                 <div class="card search-card">
                     <div class="card-body p-4">
-                        <h4 class="card-title text-center mb-4">
+                        <h2 class="card-title text-center mb-4">
                             <i class="fas fa-search me-2"></i>Search for Patient
-                        </h4>
-                        <form method="POST" action="/nurse/search-patient">
+                        </h2>
+                        <form method="POST" action="/nurse/search-patient" role="search" aria-label="Patient search form">
                             <div class="mb-4" style="position: relative;">
                                 <label for="patientSearch" class="form-label fs-5">Search by Patient SSN</label>
                                 <input type="text" class="form-control form-control-lg" id="patientSearch"
                                        placeholder="Type patient SSN (14 digits)..."
-                                       autocomplete="off">
-                                <div class="form-text text-center">
+                                       autocomplete="off"
+                                       aria-describedby="patientSearchHelp patientSearchError"
+                                       aria-invalid="false">
+                                <div class="form-text text-center" id="patientSearchHelp">
                                     <small>Type at least 2 digits to search</small>
                                 </div>
-                                <div id="autocompleteResults" class="autocomplete-results" style="display: none;">
+                                <div id="patientSearchError" class="invalid-feedback" style="display: none;" role="alert" aria-live="polite">
+                                    <!-- Validation error messages will appear here -->
+                                </div>
+                                <div id="autocompleteResults" class="autocomplete-results" style="display: none;" role="listbox" aria-label="Patient search results">
                                     <!-- Autocomplete results will appear here -->
                                 </div>
                             </div>
                             <div class="mb-4" id="ssnSection" style="display: none;">
-                                <h5 class="text-center mb-3">Confirm Patient Details</h5>
+                                <h3 class="text-center mb-3">Confirm Patient Details</h3>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="patientName" class="form-label">Patient Name</label>
                                         <input type="text" class="form-control form-control-lg text-center"
-                                               id="patientName" readonly>
-                                        <div class="form-text text-center">
+                                               id="patientName" readonly
+                                               aria-describedby="patientNameHelp">
+                                        <div class="form-text text-center" id="patientNameHelp">
                                             <small>Patient's full name</small>
                                         </div>
                                     </div>
@@ -172,17 +181,30 @@
                                         <label for="ssn" class="form-label">Patient SSN</label>
                                         <input type="text" class="form-control form-control-lg ssn-input text-center"
                                                id="ssn" name="ssn" placeholder="14-digit SSN"
-                                               pattern="\d{14}" maxlength="14" required>
-                                        <div class="form-text text-center">
+                                               pattern="\d{14}" maxlength="14" required
+                                               aria-describedby="ssnHelp ssnError"
+                                               aria-invalid="false">
+                                        <div class="form-text text-center" id="ssnHelp">
                                             <small>14-digit Egyptian SSN</small>
+                                        </div>
+                                        <div id="ssnError" class="invalid-feedback" style="display: none;" role="alert" aria-live="polite">
+                                            <!-- SSN validation error messages will appear here -->
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-success btn-custom" id="searchBtn" disabled>
-                                    <i class="fas fa-check-circle me-2"></i>Confirm Patient Info & Start Assessment
+                                <button type="submit" class="btn btn-success btn-custom" id="searchBtn" disabled
+                                        aria-describedby="searchBtnStatus">
+                                    <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
+                                    <span id="searchBtnText">Confirm Patient Info & Start Assessment</span>
                                 </button>
+                                <div id="searchBtnStatus" class="sr-only" aria-live="polite">
+                                    Button is currently disabled. Please complete the patient search first.
+                                </div>
+                                <div id="searchLoadingIndicator" class="sr-only" aria-live="assertive" aria-atomic="true">
+                                    <!-- Loading status announcements will appear here -->
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -196,9 +218,9 @@
                 <div class="col-lg-8">
                     <div class="card patient-info">
                         <div class="card-body">
-                            <h4 class="card-title text-success mb-3">
+                            <h2 class="card-title text-success mb-3">
                                 <i class="fas fa-check-circle me-2"></i>Patient Found
-                            </h4>
+                            </h2>
                             <div class="row">
                                 <div class="col-md-6">
                                     <p><strong>Full Name:</strong> <%= patient.full_name %></p>
@@ -242,11 +264,11 @@
         <% if (currentVisits && currentVisits.length > 0) { %>
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card">
+                    <div class="card" role="complementary" aria-label="Current assessments overview">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">
+                            <h3 class="card-title mb-0">
                                 <i class="fas fa-clipboard-list me-2"></i>Your Current Assessments
-                            </h5>
+                            </h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -345,11 +367,11 @@
         <!-- Instructions -->
         <div class="row">
             <div class="col-12">
-                <div class="card">
+                <div class="card" role="complementary" aria-label="Patient search instructions">
                     <div class="card-body">
-                        <h5 class="card-title">
+                        <h3 class="card-title">
                             <i class="fas fa-question-circle me-2"></i>How to Use Patient Search
-                        </h5>
+                        </h3>
                         <div class="row">
                             <div class="col-md-6">
                                 <h6><i class="fas fa-search text-primary me-2"></i>Search Process</h6>
@@ -384,7 +406,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body text-center">
-                        <h5 class="card-title mb-3">Alternative Actions</h5>
+                        <h3 class="card-title mb-3">Alternative Actions</h3>
                         <div class="row justify-content-center">
                             <div class="col-md-6">
                                 <a href="/" class="btn btn-outline-primary btn-custom w-100">
@@ -437,7 +459,7 @@
                     })
                     .then(patients => {
                         console.log('Received patients:', patients);
-                        displayAutocompleteResults(patients);
+                        displayAutocompleteResults(patients, query);
                     })
                     .catch(error => {
                         console.error('Search error:', error);
@@ -446,7 +468,43 @@
             }, 300);
         });
 
-        function displayAutocompleteResults(patients) {
+        // Keyboard navigation for autocomplete
+        document.getElementById('patientSearch').addEventListener('keydown', function(e) {
+            const resultsDiv = document.getElementById('autocompleteResults');
+            const items = resultsDiv.querySelectorAll('.autocomplete-item');
+            let currentIndex = -1;
+
+            // Find currently focused item
+            items.forEach((item, index) => {
+                if (item === document.activeElement) {
+                    currentIndex = index;
+                }
+            });
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (currentIndex < items.length - 1) {
+                    items[currentIndex + 1].focus();
+                } else if (items.length > 0) {
+                    items[0].focus();
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    items[currentIndex - 1].focus();
+                } else if (items.length > 0) {
+                    items[items.length - 1].focus();
+                }
+            } else if (e.key === 'Enter' && currentIndex >= 0) {
+                e.preventDefault();
+                items[currentIndex].click();
+            } else if (e.key === 'Escape') {
+                resultsDiv.style.display = 'none';
+                this.focus();
+            }
+        });
+
+        function displayAutocompleteResults(patients, query) {
             console.log('Displaying results for patients:', patients);
             const resultsDiv = document.getElementById('autocompleteResults');
             const ssnSection = document.getElementById('ssnSection');
@@ -466,7 +524,7 @@
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Patient not found. No patient matches the entered SSN.
                     <div class="text-center mt-3">
-                        <a href="/nurse/add-patient" class="btn btn-primary">
+                        <a href="/nurse/add-patient?ssn=${encodeURIComponent(query)}" class="btn btn-primary">
                             <i class="fas fa-user-plus me-2"></i>Add New Patient
                         </a>
                     </div>
@@ -480,7 +538,7 @@
             clientErrorContainer.style.display = 'none';
 
             resultsDiv.innerHTML = patients.map(patient => `
-                <div class="autocomplete-item" onclick="selectPatient('${patient.ssn}', '${patient.full_name}')">
+                <div class="autocomplete-item" onclick="selectPatient('${patient.ssn}', '${patient.full_name}')" tabindex="0" role="option">
                     <div class="patient-name">${patient.full_name}</div>
                     <div class="patient-details">
                         SSN: ${patient.ssn} | Medical #: ${patient.medical_number || 'N/A'}

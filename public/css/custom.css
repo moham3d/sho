@@ -161,14 +161,14 @@ body {
 
 .btn-danger {
     background: #95a5a6;
-    color: #2c3e50;
+    color: #000000;
     border-color: #95a5a6;
 }
 
 .btn-danger:hover {
     background: #839499;
     border-color: #839499;
-    color: #2c3e50;
+    color: #000000;
 }
 
 .btn-secondary {
@@ -222,8 +222,8 @@ body {
 
 .alert-success {
     background: #f8f9fa;
-    color: #27ae60;
-    border-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
 }
 
 .alert-danger {
@@ -234,8 +234,8 @@ body {
 
 .alert-info {
     background: #f8f9fa;
-    color: #17a2b8;
-    border-color: #d1ecf1;
+    color: #0c5460;
+    border-color: #bee5eb;
 }
 
 /* Tables */
@@ -274,7 +274,7 @@ body {
 
 .badge.bg-secondary {
     background-color: #95a5a6 !important;
-    color: #2c3e50 !important;
+    color: #000000 !important;
 }
 
 /* Touch-friendly elements */
@@ -324,7 +324,7 @@ body {
     height: 40px;
     border-radius: 50%;
     background: #e9ecef;
-    color: #6c757d;
+    color: #495057;
     font-weight: bold;
     margin: 0 0.5rem;
     transition: all 0.3s ease;
@@ -340,6 +340,204 @@ body {
     background: #34495e;
     color: white;
     box-shadow: 0 4px 15px rgba(52, 73, 94, 0.3);
+}
+
+/* Focus indicators for keyboard navigation */
+.btn:focus,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.25);
+}
+
+.btn:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Table focus indicators */
+.table th:focus,
+.table td:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+}
+
+/* Card focus indicators */
+.card:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+}
+
+/* Link focus indicators */
+a:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+}
+
+/* Navigation link focus indicators */
+.nav-link:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+    text-decoration: underline;
+}
+
+/* Custom interactive elements focus indicators */
+.autocomplete-item:focus {
+    outline: 3px solid #000000;
+    outline-offset: 2px;
+    background-color: #e9ecef;
+}
+
+/* Skip link styles */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #2c3e50;
+    color: #ffffff;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+    font-weight: 600;
+}
+
+.skip-link:focus {
+    top: 6px;
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* Loading States and Accessibility */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #2c3e50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 0.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    top: 50%;
+    left: 50%;
+    margin-left: -0.5rem;
+    margin-top: -0.5rem;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.btn-loading .fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus indicators for accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 3px solid #5d6d7e;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(93, 109, 126, 0.25);
+}
+
+/* Media Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+    /* Disable animations for users who prefer reduced motion */
+    .loading-spinner,
+    .btn-loading .fa-spinner,
+    .progress-bar,
+    .card:hover,
+    .btn:hover {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    /* Simplify transitions */
+    * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+    .btn {
+        border: 3px solid;
+    }
+
+    .form-control, .form-select {
+        border: 3px solid;
+    }
+
+    .card {
+        border: 3px solid;
+    }
+
+    .alert {
+        border: 3px solid;
+    }
+
+    /* Ensure focus indicators are highly visible */
+    .btn:focus, .form-control:focus, .form-select:focus {
+        outline: 4px solid #000000;
+        outline-offset: 2px;
+    }
+}
+
+/* Print styles for accessibility */
+@media print {
+    .btn, .alert, .progress {
+        display: none !important;
+    }
+
+    .sr-only {
+        display: block !important;
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        clip: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Ensure form labels are visible when printing */
+    label {
+        display: inline-block !important;
+        margin-bottom: 0.5rem !important;
+    }
 }
 
 /* Responsive adjustments */
@@ -391,19 +589,20 @@ body {
     background: #f8f9fa;
 }
 
-/* Print styles */
-@media print {
-    .btn, .navbar, .card {
-        display: none !important;
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .loading-spinner,
+    .btn-loading .fa-spinner,
+    .btn:hover,
+    .card:hover {
+        animation: none;
+        transition: none;
+        transform: none;
     }
 
-    .form-section {
-        box-shadow: none;
-        border: 1px solid #dee2e6;
-        page-break-inside: avoid;
-    }
-
-    body {
-        background: white !important;
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

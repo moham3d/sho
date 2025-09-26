@@ -1,10 +1,14 @@
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" role="navigation" aria-label="Main navigation">
+        <!-- Skip Links for Keyboard Navigation -->
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+        <a href="#navbarNav" class="skip-link">Skip to navigation</a>
+
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-hospital-alt me-2"></i>Al-Shorouk Radiology
+                <i class="fas fa-hospital-alt me-2" aria-hidden="true"></i>Al-Shorouk Radiology
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -12,45 +16,45 @@
                     <% if (user && user.role === 'admin') { %>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'admin' ? 'active' : '' %>" href="/admin">
-                                <i class="fas fa-users-cog me-1"></i>Users
+                                <i class="fas fa-users-cog me-1" aria-hidden="true"></i>Users
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'visits' ? 'active' : '' %>" href="/admin/visits">
-                                <i class="fas fa-calendar-check me-1"></i>Visits
+                                <i class="fas fa-calendar-check me-1" aria-hidden="true"></i>Visits
                             </a>
                         </li>
                     <% } else if (user && user.role === 'nurse') { %>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/">
-                                <i class="fas fa-home me-1"></i>Home
+                                <i class="fas fa-home me-1" aria-hidden="true"></i>Home
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'assessments' ? 'active' : '' %>" href="/nurse/my-assessments">
-                                <i class="fas fa-clipboard-list me-1"></i>My Assessments
+                                <i class="fas fa-clipboard-list me-1" aria-hidden="true"></i>My Assessments
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'search-patient' ? 'active' : '' %>" href="/nurse/search-patient">
-                                <i class="fas fa-search me-1"></i>New Assessment
+                                <i class="fas fa-search me-1" aria-hidden="true"></i>New Assessment
                             </a>
                         </li>
                     <% } else if (user && user.role === 'physician') { %>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/">
-                                <i class="fas fa-home me-1"></i>Home
+                                <i class="fas fa-home me-1" aria-hidden="true"></i>Home
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'radiology-form' ? 'active' : '' %>" href="/radiology-form">
-                                <i class="fas fa-x-ray me-1"></i>Radiology Assessment
+                                <i class="fas fa-x-ray me-1" aria-hidden="true"></i>Radiology Assessment
                             </a>
                         </li>
                     <% } else { %>
                         <li class="nav-item">
                             <a class="nav-link <%= currentPage === 'home' ? 'active' : '' %>" href="/">
-                                <i class="fas fa-home me-1"></i>Home
+                                <i class="fas fa-home me-1" aria-hidden="true"></i>Home
                             </a>
                         </li>
                     <% } %>
@@ -60,21 +64,21 @@
                         <li class="nav-item">
                             <span class="nav-link user-info">
                                 <% if (user.role === 'admin') { %>
-                                    <i class="fas fa-user-shield me-1"></i>
+                                    <i class="fas fa-user-shield me-1" aria-hidden="true"></i>
                                 <% } else if (user.role === 'nurse') { %>
-                                    <i class="fas fa-user-nurse me-1"></i>
+                                    <i class="fas fa-user-nurse me-1" aria-hidden="true"></i>
                                 <% } else if (user.role === 'physician') { %>
-                                    <i class="fas fa-user-md me-1"></i>
+                                    <i class="fas fa-user-md me-1" aria-hidden="true"></i>
                                 <% } else { %>
-                                    <i class="fas fa-user me-1"></i>
+                                    <i class="fas fa-user me-1" aria-hidden="true"></i>
                                 <% } %>
                                 Welcome, <%= user.fullName %> <span class="user-role">(<%= user.role %>)</span>
                             </span>
                         </li>
                         <li class="nav-item">
                             <form method="POST" action="/logout" class="d-inline">
-                                <button type="submit" class="btn btn-outline-light btn-sm logout-btn">
-                                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                                <button type="submit" class="btn btn-outline-light btn-sm logout-btn" aria-label="Logout from the system">
+                                    <i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i>Logout
                                 </button>
                             </form>
                         </li>
