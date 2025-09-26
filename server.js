@@ -173,6 +173,58 @@ app.get('/admin', requireAuth, requireRole('admin'), (req, res) => {
     });
 });
 
+app.get('/admin/users', requireAuth, requireRole('admin'), (req, res) => {
+    const { search, role, status } = req.query;
+
+    let sql = `
+        SELECT user_id, username, email, full_name, role, is_active, created_at
+        FROM users
+        WHERE 1=1
+    `;
+
+    const params = [];
+
+    if (search) {
+        sql += ` AND (full_name LIKE ? OR username LIKE ? OR email LIKE ?)`;
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    if (role && role !== 'all') {
+        sql += ` AND role = ?`;
+        params.push(role);
+    }
+
+    if (status && status !== 'all') {
+        if (status === 'active') {
+            sql += ` AND is_active = 1`;
+        } else if (status === 'inactive') {
+            sql += ` AND is_active = 0`;
+        }
+    }
+
+    sql += ` ORDER BY created_at DESC`;
+
+    db.all(sql, params, (err, users) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).send('Database error');
+        }
+
+        // Get notification from session and clear it
+        const notification = req.session.notification;
+        if (req.session.notification) {
+            delete req.session.notification;
+        }
+
+        res.render('admin-users', {
+            user: req.session,
+            users: users || [],
+            filters: { search, role, status },
+            notification: notification
+        });
+    });
+});
+
 app.get('/admin/users/new', requireAuth, requireRole('admin'), (req, res) => {
     res.render('user-form', { user: req.session, editUser: null, isNew: true });
 });
