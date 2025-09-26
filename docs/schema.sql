@@ -205,7 +205,7 @@ CREATE TABLE nursing_assessments (
     reporting_date DATETIME,
 
     -- Audit fields
-    nurse_signature TEXT,
+    nurse_signature_id TEXT REFERENCES user_signatures(signature_id), -- Reference to user's signature
     assessed_by TEXT NOT NULL REFERENCES users(user_id),
     assessed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -286,24 +286,19 @@ CREATE TABLE radiology_assessments (
     other_imaging_desc TEXT,
 
     -- Audit fields
-    physician_signature TEXT,
+    physician_signature_id TEXT REFERENCES user_signatures(signature_id), -- Reference to user's signature
     assessed_by TEXT NOT NULL REFERENCES users(user_id),
     assessed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Document storage for scanned papers and attachments
-CREATE TABLE visit_documents (
-    document_id TEXT PRIMARY KEY, -- Using TEXT for UUID
-    visit_id TEXT NOT NULL REFERENCES patient_visits(visit_id) ON DELETE CASCADE,
-    document_name TEXT NOT NULL,
-    document_type TEXT NOT NULL, -- 'scanned_form', 'lab_result', 'image', 'report', etc.
-    file_path TEXT NOT NULL, -- Path to stored file
-    file_size_bytes INTEGER,
-    mime_type TEXT,
-    uploaded_by TEXT NOT NULL REFERENCES users(user_id),
-    upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    description TEXT,
-    is_active INTEGER DEFAULT 1
+-- User signatures for reusable signatures across forms
+CREATE TABLE user_signatures (
+    signature_id TEXT PRIMARY KEY, -- Using TEXT for UUID
+    user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    signature_data TEXT NOT NULL, -- Base64 encoded signature image
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id) -- One signature per user
 );
 
 -- Audit trail for all changes

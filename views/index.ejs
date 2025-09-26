@@ -107,9 +107,9 @@
                     <% if (user.role === 'nurse') { %>
                         <!-- Nurse Options -->
                         <!-- Patient Search Section -->
-                        <div class="col-12 col-lg-9 col-xl-8">
+                        <div class="col-12 col-md-6 col-lg-4 col-xl-6">
                             <div class="card h-100 shadow-sm">
-                                <div class="card-header bg-primary text-white">
+                                <div class="card-header bg-light text-dark">
                                     <h2 class="card-title mb-0">
                                         <i class="fas fa-search me-2"></i>Patient Search & Assessment
                                     </h2>
@@ -192,9 +192,9 @@
 
                         <!-- Current Visits Status for Nurses -->
                         <% if (currentVisits && currentVisits.length > 0) { %>
-                            <div class="col-12">
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-6">
                                 <div class="card h-100">
-                                    <div class="card-header bg-primary text-white">
+                                    <div class="card-header bg-light text-dark">
                                         <h2 class="card-title mb-0">
                                             <i class="fas fa-clipboard-list me-2" aria-hidden="true"></i>Your Current Assessments
                                         </h2>
@@ -204,10 +204,8 @@
                                             <table class="table table-hover mb-0">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th><i class="fas fa-calendar me-1" aria-hidden="true"></i>Visit Date</th>
+                                                        <th><i class="fas fa-calendar me-1" aria-hidden="true"></i>Date</th>
                                                         <th><i class="fas fa-user me-1" aria-hidden="true"></i>Patient</th>
-                                                        <th><i class="fas fa-id-card me-1" aria-hidden="true"></i>Medical #</th>
-                                                        <th><i class="fas fa-stethoscope me-1" aria-hidden="true"></i>Diagnosis</th>
                                                         <th><i class="fas fa-tasks me-1" aria-hidden="true"></i>Status</th>
                                                         <th><i class="fas fa-cogs me-1" aria-hidden="true"></i>Actions</th>
                                                     </tr>
@@ -231,19 +229,6 @@
                                                                         <%= Math.floor((new Date() - new Date(visit.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000)) %> years old
                                                                     </small>
                                                                 </div>
-                                                            </td>
-                                                            <td><%= visit.medical_number || '-' %></td>
-                                                            <td>
-                                                                <% if (visit.primary_diagnosis) { %>
-                                                                    <div>
-                                                                        <strong><%= visit.primary_diagnosis %></strong>
-                                                                        <% if (visit.diagnosis_code) { %>
-                                                                            <br><small class="text-muted">Code: <%= visit.diagnosis_code %></small>
-                                                                        <% } %>
-                                                                    </div>
-                                                                <% } else { %>
-                                                                    <span class="text-muted">-</span>
-                                                                <% } %>
                                                             </td>
                                                             <td>
                                                                 <div class="assessment-status">

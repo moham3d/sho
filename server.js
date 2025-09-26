@@ -10,8 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
 // Session configuration
@@ -370,19 +370,21 @@ app.get('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res) 
 
         // Get nursing assessment
         db.get(`
-            SELECT na.*, u.full_name as assessed_by_name
+            SELECT na.*, u.full_name as assessed_by_name, us.signature_data as nurse_signature
             FROM nursing_assessments na
             JOIN form_submissions fs ON na.submission_id = fs.submission_id
             LEFT JOIN users u ON na.assessed_by = u.user_id
+            LEFT JOIN user_signatures us ON na.nurse_signature_id = us.signature_id
             WHERE fs.visit_id = ?
         `, [visitId], (err, nursingAssessment) => {
 
             // Get radiology assessment
             db.get(`
-                SELECT ra.*, u.full_name as assessed_by_name
+                SELECT ra.*, u.full_name as assessed_by_name, us.signature_data as physician_signature
                 FROM radiology_assessments ra
                 JOIN form_submissions fs ON ra.submission_id = fs.submission_id
                 LEFT JOIN users u ON ra.assessed_by = u.user_id
+                LEFT JOIN user_signatures us ON ra.physician_signature_id = us.signature_id
                 WHERE fs.visit_id = ?
             `, [visitId], (err, radiologyAssessment) => {
 
@@ -425,19 +427,21 @@ app.get('/admin/visits/:visitId/print', requireAuth, requireRole('admin'), (req,
 
         // Get nursing assessment
         db.get(`
-            SELECT na.*, u.full_name as assessed_by_name
+            SELECT na.*, u.full_name as assessed_by_name, us.signature_data as nurse_signature
             FROM nursing_assessments na
             JOIN form_submissions fs ON na.submission_id = fs.submission_id
             LEFT JOIN users u ON na.assessed_by = u.user_id
+            LEFT JOIN user_signatures us ON na.nurse_signature_id = us.signature_id
             WHERE fs.visit_id = ?
         `, [visitId], (err, nursingAssessment) => {
 
             // Get radiology assessment
             db.get(`
-                SELECT ra.*, u.full_name as assessed_by_name
+                SELECT ra.*, u.full_name as assessed_by_name, us.signature_data as physician_signature
                 FROM radiology_assessments ra
                 JOIN form_submissions fs ON ra.submission_id = fs.submission_id
                 LEFT JOIN users u ON ra.assessed_by = u.user_id
+                LEFT JOIN user_signatures us ON ra.physician_signature_id = us.signature_id
                 WHERE fs.visit_id = ?
             `, [visitId], (err, radiologyAssessment) => {
 
@@ -839,7 +843,13 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
     const visitId = formData.visit_id;
     const isDraft = formData.action === 'draft';
 
-    console.log('Nurse form submitted:', formData);
+    console.log('Nurse form submitted:', {
+        visitId,
+        isDraft,
+        hasSignature: !!formData.nurse_signature,
+        signatureLength: formData.nurse_signature ? formData.nurse_signature.length : 0,
+        signaturePreview: formData.nurse_signature ? formData.nurse_signature.substring(0, 100) + '...' : 'none'
+    });
 
     // Check if assessment already exists
     db.get('SELECT na.*, fs.submission_id FROM nursing_assessments na JOIN form_submissions fs ON na.submission_id = fs.submission_id WHERE fs.visit_id = ?', [visitId], (err, existingAssessment) => {
@@ -848,6 +858,42 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             return res.status(500).send('Database error');
         }
 
+        // Handle signature storage
+        const signatureData = formData.nurse_signature;
+        if (!signatureData || signatureData === '') {
+            return res.status(400).send('Signature is required');
+        }
+
+        // Check if user already has a signature
+        db.get('SELECT signature_id FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, existingSignature) => {
+            if (err) {
+                console.error('Error checking existing signature:', err);
+                return res.status(500).send('Database error');
+            }
+
+            const signatureId = existingSignature ? existingSignature.signature_id : 'sig-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+            const signatureSql = existingSignature ?
+                'UPDATE user_signatures SET signature_data = ?, updated_at = CURRENT_TIMESTAMP WHERE signature_id = ?' :
+                'INSERT INTO user_signatures (signature_id, user_id, signature_data) VALUES (?, ?, ?)';
+
+            const signatureValues = existingSignature ?
+                [signatureData, signatureId] :
+                [signatureId, req.session.userId, signatureData];
+
+            db.run(signatureSql, signatureValues, function(sigErr) {
+                if (sigErr) {
+                    console.error('Error saving signature:', sigErr);
+                    return res.status(500).send('Error saving signature');
+                }
+
+                // Now proceed with form submission using signature_id reference
+                proceedWithFormSubmission(signatureId, existingAssessment);
+            });
+        });
+    });
+
+    function proceedWithFormSubmission(signatureId, existingAssessment) {
         const submissionId = existingAssessment ? existingAssessment.submission_id : 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         const assessmentId = existingAssessment ? existingAssessment.assessment_id : 'nurse-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
@@ -863,7 +909,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 uses_other_equipment = ?, pain_intensity = ?, pain_location = ?, pain_frequency = ?,
                 pain_character = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
                 needs_medical_equipment_education = ?, needs_rehabilitation_education = ?, needs_drug_interaction_education = ?,
-                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature = ?
+                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature_id = ?
              WHERE assessment_id = ?` :
             `INSERT INTO nursing_assessments (
                 assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
@@ -875,7 +921,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 pain_intensity, pain_location, pain_frequency, pain_character,
                 needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
                 needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
-                needs_fall_prevention_education, other_needs, nurse_signature, assessed_by, assessed_at
+                needs_fall_prevention_education, other_needs, nurse_signature_id, assessed_by, assessed_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const values = existingAssessment ? [
@@ -891,7 +937,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.pain_character, formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
-            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, formData.nurse_signature, assessmentId
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId, assessmentId
         ] : [
             assessmentId, submissionId, formData.mode_of_arrival, formData.age, formData.chief_complaint,
             formData.accompanied_by, formData.language_spoken, formData.temperature_celsius, formData.pulse_bpm,
@@ -901,13 +947,12 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.medication_allergies, formData.food_allergies, formData.other_allergies,
             formData.diet_type, formData.appetite, formData.has_git_problems ? 1 : 0, formData.has_weight_loss ? 1 : 0,
             formData.has_weight_gain ? 1 : 0, formData.feeding_status, formData.hygiene_status, formData.toileting_status,
-            formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0,
-            formData.uses_transfer_device ? 1 : 0, formData.uses_other_equipment ? 1 : 0,
-            formData.pain_intensity, formData.pain_location, formData.pain_frequency, formData.pain_character,
-            formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
+            formData.ambulation_status, formData.uses_walker ? 1 : 0, formData.uses_wheelchair ? 1 : 0, formData.uses_transfer_device ? 1 : 0,
+            formData.uses_other_equipment ? 1 : 0, formData.pain_intensity, formData.pain_location, formData.pain_frequency,
+            formData.pain_character, formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
-            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, formData.nurse_signature, req.session.userId,
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId, req.session.userId,
             new Date().toISOString()
         ];
 
@@ -917,9 +962,10 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 console.error('SQL:', sql);
                 console.error('Number of columns in SQL:', sql.match(/\?/g).length);
                 console.error('Number of values provided:', values.length);
-                console.error('Values:', values);
                 return res.status(500).send('Error saving assessment: ' + err.message);
             }
+
+            console.log('Nurse assessment saved successfully with ID:', existingAssessment ? existingAssessment.assessment_id : assessmentId);
 
             if (!existingAssessment) {
                 // Create form submission record if new
@@ -937,8 +983,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 res.redirect('/nurse?notification=success&message=Nursing+assessment+submitted+successfully');
             }
         });
-    });
-});
+    }
 
 app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, res) => {
     const formData = req.body;
@@ -948,71 +993,106 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
         return res.status(400).send('No patient visit selected');
     }
 
-    // Generate UUID-like string
-    const radiologyId = 'radio-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    // Handle signature storage
+    const signatureData = formData.physician_signature;
+    if (!signatureData || signatureData === '') {
+        return res.status(400).send('Signature is required');
+    }
 
-    // Insert into radiology_assessments
-    const sql = `
-        INSERT INTO radiology_assessments (
-            radiology_id, submission_id, treating_physician, department,
-            fasting_hours, is_diabetic, blood_sugar_level, weight_kg, height_cm,
-            dose_amount, ctd1vol, dlp, uses_contrast, kidney_function_value,
-            is_first_time, requires_report, diagnosis, reason_for_study,
-            findings, impression, recommendations, modality, body_region,
-            has_chemotherapy, chemo_type, chemo_sessions, has_radiotherapy,
-            radiotherapy_site, radiotherapy_sessions, has_operations, has_endoscopy,
-            has_biopsies, has_tc_mdp_bone_scan, has_tc_dtpa_kidney_scan,
-            has_mri, has_mammography, has_ct, has_xray, has_ultrasound,
-            physician_signature, assessed_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-        radiologyId, submissionId, formData.treating_physician, formData.department,
-        formData.fasting_hours, formData.is_diabetic === 'true' ? 1 : 0, formData.blood_sugar_level,
-        formData.weight_kg, formData.height_cm, formData.dose_amount,
-        formData.ctd1vol, formData.dlp, formData.uses_contrast === 'true' ? 1 : 0,
-        formData.kidney_function_value, formData.is_first_time === 'true' ? 1 : 0,
-        formData.requires_report === 'true' ? 1 : 0, formData.diagnosis, formData.reason_for_study,
-        formData.findings, formData.impression, formData.recommendations,
-        formData.modality, formData.body_region, formData.has_chemotherapy ? 1 : 0,
-        formData.chemo_type, formData.chemo_sessions, formData.has_radiotherapy ? 1 : 0,
-        formData.radiotherapy_site, formData.radiotherapy_sessions,
-        formData.has_operations ? 1 : 0, formData.has_endoscopy ? 1 : 0,
-        formData.has_biopsies ? 1 : 0, formData.has_tc_mdp_bone_scan ? 1 : 0,
-        formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
-        formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
-        formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, formData.physician_signature, req.session.userId
-    ];
-
-    db.run(sql, values, function(err) {
+    // Check if user already has a signature
+    db.get('SELECT signature_id FROM user_signatures WHERE user_id = ?', [req.session.userId], (err, existingSignature) => {
         if (err) {
-            console.error('Error inserting radiology assessment:', err.message);
-            return res.status(500).send('Error saving assessment');
+            console.error('Error checking existing signature:', err);
+            return res.status(500).send('Database error');
         }
 
-        // Create form submission record
-        db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by, submission_status) VALUES (?, ?, ?, ?, ?)',
-            [submissionId, req.session.selectedVisit.visit_id, 'form-04-uuid', req.session.userId, 'submitted'], function(err) {
-                if (err) {
-                    console.error('Error creating form submission:', err);
-                }
-            });
+        const signatureId = existingSignature ? existingSignature.signature_id : 'sig-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 
-        console.log('Radiology assessment saved with ID:', radiologyId);
-        res.send(`
-            <div class="alert alert-success text-center">
-                <h4><i class="fas fa-check-circle me-2"></i>Radiology Assessment Submitted Successfully!</h4>
-                <p>Assessment ID: ${radiologyId}</p>
-                <a href="/doctor" class="btn btn-primary">Back to Dashboard</a>
-            </div>
-        `);
+        const signatureSql = existingSignature ?
+            'UPDATE user_signatures SET signature_data = ?, updated_at = CURRENT_TIMESTAMP WHERE signature_id = ?' :
+            'INSERT INTO user_signatures (signature_id, user_id, signature_data) VALUES (?, ?, ?)';
+
+        const signatureValues = existingSignature ?
+            [signatureData, signatureId] :
+            [signatureId, req.session.userId, signatureData];
+
+        db.run(signatureSql, signatureValues, function(sigErr) {
+            if (sigErr) {
+                console.error('Error saving signature:', sigErr);
+                return res.status(500).send('Error saving signature');
+            }
+
+            // Now proceed with form submission using signature_id reference
+            proceedWithRadiologySubmission(signatureId);
+        });
+    });
+
+    function proceedWithRadiologySubmission(signatureId) {
+        // Generate UUID-like string
+        const radiologyId = 'radio-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const submissionId = 'sub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+        // Insert into radiology_assessments
+        const sql = `
+            INSERT INTO radiology_assessments (
+                radiology_id, submission_id, treating_physician, department,
+                fasting_hours, is_diabetic, blood_sugar_level, weight_kg, height_cm,
+                dose_amount, ctd1vol, dlp, uses_contrast, kidney_function_value,
+                is_first_time, requires_report, diagnosis, reason_for_study,
+                findings, impression, recommendations, modality, body_region,
+                has_chemotherapy, chemo_type, chemo_sessions, has_radiotherapy,
+                radiotherapy_site, radiotherapy_sessions, has_operations, has_endoscopy,
+                has_biopsies, has_tc_mdp_bone_scan, has_tc_dtpa_kidney_scan,
+                has_mri, has_mammography, has_ct, has_xray, has_ultrasound,
+                physician_signature_id, assessed_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            radiologyId, submissionId, formData.treating_physician, formData.department,
+            formData.fasting_hours, formData.is_diabetic === 'true' ? 1 : 0, formData.blood_sugar_level,
+            formData.weight_kg, formData.height_cm, formData.dose_amount,
+            formData.ctd1vol, formData.dlp, formData.uses_contrast === 'true' ? 1 : 0,
+            formData.kidney_function_value, formData.is_first_time === 'true' ? 1 : 0,
+            formData.requires_report === 'true' ? 1 : 0, formData.diagnosis, formData.reason_for_study,
+            formData.findings, formData.impression, formData.recommendations,
+            formData.modality, formData.body_region, formData.has_chemotherapy ? 1 : 0,
+            formData.chemo_type, formData.chemo_sessions, formData.has_radiotherapy ? 1 : 0,
+            formData.radiotherapy_site, formData.radiotherapy_sessions,
+            formData.has_operations ? 1 : 0, formData.has_endoscopy ? 1 : 0,
+            formData.has_biopsies ? 1 : 0, formData.has_tc_mdp_bone_scan ? 1 : 0,
+            formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
+            formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
+            formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, signatureId, req.session.userId
+        ];
+
+        db.run(sql, values, function(err) {
+            if (err) {
+                console.error('Error inserting radiology assessment:', err.message);
+                return res.status(500).send('Error saving assessment');
+            }
+
+            // Create form submission record
+            db.run('INSERT INTO form_submissions (submission_id, visit_id, form_id, submitted_by, submission_status) VALUES (?, ?, ?, ?, ?)',
+                [submissionId, req.session.selectedVisit.visit_id, 'form-04-uuid', req.session.userId, 'submitted'], function(err) {
+                    if (err) {
+                        console.error('Error creating form submission:', err);
+                    }
+                });
+
+            console.log('Radiology assessment saved with ID:', radiologyId);
+            res.send(`
+                <div class="alert alert-success text-center">
+                    <h4><i class="fas fa-check-circle me-2"></i>Radiology Assessment Submitted Successfully!</h4>
+                    <p>Assessment ID: ${radiologyId}</p>
+                    <a href="/doctor" class="btn btn-primary">Back to Dashboard</a>
+                </div>
+            `);
+        });
+    }
     });
 });
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
-
-module.exports = app;

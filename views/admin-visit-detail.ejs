@@ -349,6 +349,18 @@
                                     </div>
                                 </div>
                             <% } %>
+
+                            <!-- Nurse Signature -->
+                            <% if (nursingAssessment.nurse_signature) { %>
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h5><i class="fas fa-signature me-2"></i>Nurse Signature</h5>
+                                        <div class="border rounded p-3 bg-light">
+                                            <img src="<%= nursingAssessment.nurse_signature %>" alt="Nurse Signature" class="img-fluid" style="max-height: 100px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -428,6 +440,18 @@
                                         <h5><i class="fas fa-lightbulb me-2"></i>Recommendations</h5>
                                         <div class="bg-light p-3 rounded">
                                             <%= radiologyAssessment.recommendations.replace(/\n/g, '<br>') %>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <!-- Physician Signature -->
+                            <% if (radiologyAssessment.physician_signature) { %>
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <h5><i class="fas fa-signature me-2"></i>Physician Signature</h5>
+                                        <div class="border rounded p-3 bg-light">
+                                            <img src="<%= radiologyAssessment.physician_signature %>" alt="Physician Signature" class="img-fluid" style="max-height: 100px;">
                                         </div>
                                     </div>
                                 </div>

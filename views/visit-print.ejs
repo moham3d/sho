@@ -374,6 +374,20 @@
                     </div>
                 </div>
             <% } %>
+
+            <!-- Nurse Signature -->
+            <% if (nursingAssessment.nurse_signature) { %>
+                <div style="margin: 30px 0; text-align: center; page-break-inside: avoid;">
+                    <strong>Nurse Signature:</strong>
+                    <div style="margin: 20px 0; padding: 20px; border: 2px solid #dee2e6; border-radius: 5px; background-color: #f8f9fa;">
+                        <img src="<%= nursingAssessment.nurse_signature %>" alt="Nurse Signature" style="max-height: 80px; max-width: 300px;">
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #495057;">
+                        Signed by: <%= nursingAssessment.assessed_by_name || 'Unknown' %> |
+                        Date: <%= nursingAssessment.assessed_at ? new Date(nursingAssessment.assessed_at).toLocaleString() : 'Not specified' %>
+                    </div>
+                </div>
+            <% } %>
         <% } %>
 
         <!-- Radiology Assessment -->
@@ -437,6 +451,20 @@
                     <strong>Recommendations:</strong>
                     <div class="assessment-content">
                         <%= radiologyAssessment.recommendations.replace(/\n/g, '<br>') %>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Physician Signature -->
+            <% if (radiologyAssessment.physician_signature) { %>
+                <div style="margin: 30px 0; text-align: center; page-break-inside: avoid;">
+                    <strong>Physician Signature:</strong>
+                    <div style="margin: 20px 0; padding: 20px; border: 2px solid #dee2e6; border-radius: 5px; background-color: #f8f9fa;">
+                        <img src="<%= radiologyAssessment.physician_signature %>" alt="Physician Signature" style="max-height: 80px; max-width: 300px;">
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #495057;">
+                        Signed by: <%= radiologyAssessment.assessed_by_name || 'Unknown' %> |
+                        Date: <%= radiologyAssessment.assessed_at ? new Date(radiologyAssessment.assessed_at).toLocaleString() : 'Not specified' %>
                     </div>
                 </div>
             <% } %>
