@@ -62,7 +62,7 @@ app.get('/', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
         res.redirect('/admin');
     } else if (req.session.role === 'nurse') {
-        res.redirect('/nurse');
+        res.redirect('/');
     } else if (req.session.role === 'physician') {
         res.redirect('/doctor');
     } else {
@@ -982,7 +982,7 @@ app.post('/admin/visits/:visitId', requireAuth, requireRole('admin'), (req, res)
          secondary_diagnosis || null, diagnosis_code || null, visit_type || null,
          department || null, created_by || req.session.userId, visitId], function(err) {
             if (err) {
-                console.error('Error updating visit:', err);
+                console.error('Database error:', err);
                 req.session.notification = {
                     type: 'error',
                     message: 'Error updating visit record.'
@@ -1900,6 +1900,19 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             risk_level: formData.elderly_risk_level || 'Low Risk'
         };
 
+        const insertColumns = `assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
+                temperature_celsius, pulse_bpm, blood_pressure_systolic, blood_pressure_diastolic,
+                respiratory_rate_per_min, oxygen_saturation_percent, blood_sugar_mg_dl, weight_kg, height_cm,
+                psychological_problem, is_smoker, has_allergies, medication_allergies, food_allergies, other_allergies,
+                diet_type, appetite, has_git_problems, has_weight_loss, has_weight_gain, feeding_status, hygiene_status,
+                toileting_status, ambulation_status, uses_walker, uses_wheelchair, uses_transfer_device, uses_other_equipment,
+                pain_intensity, pain_location, pain_frequency, pain_character, morse_total_score, morse_risk_level, morse_scale,
+                pediatric_fall_risk, elderly_assessment, needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
+                needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
+                needs_fall_prevention_education, other_needs, nurse_signature_id, assessed_by, assessed_at`;
+
+        const insertPlaceholders = insertColumns.split(',').map(() => '?').join(', ');
+
         const sql = existingAssessment ?
             `UPDATE nursing_assessments SET
                 mode_of_arrival = ?, age = ?, chief_complaint = ?, accompanied_by = ?, language_spoken = ?,
@@ -1915,18 +1928,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 needs_medical_equipment_education = ?, needs_rehabilitation_education = ?, needs_drug_interaction_education = ?,
                 needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature_id = ?
              WHERE assessment_id = ?` :
-            `INSERT INTO nursing_assessments (
-                assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
-                temperature_celsius, pulse_bpm, blood_pressure_systolic, blood_pressure_diastolic,
-                respiratory_rate_per_min, oxygen_saturation_percent, blood_sugar_mg_dl, weight_kg, height_cm,
-                psychological_problem, is_smoker, has_allergies, medication_allergies, food_allergies, other_allergies,
-                diet_type, appetite, has_git_problems, has_weight_loss, has_weight_gain, feeding_status, hygiene_status,
-                toileting_status, ambulation_status, uses_walker, uses_wheelchair, uses_transfer_device, uses_other_equipment,
-                pain_intensity, pain_location, pain_frequency, pain_character, morse_total_score, morse_risk_level, morse_scale,
-                pediatric_fall_risk, elderly_assessment, needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
-                needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
-                needs_fall_prevention_education, other_needs, nurse_signature_id, assessed_by, assessed_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            `INSERT INTO nursing_assessments (${insertColumns}) VALUES (${insertPlaceholders})`;
 
         const values = existingAssessment ? [
             formData.mode_of_arrival, formData.age, formData.chief_complaint, formData.accompanied_by, formData.language_spoken,
@@ -1966,7 +1968,9 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             if (err) {
                 console.error('Error saving nurse assessment:', err.message);
                 console.error('SQL:', sql);
-                console.error('Number of columns in SQL:', sql.match(/\?/g).length);
+                // show number of placeholders (matches number of ? in SQL)
+                const placeholderMatches = sql.match(/\?/g);
+                console.error('Number of placeholders in SQL:', placeholderMatches ? placeholderMatches.length : 0);
                 console.error('Number of values provided:', values.length);
                 return res.status(500).send('Error saving assessment: ' + err.message);
             }
@@ -2067,7 +2071,7 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
                     formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
                     formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
                     formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, signatureId, req.session.userId
-                ];
+                };
 
                 db.run(sql, values, function(err) {
                     if (err) {
