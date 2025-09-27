@@ -62,7 +62,7 @@ app.get('/', requireAuth, (req, res) => {
     if (req.session.role === 'admin') {
         res.redirect('/admin');
     } else if (req.session.role === 'nurse') {
-        res.redirect('/');
+        res.redirect('/nurse');
     } else if (req.session.role === 'physician') {
         res.redirect('/doctor');
     } else {
@@ -101,7 +101,7 @@ app.post('/login', async (req, res) => {
         if (user.role === 'admin') {
             res.redirect('/admin');
         } else if (user.role === 'nurse') {
-            res.redirect('/');
+            res.redirect('/nurse');
         } else if (user.role === 'physician') {
             res.redirect('/doctor');
         } else {
@@ -2071,7 +2071,7 @@ app.post('/submit-radiology-form', requireAuth, requireRole('physician'), (req, 
                     formData.has_tc_dtpa_kidney_scan ? 1 : 0, formData.has_mri ? 1 : 0,
                     formData.has_mammography ? 1 : 0, formData.has_ct ? 1 : 0,
                     formData.has_xray ? 1 : 0, formData.has_ultrasound ? 1 : 0, signatureId, req.session.userId
-                };
+                ];
 
                 db.run(sql, values, function(err) {
                     if (err) {
