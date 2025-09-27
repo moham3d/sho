@@ -31,7 +31,7 @@ app.use(session({
 
 // Set view engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'srv/views'));
 
 // Authentication middleware
 function requireAuth(req, res, next) {
