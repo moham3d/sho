@@ -11,16 +11,17 @@ This document tracks the migration of route handlers from `server_backup.js` to 
 ## Migration Status
 
 ### ✅ Completed
-- [x] Basic project structure created
-- [x] Config files created (app.js, database.js, session.js)
-- [x] Middleware files created (auth.js)
-- [x] Route files scaffolded
-- [x] Server.js refactored to 19 lines
+
 
 ### 🔄 In Progress
-- [x] Route migration - Nurse routes completed
-- [x] Fixed `this` binding issues in nurseController
-- [x] Fixed database schema issues in nurseFormService
+- [ ] Basic project structure created
+- [ ] Config files created (app.js, database.js, session.js)
+- [ ] Middleware files created (auth.js)
+- [ ] Route files scaffolded
+- [ ] Server.js refactored to 19 lines
+- [ ] Route migration - Nurse routes completed
+- [ ] Fixed `this` binding issues in nurseController
+- [ ] Fixed database schema issues in nurseFormService
 - [ ] Fix session persistence issues (userId not being passed to form submission)
 
 ### ❌ Pending
