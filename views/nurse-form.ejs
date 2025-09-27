@@ -132,6 +132,10 @@
                                 <label class="form-label">Chief Complaint (الشكوي الحالية)</label>
                                 <textarea class="form-control" name="chief_complaint" rows="3" required aria-label="Patient's chief complaint in Arabic and English"><%= assessment ? assessment.chief_complaint : '' %></textarea>
                             </div>
+                            <div class="col-12">
+                                <label class="form-label">General Condition: الحالة العامة</label>
+                                <textarea class="form-control" name="general_condition" rows="2" aria-label="Patient's general condition"><%= assessment ? assessment.general_condition : '' %></textarea>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Accompanied by: المرافق </label>
                                 <select class="form-select" name="accompanied_by" aria-label="Person accompanying the patient">
@@ -353,6 +357,15 @@
                                             <label class="form-check-label">Other: أخرى</label>
                                         </div>
                                     </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="uses_raised_toilet_seat" <%= assessment && assessment.uses_raised_toilet_seat ? 'checked' : '' %> aria-label="Patient uses raised toilet seat">
+                                            <label class="form-check-label">Raised Toilet Seat: مقعد مرتفع</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="text" class="form-control" name="other_equipment_desc" placeholder="Other equipment description: وصف الأجهزة الأخرى" value="<%= assessment ? assessment.other_equipment_desc : '' %>" aria-label="Description of other assistive equipment">
                                 </div>
                             </div>
                         </div>
@@ -384,6 +397,14 @@
                             <div class="col-md-6">
                                 <label class="form-label">Pain Character</label>
                                 <input type="text" class="form-control" name="pain_character" value="<%= assessment ? assessment.pain_character : '' %>" aria-label="Description of patient's pain character">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Pain Duration: مدة الألم</label>
+                                <input type="text" class="form-control" name="pain_duration" value="<%= assessment ? assessment.pain_duration : '' %>" aria-label="Duration of patient's pain">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Action Taken: الإجراء المتخذ</label>
+                                <input type="text" class="form-control" name="action_taken" value="<%= assessment ? assessment.action_taken : '' %>" aria-label="Action taken for patient's pain">
                             </div>
                         </div>
                     </div>

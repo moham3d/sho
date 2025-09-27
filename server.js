@@ -1993,7 +1993,8 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 pain_character = ?, morse_total_score = ?, morse_risk_level = ?, morse_scale = ?,
                 pediatric_fall_risk = ?, elderly_assessment = ?, needs_medication_education = ?, needs_diet_nutrition_education = ?,
                 needs_medical_equipment_education = ?, needs_rehabilitation_education = ?, needs_drug_interaction_education = ?,
-                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature_id = ?
+                needs_pain_symptom_education = ?, needs_fall_prevention_education = ?, other_needs = ?, nurse_signature_id = ?,
+                pain_duration = ?, action_taken = ?, uses_raised_toilet_seat = ?, other_equipment_desc = ?, general_condition = ?
              WHERE assessment_id = ?` :
             `INSERT INTO nursing_assessments (
                 assessment_id, submission_id, mode_of_arrival, age, chief_complaint, accompanied_by, language_spoken,
@@ -2005,8 +2006,9 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
                 pain_intensity, pain_location, pain_frequency, pain_character, morse_total_score, morse_risk_level, morse_scale,
                 pediatric_fall_risk, elderly_assessment, needs_medication_education, needs_diet_nutrition_education, needs_medical_equipment_education,
                 needs_rehabilitation_education, needs_drug_interaction_education, needs_pain_symptom_education,
-                needs_fall_prevention_education, other_needs, nurse_signature_id, assessed_by, assessed_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                needs_fall_prevention_education, other_needs, nurse_signature_id, assessed_by, assessed_at,
+                pain_duration, action_taken, uses_raised_toilet_seat, other_equipment_desc, general_condition
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const values = existingAssessment ? [
             formData.mode_of_arrival, formData.age, formData.chief_complaint, formData.accompanied_by, formData.language_spoken,
@@ -2022,7 +2024,8 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             JSON.stringify(pediatricFallRiskData), JSON.stringify(elderlyAssessmentData), formData.needs_medication_education ? 1 : 0, formData.needs_diet_nutrition_education ? 1 : 0,
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
-            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId, assessmentId
+            formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId,
+            formData.pain_duration, formData.action_taken, formData.uses_raised_toilet_seat ? 1 : 0, formData.other_equipment_desc, formData.general_condition, assessmentId
         ] : [
             assessmentId, submissionId, formData.mode_of_arrival, formData.age, formData.chief_complaint,
             formData.accompanied_by, formData.language_spoken, formData.temperature_celsius, formData.pulse_bpm,
@@ -2039,7 +2042,7 @@ app.post('/submit-nurse-form', requireAuth, requireRole('nurse'), (req, res) => 
             formData.needs_medical_equipment_education ? 1 : 0, formData.needs_rehabilitation_education ? 1 : 0,
             formData.needs_drug_interaction_education ? 1 : 0, formData.needs_pain_symptom_education ? 1 : 0,
             formData.needs_fall_prevention_education ? 1 : 0, formData.other_needs ? 1 : 0, signatureId, req.session.userId,
-            new Date().toISOString()
+            new Date().toISOString(), formData.pain_duration, formData.action_taken, formData.uses_raised_toilet_seat ? 1 : 0, formData.other_equipment_desc, formData.general_condition
         ];
 
         db.run(sql, values, function(err) {
